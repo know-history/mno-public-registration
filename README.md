@@ -19,11 +19,14 @@ Before running Terraform, copy the example tfvars files and populate your secret
 ```bash
 cp terraform.secret.tfvars.example envs/dev/terraform.secret.tfvars
 cp terraform.tfvars.example envs/dev/terraform.tfvars
-cp terraform.secret.tfvars.example envs/prod/terraform.secret.tfvars
-cp terraform.tfvars.example envs/prod/terraform.tfvars
 ```
 
 Do the same for envs/prod/ when you're ready.
+
+```bash
+cp terraform.secret.tfvars.example envs/prod/terraform.secret.tfvars
+cp terraform.tfvars.example envs/prod/terraform.tfvars
+```
 
 ### Prerequisites
 - Terraform CLI
