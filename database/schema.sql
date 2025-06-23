@@ -329,7 +329,7 @@ ALTER TABLE ONLY public.document_types ALTER COLUMN id SET DEFAULT nextval('publ
 
 ALTER TABLE ONLY public.gender_types ALTER COLUMN id SET DEFAULT nextval('public.gender_types_id_seq'::regclass);
 
-ALTER TABLE ONLY public.harvesting_purposes ALTER COLUMN id SET DEFAULT nextval('public.purposes_id_seq'::regclass);
+ALTER TABLE ONLY public.harvesting_purposes ALTER COLUMN id SET DEFAULT nextval('public.harvesting_purposes_id_seq'::regclass);
 
 ALTER TABLE ONLY public.relationship_types ALTER COLUMN id SET DEFAULT nextval('public.relationship_types_id_seq'::regclass);
 
