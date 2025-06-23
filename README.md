@@ -8,6 +8,15 @@ This repository contains Terraform code for deploying and managing the cloud inf
 - n8n and Wappler-compatible app infrastructure
 - Tagged AWS resources for cost tracking
 
+## Database Schema
+
+The `database/` folder contains the PostgreSQL schema and ERD for the MNO Public Registration system:
+
+- `schema.sql`: Source-controlled DDL for all normalized tables, enums, indexes, and constraints.
+- `erd.svg`: Auto-generated entity relationship diagram reflecting the current schema.
+
+The schema is designed around clear separation of application types (e.g., citizenship, harvesting), with normalized references for document types, relationship types, and multilingual support (English and French). It follows 3NF standards and is optimized for clean join logic and future system scaling.
+
 ## Usage
 
 ### Secrets & Configuration
