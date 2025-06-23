@@ -248,16 +248,16 @@ CREATE TABLE public.persons (
 
 ALTER TABLE public.persons OWNER TO mnoadmin;
 
-CREATE TABLE public.purposes (
+CREATE TABLE public.harvesting_purposes (
     id integer NOT NULL,
     code text NOT NULL,
     html_value_en text NOT NULL,
     html_value_fr text NOT NULL
 );
 
-ALTER TABLE public.purposes OWNER TO mnoadmin;
+ALTER TABLE public.harvesting_purposes OWNER TO mnoadmin;
 
-CREATE SEQUENCE public.purposes_id_seq
+CREATE SEQUENCE public.harvesting_purposes_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -265,9 +265,9 @@ CREATE SEQUENCE public.purposes_id_seq
     NO MAXVALUE
     CACHE 1;
 
-ALTER SEQUENCE public.purposes_id_seq OWNER TO mnoadmin;
+ALTER SEQUENCE public.harvesting_purposes_id_seq OWNER TO mnoadmin;
 
-ALTER SEQUENCE public.purposes_id_seq OWNED BY public.purposes.id;
+ALTER SEQUENCE public.harvesting_purposes_id_seq OWNED BY public.harvesting_purposes.id;
 
 CREATE TABLE public.relationship_types (
     id integer NOT NULL,
@@ -329,7 +329,7 @@ ALTER TABLE ONLY public.document_types ALTER COLUMN id SET DEFAULT nextval('publ
 
 ALTER TABLE ONLY public.gender_types ALTER COLUMN id SET DEFAULT nextval('public.gender_types_id_seq'::regclass);
 
-ALTER TABLE ONLY public.purposes ALTER COLUMN id SET DEFAULT nextval('public.purposes_id_seq'::regclass);
+ALTER TABLE ONLY public.harvesting_purposes ALTER COLUMN id SET DEFAULT nextval('public.purposes_id_seq'::regclass);
 
 ALTER TABLE ONLY public.relationship_types ALTER COLUMN id SET DEFAULT nextval('public.relationship_types_id_seq'::regclass);
 
