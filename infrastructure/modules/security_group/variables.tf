@@ -6,8 +6,3 @@ variable "allowed_cidrs" {
   type        = list(string)
   description = "List of allowed CIDR blocks"
 }
-
-variable "tags" {
-  type        = map(string)
-  description = "Tags to apply to the security group"
-}

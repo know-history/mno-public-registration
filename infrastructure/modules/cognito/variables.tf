@@ -1,36 +1,3 @@
-variable "aws_region" {
-  description = "AWS region to deploy resources in"
-  default     = "ca-central-1"
-}
-
-variable "aws_profile" {
-  description = "AWS CLI profile name"
-  default     = "kh"
-}
-
-variable "db_identifier" {
-  description = "Unique identifier for the RDS instance"
-}
-
-variable "db_username" {
-  description = "Master username for RDS"
-}
-
-variable "db_password" {
-  description = "Master password for RDS"
-  sensitive   = true
-}
-
-variable "tags" {
-  type        = map(string)
-  description = "Tags to apply to all resources"
-}
-
-variable "allowed_cidrs" {
-  type        = list(string)
-  description = "List of CIDR blocks to allow PostgreSQL access from"
-}
-
 variable "user_pool_name" {
   description = "Name of the Cognito User Pool"
   type        = string
@@ -57,14 +24,13 @@ variable "logout_urls" {
 }
 
 variable "admin_user_email" {
-  description = "Admin user email for initial Cognito user"
+  description = "Default Admin user email"
   type        = string
 }
 
 variable "admin_user_password" {
-  description = "Admin user temp password for initial Cognito user"
+  description = "Default Admin user password"
   type        = string
-  sensitive   = true
 }
 
 variable "cloudflare_api_token" {

@@ -17,14 +17,12 @@ Each environment (`dev`, `prod`, etc.) has its own configuration directory under
 Before running Terraform, copy the example tfvars files and populate your secrets:
 
 ```bash
-cp terraform.secret.tfvars.example envs/dev/terraform.secret.tfvars
 cp terraform.tfvars.example envs/dev/terraform.tfvars
 ```
 
 Do the same for envs/prod/ when you're ready.
 
 ```bash
-cp terraform.secret.tfvars.example envs/prod/terraform.secret.tfvars
 cp terraform.tfvars.example envs/prod/terraform.tfvars
 ```
 
@@ -47,6 +45,6 @@ This will:
 - Run `terraform init`, `plan`, and `apply`
 
 ### Notes
-- `terraform.secret.tfvars` is ignored by Git; never commit secrets!
+- `terraform.tfvars` is ignored by Git; never commit secrets!
 - Tags are applied to all resources for cost tracking and auditing.
 - Each environment can be expanded with additional modules (e.g., Cognito, ECS, SES, etc.)
