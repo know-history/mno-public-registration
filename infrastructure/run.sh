@@ -28,7 +28,7 @@ terraform plan \
   -var-file="$VARS_FILE"
 
 echo "Applying changes to AWS (press 'yes' to confirm)..."
-erraform apply \
+terraform apply \
   -var-file="$VARS_FILE"
 
 echo "Terraform apply complete!"

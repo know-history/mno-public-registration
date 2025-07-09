@@ -1,27 +1,44 @@
+# S3 Configuration
+s3_bucket_name = "mno-pr-documents-dev"
+allowed_origins = [
+  "http://localhost:3000",
+  "https://your-app-domain.com"
+]
+
+# Cognito Configuration
+cognito_user_pool_name = "MNO-PR-UserPool-Dev"
+cognito_user_pool_client_name = "MNO-PR-Client-Dev"
+cognito_identity_pool_name = "MNO-PR-IdentityPool-Dev"
+
+# Callback URLs
+cognito_callback_urls = [
+  "http://localhost:3000/auth/callback"
+]
+
+cognito_logout_urls = [
+  "http://localhost:3000/"
+]
+
+create_cognito_hosted_ui_domain = false
+cognito_domain_name = ""  # e.g., "mno-pr-dev" (will become mno-pr-dev.auth.ca-central-1.amazoncognito.com)
+
+# Hosting Configuration
+website_bucket_name = "mno-pr-website-dev"
+create_deployment_user = true
+
 tags = {
   Project     = "MNO_Public_Registration"
   Environment = "Dev"
   Owner       = "roger.rabbit"
 }
 
-db_identifier = "db-dev"
-db_username   = "admin"
-db_password   = "password"
+# Database Configuration
+db_identifier = "mno-pr-db-dev"
+db_username   = "mnoadmin"
+db_password   = "CHANGE_ME_PLS"
 
+# Network Access
 allowed_cidrs = [
-  "0.0.0.0/32"
+  "YOUR.IP.ADDR.HERE/32",
+  "YOUR.OTHER.IP.ADDR.HERE/32"
 ]
-
-cognito_custom_domain = "example.com"
-callback_urls         = ["https://example.com/login/callback"]
-logout_urls           = ["https://example.com/logout"]
-
-user_pool_name   = "user-pool-dev"
-user_pool_domain = "domain-dev"
-app_client_name  = "app-client-dev"
-
-admin_user_email       = "roger.rabbit@example.com"
-admin_user_password    = "password"
-
-cloudflare_api_token = "1234567890"
-cloudflare_zone_id   = "1234567890"

@@ -1,50 +1,50 @@
 variable "user_pool_name" {
-  description = "Name of the Cognito User Pool"
+  description = "Name for the Cognito User Pool"
   type        = string
 }
 
-variable "user_pool_domain" {
-  description = "Friendly name of the Cognito User Pool Domain"
+variable "user_pool_client_name" {
+  description = "Name for the Cognito User Pool Client"
   type        = string
 }
 
-variable "app_client_name" {
-  description = "Name of the Cognito App Client"
+variable "identity_pool_name" {
+  description = "Name for the Cognito Identity Pool"
   type        = string
 }
 
 variable "callback_urls" {
-  description = "OAuth2 callback URLs"
+  description = "List of callback URLs for OAuth"
   type        = list(string)
+  default     = ["http://localhost:3000/auth/callback"]
 }
 
 variable "logout_urls" {
-  description = "OAuth2 logout URLs"
+  description = "List of logout URLs for OAuth"
   type        = list(string)
+  default     = ["http://localhost:3000/"]
 }
 
-variable "admin_user_email" {
-  description = "Default Admin user email"
-  type        = string
+variable "create_hosted_ui_domain" {
+  description = "Whether to create a hosted UI domain"
+  type        = bool
+  default     = false
 }
 
-variable "admin_user_password" {
-  description = "Default Admin user password"
+variable "cognito_domain_name" {
+  description = "Domain name for Cognito hosted UI"
   type        = string
+  default     = ""
 }
 
-variable "cloudflare_api_token" {
-  description = "API token with Zone.DNS:Edit permissions"
+variable "s3_bucket_arn" {
+  description = "ARN of the S3 bucket for user uploads"
   type        = string
-  sensitive   = true
+  default     = ""
 }
 
-variable "cloudflare_zone_id" {
-  description = "The Cloudflare Zone ID for the domain"
-  type        = string
-}
-
-variable "cognito_custom_domain" {
-  description = "Custom domain for Cognito (e.g. auth.example.com)"
-  type        = string
+variable "tags" {
+  description = "Tags to apply to all resources"
+  type        = map(string)
+  default     = {}
 }

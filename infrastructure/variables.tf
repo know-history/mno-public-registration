@@ -8,6 +8,7 @@ variable "aws_profile" {
   default     = "kh"
 }
 
+# Database variables
 variable "db_identifier" {
   description = "Unique identifier for the RDS instance"
 }
@@ -21,64 +22,59 @@ variable "db_password" {
   sensitive   = true
 }
 
-variable "tags" {
-  type        = map(string)
-  description = "Tags to apply to all resources"
-}
-
 variable "allowed_cidrs" {
   type        = list(string)
   description = "List of CIDR blocks to allow PostgreSQL access from"
 }
 
-variable "user_pool_name" {
-  description = "Name of the Cognito User Pool"
+# S3 variables
+variable "s3_bucket_name" {
+  description = "Name of the S3 bucket for document storage"
   type        = string
+  default     = ""
 }
 
-variable "user_pool_domain" {
-  description = "Friendly name of the Cognito User Pool Domain"
+variable "allowed_origins" {
+  description = "List of allowed origins for CORS"
+  type        = list(string)
+  default     = ["http://localhost:3000"]
+}
+
+# Cognito variables
+variable "user_pool_name" {
+  description = "Name for the Cognito User Pool"
   type        = string
 }
 
 variable "app_client_name" {
-  description = "Name of the Cognito App Client"
+  description = "Name for the Cognito User Pool Client"
   type        = string
 }
 
-variable "callback_urls" {
-  description = "OAuth2 callback URLs"
-  type        = list(string)
-}
-
-variable "logout_urls" {
-  description = "OAuth2 logout URLs"
-  type        = list(string)
-}
-
 variable "admin_user_email" {
-  description = "Admin user email for initial Cognito user"
+  description = "Email for the admin user"
   type        = string
 }
 
 variable "admin_user_password" {
-  description = "Admin user temp password for initial Cognito user"
+  description = "Password for the admin user"
   type        = string
   sensitive   = true
 }
 
-variable "cloudflare_api_token" {
-  description = "API token with Zone.DNS:Edit permissions"
-  type        = string
-  sensitive   = true
-}
-
-variable "cloudflare_zone_id" {
-  description = "The Cloudflare Zone ID for the domain"
+# Hosting variables
+variable "website_bucket_name" {
+  description = "Name of the S3 bucket for hosting the website"
   type        = string
 }
 
-variable "cognito_custom_domain" {
-  description = "Custom domain for Cognito (e.g. auth.example.com)"
-  type        = string
+variable "create_deployment_user" {
+  description = "Whether to create an IAM user for deployment"
+  type        = bool
+  default     = true
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "Tags to apply to all resources"
 }
