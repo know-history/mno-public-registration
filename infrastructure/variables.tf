@@ -8,6 +8,7 @@ variable "aws_profile" {
   default     = "kh"
 }
 
+# Database variables
 variable "db_identifier" {
   description = "Unique identifier for the RDS instance"
 }
@@ -21,12 +22,59 @@ variable "db_password" {
   sensitive   = true
 }
 
-variable "tags" {
-  type        = map(string)
-  description = "Tags to apply to all resources"
-}
-
 variable "allowed_cidrs" {
   type        = list(string)
   description = "List of CIDR blocks to allow PostgreSQL access from"
+}
+
+# S3 variables
+variable "s3_bucket_name" {
+  description = "Name of the S3 bucket for document storage"
+  type        = string
+  default     = ""
+}
+
+variable "allowed_origins" {
+  description = "List of allowed origins for CORS"
+  type        = list(string)
+  default     = ["http://localhost:3000"]
+}
+
+# Cognito variables
+variable "user_pool_name" {
+  description = "Name for the Cognito User Pool"
+  type        = string
+}
+
+variable "app_client_name" {
+  description = "Name for the Cognito User Pool Client"
+  type        = string
+}
+
+variable "admin_user_email" {
+  description = "Email for the admin user"
+  type        = string
+}
+
+variable "admin_user_password" {
+  description = "Password for the admin user"
+  type        = string
+  sensitive   = true
+}
+
+# Hosting variables
+variable "website_bucket_name" {
+  description = "Name of the S3 bucket for hosting the website"
+  type        = string
+}
+
+variable "create_deployment_user" {
+  description = "Whether to create an IAM user for deployment"
+  type        = bool
+  default     = true
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "Tags to apply to all resources"
 }

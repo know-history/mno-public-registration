@@ -10,6 +10,4 @@ resource "aws_db_instance" "postgres" {
   skip_final_snapshot    = true
   publicly_accessible    = true
   vpc_security_group_ids = var.vpc_security_group_ids
-
-  tags = var.tags
 }

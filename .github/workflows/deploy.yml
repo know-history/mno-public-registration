@@ -1,0 +1,70 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Set environment variables
+      run: |
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+        else
+          echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+        fi
+
+    - name: Create environment file
+      run: |
+        cat > .env.local << EOF
+        NEXT_PUBLIC_AWS_REGION=${{ secrets.AWS_REGION }}
+        NEXT_PUBLIC_COGNITO_USER_POOL_ID=${{ secrets[format('COGNITO_USER_POOL_ID_{0}', env.ENVIRONMENT)] }}
+        NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID=${{ secrets[format('COGNITO_USER_POOL_CLIENT_ID_{0}', env.ENVIRONMENT)] }}
+        NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID=${{ secrets[format('COGNITO_IDENTITY_POOL_ID_{0}', env.ENVIRONMENT)] }}
+        NEXT_PUBLIC_S3_BUCKET_NAME=${{ secrets[format('S3_BUCKET_NAME_{0}', env.ENVIRONMENT)] }}
+        NEXT_PUBLIC_WEBSITE_URL=${{ secrets[format('WEBSITE_URL_{0}', env.ENVIRONMENT)] }}
+        EOF
+
+    - name: Build application
+      run: npm run build
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets[format('AWS_ACCESS_KEY_ID_{0}', env.ENVIRONMENT)] }}
+        aws-secret-access-key: ${{ secrets[format('AWS_SECRET_ACCESS_KEY_{0}', env.ENVIRONMENT)] }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Deploy to S3
+      run: |
+        aws s3 sync out/ s3://${{ secrets[format('S3_WEBSITE_BUCKET_{0}', env.ENVIRONMENT)] }} --delete
+
+    - name: Invalidate CloudFront
+      run: |
+        aws cloudfront create-invalidation --distribution-id ${{ secrets[format('CLOUDFRONT_DISTRIBUTION_ID_{0}', env.ENVIRONMENT)] }} --paths "/*"
+
+    - name: Deploy notification
+      if: success()
+      run: |
+        echo "🚀 Deployment successful to ${{ env.ENVIRONMENT }} environment"
+        echo "🌐 Website URL: ${{ secrets[format('WEBSITE_URL_{0}', env.ENVIRONMENT)] }}"
