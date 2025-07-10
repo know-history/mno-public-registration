@@ -41,21 +41,23 @@ resource "aws_s3_bucket_cors_configuration" "documents" {
   }
 }
 
-# Folder structure for applications: /applications/{application-id}/applicants/{applicant-id}/{file}
 resource "aws_s3_object" "applications_folder" {
-  bucket = aws_s3_bucket.documents.id
-  key    = "applications/.keep"
-  content = ""
+  bucket       = aws_s3_bucket.documents.id
+  key          = "applications/.keep"
+  content      = ""
   content_type = "text/plain"
 }
 
-# Lifecycle rule to clean up incomplete multipart uploads
 resource "aws_s3_bucket_lifecycle_configuration" "documents" {
   bucket = aws_s3_bucket.documents.id
 
   rule {
     id     = "cleanup_incomplete_multipart"
     status = "Enabled"
+
+    filter {
+      prefix = ""
+    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
@@ -65,6 +67,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "documents" {
   rule {
     id     = "archive_old_versions"
     status = "Enabled"
+
+    filter {
+      prefix = ""
+    }
 
     noncurrent_version_transition {
       noncurrent_days = 30

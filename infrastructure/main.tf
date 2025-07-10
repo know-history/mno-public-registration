@@ -7,7 +7,6 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# S3 bucket for document storage
 module "s3" {
   source          = "./modules/s3"
   bucket_name     = var.s3_bucket_name != "" ? var.s3_bucket_name : "${var.db_identifier}-documents"
@@ -15,7 +14,6 @@ module "s3" {
   tags            = var.tags
 }
 
-# Security group for RDS
 module "rds_sg" {
   source        = "./modules/security_group"
   vpc_id        = data.aws_vpc.default.id
@@ -23,7 +21,6 @@ module "rds_sg" {
   tags          = var.tags
 }
 
-# RDS PostgreSQL database
 module "rds" {
   source                 = "./modules/rds"
   db_identifier          = var.db_identifier
@@ -33,19 +30,17 @@ module "rds" {
   tags                   = var.tags
 }
 
-# Cognito for authentication
 module "cognito" {
   source                = "./modules/cognito"
-  user_pool_name       = var.user_pool_name
+  user_pool_name        = var.user_pool_name
   user_pool_client_name = var.app_client_name
-  identity_pool_name   = "${var.user_pool_name}-identity"
-  admin_user_email     = var.admin_user_email
-  admin_user_password  = var.admin_user_password
-  s3_bucket_arn        = module.s3.bucket_arn
-  tags                 = var.tags
+  identity_pool_name    = "${var.user_pool_name}-identity"
+  admin_user_email      = var.admin_user_email
+  admin_user_password   = var.admin_user_password
+  s3_bucket_arn         = module.s3.bucket_arn
+  tags                  = var.tags
 }
 
-# Website hosting
 module "hosting" {
   source                 = "./modules/hosting"
   website_bucket_name    = var.website_bucket_name

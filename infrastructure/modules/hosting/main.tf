@@ -1,4 +1,3 @@
-# S3 bucket for hosting static website
 resource "aws_s3_bucket" "website" {
   bucket = var.website_bucket_name
   tags   = var.tags
@@ -21,11 +20,10 @@ resource "aws_s3_bucket_website_configuration" "website" {
   }
 
   error_document {
-    key = "index.html"  # For SPA routing
+    key = "index.html"
   }
 }
 
-# Origin Access Control for CloudFront
 resource "aws_cloudfront_origin_access_control" "website" {
   name                              = "${var.website_bucket_name}-oac"
   description                       = "OAC for ${var.website_bucket_name}"
@@ -34,7 +32,6 @@ resource "aws_cloudfront_origin_access_control" "website" {
   signing_protocol                  = "sigv4"
 }
 
-# CloudFront distribution
 resource "aws_cloudfront_distribution" "website" {
   origin {
     domain_name              = aws_s3_bucket.website.bucket_regional_domain_name
@@ -45,9 +42,8 @@ resource "aws_cloudfront_distribution" "website" {
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
-  price_class         = "PriceClass_100"  # Use only North America and Europe
+  price_class         = "PriceClass_100"
 
-  # Cache behavior for the default path
   default_cache_behavior {
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
@@ -63,11 +59,10 @@ resource "aws_cloudfront_distribution" "website" {
     }
 
     min_ttl     = 0
-    default_ttl = 3600   # 1 hour
-    max_ttl     = 86400  # 24 hours
+    default_ttl = 3600
+    max_ttl     = 86400
   }
 
-  # Cache behavior for API routes (if you add them later)
   ordered_cache_behavior {
     path_pattern           = "/api/*"
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
@@ -89,7 +84,6 @@ resource "aws_cloudfront_distribution" "website" {
     max_ttl     = 0
   }
 
-  # SPA routing - send everything to index.html
   custom_error_response {
     error_code            = 403
     response_code         = 200
@@ -121,7 +115,6 @@ resource "aws_cloudfront_distribution" "website" {
   tags = var.tags
 }
 
-# S3 bucket policy to allow CloudFront access
 resource "aws_s3_bucket_policy" "website" {
   bucket = aws_s3_bucket.website.id
 
@@ -146,7 +139,6 @@ resource "aws_s3_bucket_policy" "website" {
   })
 }
 
-# IAM role for GitHub Actions deployment (optional)
 resource "aws_iam_user" "deployment" {
   count = var.create_deployment_user ? 1 : 0
   name  = "${var.website_bucket_name}-deploy"

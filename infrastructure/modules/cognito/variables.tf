@@ -13,28 +13,17 @@ variable "identity_pool_name" {
   type        = string
 }
 
-variable "callback_urls" {
-  description = "List of callback URLs for OAuth"
-  type        = list(string)
-  default     = ["http://localhost:3000/auth/callback"]
-}
-
-variable "logout_urls" {
-  description = "List of logout URLs for OAuth"
-  type        = list(string)
-  default     = ["http://localhost:3000/"]
-}
-
-variable "create_hosted_ui_domain" {
-  description = "Whether to create a hosted UI domain"
-  type        = bool
-  default     = false
-}
-
-variable "cognito_domain_name" {
-  description = "Domain name for Cognito hosted UI"
+variable "admin_user_email" {
+  description = "Email for the admin user"
   type        = string
   default     = ""
+}
+
+variable "admin_user_password" {
+  description = "Password for the admin user"
+  type        = string
+  default     = ""
+  sensitive   = true
 }
 
 variable "s3_bucket_arn" {
