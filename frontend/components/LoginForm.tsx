@@ -44,8 +44,9 @@ export default function LoginForm() {
     setError('');
     try {
       await signIn(data.email, data.password);
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -58,8 +59,9 @@ export default function LoginForm() {
       await signUp(data.email, data.password, data.given_name, data.family_name);
       setConfirmationEmail(data.email);
       setNeedsConfirmation(true);
-    } catch (err: any) {
-      setError(err.message || 'Signup failed');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Signup failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -73,8 +75,9 @@ export default function LoginForm() {
       await confirmSignUp(confirmationEmail, confirmationCode);
       setNeedsConfirmation(false);
       setIsSignup(false);
-    } catch (err: any) {
-      setError(err.message || 'Confirmation failed');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Confirmation failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
