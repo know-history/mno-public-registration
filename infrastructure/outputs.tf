@@ -1,3 +1,18 @@
+output "db_endpoint" {
+  description = "The database endpoint to connect to"
+  value       = module.rds.db_endpoint
+}
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket for document storage"
+  value       = module.s3.bucket_name
+}
+
+output "s3_bucket_arn" {
+  description = "ARN of the S3 bucket"
+  value       = module.s3.bucket_arn
+}
+
 output "cognito_user_pool_id" {
   description = "ID of the Cognito User Pool"
   value       = module.cognito.user_pool_id
