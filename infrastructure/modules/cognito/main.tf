@@ -1,7 +1,6 @@
 resource "aws_cognito_user_pool" "main" {
   name = var.user_pool_name
 
-  # Password policy
   password_policy {
     minimum_length    = 8
     require_lowercase = true
@@ -10,13 +9,9 @@ resource "aws_cognito_user_pool" "main" {
     require_uppercase = true
   }
 
-  # Username configuration
-  username_attributes = ["email"]
-  
-  # Auto-verified attributes
+  username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 
-  # Account recovery settings
   account_recovery_setting {
     recovery_mechanism {
       name     = "verified_email"
@@ -24,7 +19,6 @@ resource "aws_cognito_user_pool" "main" {
     }
   }
 
-  # Schema for additional user attributes
   schema {
     attribute_data_type = "String"
     name               = "email"
@@ -58,12 +52,10 @@ resource "aws_cognito_user_pool" "main" {
     }
   }
 
-  # Email configuration
   email_configuration {
     email_sending_account = "COGNITO_DEFAULT"
   }
 
-  # Verification message templates
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
     email_subject_by_link = "Your MNO Registration Account Verification"
@@ -73,18 +65,15 @@ resource "aws_cognito_user_pool" "main" {
   tags = var.tags
 }
 
-# User Pool Client
 resource "aws_cognito_user_pool_client" "main" {
   name         = var.user_pool_client_name
   user_pool_id = aws_cognito_user_pool.main.id
 
-  # Client settings
   generate_secret = false
   
-  # Token validity
-  access_token_validity  = 60    # 1 hour
-  id_token_validity      = 60    # 1 hour
-  refresh_token_validity = 30    # 30 days
+  access_token_validity  = 60
+  id_token_validity      = 60
+  refresh_token_validity = 30
   
   token_validity_units {
     access_token  = "minutes"
@@ -92,14 +81,11 @@ resource "aws_cognito_user_pool_client" "main" {
     refresh_token = "days"
   }
 
-  # OAuth settings - only for API access, not hosted UI
   allowed_oauth_flows_user_pool_client = false
   
-  # Callback URLs (not used since no hosted UI, but required by AWS)
   callback_urls = ["http://localhost:3000"]
   logout_urls   = ["http://localhost:3000"]
 
-  # Explicit auth flows - for direct API access
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH",
@@ -107,10 +93,8 @@ resource "aws_cognito_user_pool_client" "main" {
     "ALLOW_ADMIN_USER_PASSWORD_AUTH"
   ]
 
-  # Prevent user existence errors
   prevent_user_existence_errors = "ENABLED"
 
-  # Read and write attributes
   read_attributes = [
     "email",
     "email_verified",
@@ -127,7 +111,6 @@ resource "aws_cognito_user_pool_client" "main" {
   ]
 }
 
-# Identity Pool for AWS resource access
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = var.identity_pool_name
   allow_unauthenticated_identities = false
@@ -141,9 +124,8 @@ resource "aws_cognito_identity_pool" "main" {
   tags = var.tags
 }
 
-# IAM roles for authenticated and unauthenticated users
-resource "aws_iam_role" "authenticated" {
-  name = "${var.user_pool_name}-authenticated-role"
+resource "aws_iam_role" "applicant_role" {
+  name = "${var.user_pool_name}-applicant-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -169,9 +151,117 @@ resource "aws_iam_role" "authenticated" {
   tags = var.tags
 }
 
-resource "aws_iam_role_policy" "authenticated" {
-  name = "${var.user_pool_name}-authenticated-policy"
-  role = aws_iam_role.authenticated.id
+resource "aws_iam_role" "researcher_role" {
+  name = "${var.user_pool_name}-researcher-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = "cognito-identity.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "cognito-identity.amazonaws.com:aud" = aws_cognito_identity_pool.main.id
+          }
+          "ForAnyValue:StringLike" = {
+            "cognito-identity.amazonaws.com:amr" = "authenticated"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role" "harvesting_admin_role" {
+  name = "${var.user_pool_name}-harvesting-admin-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = "cognito-identity.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "cognito-identity.amazonaws.com:aud" = aws_cognito_identity_pool.main.id
+          }
+          "ForAnyValue:StringLike" = {
+            "cognito-identity.amazonaws.com:amr" = "authenticated"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role" "harvesting_captain_role" {
+  name = "${var.user_pool_name}-harvesting-captain-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = "cognito-identity.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "cognito-identity.amazonaws.com:aud" = aws_cognito_identity_pool.main.id
+          }
+          "ForAnyValue:StringLike" = {
+            "cognito-identity.amazonaws.com:amr" = "authenticated"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role" "admin_role" {
+  name = "${var.user_pool_name}-admin-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = "cognito-identity.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "cognito-identity.amazonaws.com:aud" = aws_cognito_identity_pool.main.id
+          }
+          "ForAnyValue:StringLike" = {
+            "cognito-identity.amazonaws.com:amr" = "authenticated"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy" "applicant_s3_policy" {
+  name = "${var.user_pool_name}-applicant-s3-policy"
+  role = aws_iam_role.applicant_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -179,11 +269,12 @@ resource "aws_iam_role_policy" "authenticated" {
       {
         Effect = "Allow"
         Action = [
-          "s3:GetObject",
           "s3:PutObject",
+          "s3:PutObjectAcl",
+          "s3:GetObject",
           "s3:DeleteObject"
         ]
-        Resource = "${var.s3_bucket_arn}/applications/*/applicants/${cognito-identity.amazonaws.com:sub}/*"
+        Resource = "${var.s3_bucket_arn}/applications/*/applicants/$${cognito-identity.amazonaws.com:sub}/*"
       },
       {
         Effect = "Allow"
@@ -193,7 +284,7 @@ resource "aws_iam_role_policy" "authenticated" {
         Resource = var.s3_bucket_arn
         Condition = {
           StringLike = {
-            "s3:prefix" = "applications/*/applicants/${cognito-identity.amazonaws.com:sub}/*"
+            "s3:prefix" = "applications/*/applicants/$${cognito-identity.amazonaws.com:sub}/*"
           }
         }
       }
@@ -201,7 +292,117 @@ resource "aws_iam_role_policy" "authenticated" {
   })
 }
 
-# Attach roles to identity pool with role mapping
+resource "aws_iam_role_policy" "researcher_s3_policy" {
+  name = "${var.user_pool_name}-researcher-s3-policy"
+  role = aws_iam_role.researcher_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${var.s3_bucket_arn}/applications/*/applicants/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = var.s3_bucket_arn
+        Condition = {
+          StringLike = {
+            "s3:prefix" = "applications/*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "harvesting_admin_s3_policy" {
+  name = "${var.user_pool_name}-harvesting-admin-s3-policy"
+  role = aws_iam_role.harvesting_admin_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${var.s3_bucket_arn}/applications/harvesting-*/applicants/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = var.s3_bucket_arn
+        Condition = {
+          StringLike = {
+            "s3:prefix" = "applications/harvesting-*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "harvesting_captain_s3_policy" {
+  name = "${var.user_pool_name}-harvesting-captain-s3-policy"
+  role = aws_iam_role.harvesting_captain_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${var.s3_bucket_arn}/applications/harvesting-*/applicants/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = var.s3_bucket_arn
+        Condition = {
+          StringLike = {
+            "s3:prefix" = "applications/harvesting-*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "admin_s3_policy" {
+  name = "${var.user_pool_name}-admin-s3-policy"
+  role = aws_iam_role.admin_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:*"
+        ]
+        Resource = [
+          var.s3_bucket_arn,
+          "${var.s3_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = aws_cognito_identity_pool.main.id
 
@@ -210,7 +411,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
   }
 
   role_mapping {
-    identity_provider         = aws_cognito_user_pool.main.endpoint
+    identity_provider         = "${aws_cognito_user_pool.main.endpoint}:${aws_cognito_user_pool_client.main.id}"
     ambiguous_role_resolution = "AuthenticatedRole"
     type                     = "Rules"
 
@@ -251,37 +452,19 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
   }
 }
 
-# Create admin user
 resource "aws_cognito_user" "admin" {
   count        = var.admin_user_email != "" ? 1 : 0
   user_pool_id = aws_cognito_user_pool.main.id
   username     = var.admin_user_email
 
   attributes = {
-    email          = var.admin_user_email
-    email_verified = true
-    given_name     = "Admin"
-    family_name    = "User"
+    email              = var.admin_user_email
+    email_verified     = "true"
+    given_name         = "Admin"
+    family_name        = "User"
     "custom:user_role" = "admin"
   }
 
-  temporary_password = var.admin_user_password
-  message_action     = "SUPPRESS"  # Don't send welcome email
-}
-
-# Set permanent password for admin user
-resource "aws_cognito_user" "admin_permanent_password" {
-  count        = var.admin_user_email != "" ? 1 : 0
-  user_pool_id = aws_cognito_user_pool.main.id
-  username     = var.admin_user_email
-  password     = var.admin_user_password
-
-  depends_on = [aws_cognito_user.admin]
-
-  lifecycle {
-    ignore_changes = [
-      temporary_password,
-      message_action
-    ]
-  }
+  password       = var.admin_user_password
+  message_action = "SUPPRESS"
 }
