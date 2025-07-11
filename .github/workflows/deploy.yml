@@ -17,24 +17,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
       with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
+        bun-version: latest
 
     - name: Set environment variables
       run: |
         if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-          echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          echo "ENVIRONMENT=PROD" >> $GITHUB_ENV
         else
-          echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+          echo "ENVIRONMENT=DEV" >> $GITHUB_ENV
         fi
 
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: bun install
+
     - name: Create environment file
+      working-directory: ./frontend
       run: |
         cat > .env.local << EOF
         NEXT_PUBLIC_AWS_REGION=${{ secrets.AWS_REGION }}
@@ -46,7 +47,8 @@ jobs:
         EOF
 
     - name: Build application
-      run: npm run build
+      working-directory: ./frontend
+      run: bun run build
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -56,6 +58,7 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Deploy to S3
+      working-directory: ./frontend
       run: |
         aws s3 sync out/ s3://${{ secrets[format('S3_WEBSITE_BUCKET_{0}', env.ENVIRONMENT)] }} --delete
 
