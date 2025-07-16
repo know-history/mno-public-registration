@@ -27,6 +27,7 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
   const [isSignup, setIsSignup] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState('');
   const [confirmationCode, setConfirmationCode] = useState('');
@@ -127,129 +128,79 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-extrabold text-gray-900 text-center">
-          MNO Registration
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          {isSignup ? 'Create your account' : 'Sign in to your account'}
-        </p>
-      </div>
-
-      {isSignup ? (
-        <form className="space-y-6" onSubmit={signupForm.handleSubmit(handleSignup)}>
-          <div className="space-y-4">
-            <div>
-              <input
-                {...signupForm.register('given_name')}
-                type="text"
-                placeholder="First name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {signupForm.formState.errors.given_name && (
-                <p className="text-red-600 text-sm mt-1">{signupForm.formState.errors.given_name.message}</p>
-              )}
-            </div>
-            <div>
-              <input
-                {...signupForm.register('family_name')}
-                type="text"
-                placeholder="Last name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {signupForm.formState.errors.family_name && (
-                <p className="text-red-600 text-sm mt-1">{signupForm.formState.errors.family_name.message}</p>
-              )}
-            </div>
-            <div>
-              <input
-                {...signupForm.register('email')}
-                type="email"
-                placeholder="Email address"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {signupForm.formState.errors.email && (
-                <p className="text-red-600 text-sm mt-1">{signupForm.formState.errors.email.message}</p>
-              )}
-            </div>
-            <div>
-              <input
-                {...signupForm.register('password')}
-                type="password"
-                placeholder="Password"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {signupForm.formState.errors.password && (
-                <p className="text-red-600 text-sm mt-1">{signupForm.formState.errors.password.message}</p>
-              )}
-            </div>
-          </div>
-
-          {error && (
-            <div className="text-red-600 text-sm">{error}</div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+    <div>
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 p-4 flex flex-wrap justify-center items-center w-full h-full z-[1000] overflow-auto bg-black/50 bg-opacity-30"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-white shadow-lg rounded-lg p-8 relative"
+            onClick={(e) => e.stopPropagation()}
           >
-            {loading ? 'Creating account...' : 'Create account'}
-          </button>
-        </form>
-      ) : (
-        <form className="space-y-6" onSubmit={loginForm.handleSubmit(handleLogin)}>
-          <div className="space-y-4">
-            <div>
-              <input
-                {...loginForm.register('email')}
-                type="email"
-                placeholder="Email address"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {loginForm.formState.errors.email && (
-                <p className="text-red-600 text-sm mt-1">{loginForm.formState.errors.email.message}</p>
-              )}
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              onClick={() => {
+                setIsModalOpen(false);
+                onSuccess?.();
+              }}
+            >
+              ✕
+            </button>
+
+            <div className="my-8 text-center">
+              <h4 className="text-3xl text-slate-900 font-bold"> MNO Registration </h4>
+              <p className="text-sm text-slate-500 mt-4">Login to your account to continue the process</p>
             </div>
-            <div>
-              <input
-                {...loginForm.register('password')}
-                type="password"
-                placeholder="Password"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {loginForm.formState.errors.password && (
-                <p className="text-red-600 text-sm mt-1">{loginForm.formState.errors.password.message}</p>
-              )}
-            </div>
+
+            <form className="space-y-4">
+              <div className="relative flex items-center">
+                <input
+                  {...loginForm.register('email')}
+                  type="email"
+                  placeholder="Enter Email"
+                  className="px-4 py-3 bg-white text-slate-900 w-full text-sm border border-gray-300 focus:border-blue-600 outline-none rounded-lg"
+                />
+              </div>
+
+              <div className="relative flex items-center">
+                <input
+                  type="password"
+                  placeholder="Enter Password"
+                  {...loginForm.register('password')}
+                  className="px-4 py-3 bg-white text-slate-900 w-full text-sm border border-gray-300 focus:border-blue-600 outline-none rounded-lg"
+                />
+              </div>
+
+              <button
+                type="button"
+                className="px-5 py-2.5 !mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg tracking-wide"
+                onClick={loginForm.handleSubmit(handleLogin)}
+              >
+                Sign in
+              </button>
+            </form>
+
+            <a
+              href="#"
+              className="text-sm font-medium text-blue-600 text-center mt-4 block hover:underline"
+            >
+              Forgot Your Password?
+            </a>
+
+            <hr className="my-8 border-gray-300" />
+
+            <p className="text-sm text-center text-slate-500">
+              Don't Have an Account?
+              <a href="#" className="text-sm font-medium text-blue-600 hover:underline ml-1">
+                Sign Up
+              </a>
+            </p>
           </div>
-
-          {error && (
-            <div className="text-red-600 text-sm">{error}</div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
+        </div>
       )}
 
-      <div className="text-center">
-        <button
-          onClick={() => setIsSignup(!isSignup)}
-          className="text-blue-600 hover:text-blue-500"
-        >
-          {isSignup 
-            ? 'Already have an account? Sign in' 
-            : "Don't have an account? Sign up"
-          }
-        </button>
-      </div>
+
     </div>
   );
 }
