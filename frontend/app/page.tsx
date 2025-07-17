@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/hooks/useAuth';
-import LoginForm from '@/components/LoginForm';
-import Dashboard from '@/components/Dashboard';
+import { useAuth } from "@/hooks/useAuth";
+import Dashboard from "@/components/Dashboard";
+import Landing from "@/components/Landing";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -16,8 +16,6 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen">
-      {user ? <Dashboard /> : <LoginForm />}
-    </main>
+    <main className="min-h-screen">{user ? <Dashboard /> : <Landing />}</main>
   );
 }

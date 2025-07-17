@@ -10,6 +10,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, given_name?: string, family_name?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   confirmSignUp: (email: string, code: string) => Promise<void>;
 }
 
@@ -68,6 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      await authService.resetPassword({ email });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -75,7 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
-      confirmSignUp
+      confirmSignUp,
+      resetPassword,
     }}>
       {children}
     </AuthContext.Provider>
