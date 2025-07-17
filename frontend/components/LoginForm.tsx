@@ -18,8 +18,13 @@ const signupSchema = z.object({
   family_name: z.string().min(1, 'Last name is required'),
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
 type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -27,14 +32,14 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
   const [isSignup, setIsSignup] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(true);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState('');
   const [confirmationCode, setConfirmationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
-  const { signIn, signUp, confirmSignUp } = useAuth();
+  const { signIn, signUp, confirmSignUp, resetPassword } = useAuth();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -42,6 +47,10 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+  });
+
+  const resetPasswordForm = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema)
   });
 
   const handleLogin = async (data: LoginFormData) => {
@@ -57,6 +66,20 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       setLoading(false);
     }
   };
+
+  const handleForgotPassword = async (data: ResetPasswordFormData) => {
+    setLoading(true);
+    setError('');
+    try {
+      await resetPassword(data.email);
+      onSuccess?.();
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Reset Password failed';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleSignup = async (data: SignupFormData) => {
     setLoading(true);
@@ -128,79 +151,108 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
   }
 
   return (
-    <div>
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 p-4 flex flex-wrap justify-center items-center w-full h-full z-[1000] overflow-auto bg-black/50 bg-opacity-30"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-lg bg-white shadow-lg rounded-lg p-8 relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              onClick={() => {
-                setIsModalOpen(false);
-                onSuccess?.();
-              }}
-            >
-              ✕
-            </button>
+    <div
+      className="w-full max-w-lg bg-white shadow-lg rounded-lg p-8 relative"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        onClick={() => {
+          setIsForgotPassword(false);
+          onSuccess?.();
+        }}
+      >
+        ✕
+      </button>
 
-            <div className="my-8 text-center">
-              <h4 className="text-3xl text-slate-900 font-bold"> MNO Registration </h4>
-              <p className="text-sm text-slate-500 mt-4">Login to your account to continue the process</p>
-            </div>
-
-            <form className="space-y-4">
-              <div className="relative flex items-center">
-                <input
-                  {...loginForm.register('email')}
-                  type="email"
-                  placeholder="Enter Email"
-                  className="px-4 py-3 bg-white text-slate-900 w-full text-sm border border-gray-300 focus:border-blue-600 outline-none rounded-lg"
-                />
-              </div>
-
-              <div className="relative flex items-center">
-                <input
-                  type="password"
-                  placeholder="Enter Password"
-                  {...loginForm.register('password')}
-                  className="px-4 py-3 bg-white text-slate-900 w-full text-sm border border-gray-300 focus:border-blue-600 outline-none rounded-lg"
-                />
-              </div>
-
-              <button
-                type="button"
-                className="px-5 py-2.5 !mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg tracking-wide"
-                onClick={loginForm.handleSubmit(handleLogin)}
-              >
-                Sign in
-              </button>
-            </form>
-
-            <a
-              href="#"
-              className="text-sm font-medium text-blue-600 text-center mt-4 block hover:underline"
-            >
-              Forgot Your Password?
-            </a>
-
-            <hr className="my-8 border-gray-300" />
-
-            <p className="text-sm text-center text-slate-500">
-              Don't Have an Account?
-              <a href="#" className="text-sm font-medium text-blue-600 hover:underline ml-1">
-                Sign Up
-              </a>
+      {isForgotPassword ? (
+        // 🔐 Forgot Password Form
+        <>
+          <div className="my-8 text-center">
+            <h4 className="text-3xl text-slate-900 font-bold">Reset Password</h4>
+            <p className="text-sm text-slate-500 mt-4">
+              Fields marked with an * are required<br />
+              <strong>Please enter your email address.</strong> <br />
+              You will receive an email with instructions on how to reset your password.
             </p>
           </div>
-        </div>
+
+          <form className="space-y-4">
+            <div className="relative flex items-center">
+              <input
+                {...resetPasswordForm.register('email')}
+                type="email"
+                placeholder="Email address *"
+                className="px-4 py-3 bg-white text-slate-900 w-full text-sm border border-gray-300 focus:border-blue-600 outline-none rounded-lg"
+              />
+            </div>
+
+            <button
+              type="button"
+              className="px-5 py-2.5 !mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg tracking-wide"
+              onClick={resetPasswordForm.handleSubmit(handleForgotPassword)}
+            >
+              Reset Password
+            </button>
+          </form>
+        </>
+      ) : (
+        // 🔐 Login Form (existing)
+        <>
+          <div className="my-8 text-center">
+            <h4 className="text-3xl text-slate-900 font-bold">MNO Registration</h4>
+            <p className="text-sm text-slate-500 mt-4">Login to your account to continue the process</p>
+          </div>
+
+          <form className="space-y-4">
+            <div className="relative flex items-center">
+              <input
+                {...loginForm.register('email')}
+                type="email"
+                placeholder="Enter Email"
+                className="px-4 py-3 bg-white text-slate-900 w-full text-sm border border-gray-300 focus:border-blue-600 outline-none rounded-lg"
+              />
+            </div>
+
+            <div className="relative flex items-center">
+              <input
+                type="password"
+                placeholder="Enter Password"
+                {...loginForm.register('password')}
+                className="px-4 py-3 bg-white text-slate-900 w-full text-sm border border-gray-300 focus:border-blue-600 outline-none rounded-lg"
+              />
+            </div>
+
+            <button
+              type="button"
+              className="px-5 py-2.5 !mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg tracking-wide"
+              onClick={loginForm.handleSubmit(handleLogin)}
+            >
+              Sign in
+            </button>
+          </form>
+
+          <a
+            href="#"
+            className="text-sm font-medium text-blue-600 text-center mt-4 block hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsForgotPassword(true);
+            }}
+          >
+            Forgot Your Password?
+          </a>
+
+          <hr className="my-8 border-gray-300" />
+
+          <p className="text-sm text-center text-slate-500">
+            Don't Have an Account?
+            <a href="#" className="text-sm font-medium text-blue-600 hover:underline ml-1">
+              Sign Up
+            </a>
+          </p>
+        </>
       )}
-
-
     </div>
   );
 }

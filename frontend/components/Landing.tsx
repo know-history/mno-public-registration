@@ -595,7 +595,16 @@ const LoginModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <LoginForm onSuccess={onClose} />
+    <div
+      className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside modal content
+      >
+        <LoginForm onSuccess={onClose} />
+      </div>
+    </div>
   );
 };
 
