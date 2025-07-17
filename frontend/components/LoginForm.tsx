@@ -171,9 +171,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           <div className="my-8 text-center">
             <h4 className="text-3xl text-slate-900 font-bold">Reset Password</h4>
             <p className="text-sm text-slate-500 mt-4">
-              Fields marked with an * are required<br />
               <strong>Please enter your email address.</strong> <br />
-              You will receive an email with instructions on how to reset your password.
+              We will send you instructions on how to reset your password.
             </p>
           </div>
 
