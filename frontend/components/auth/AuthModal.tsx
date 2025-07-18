@@ -95,7 +95,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             email={confirmationEmail}
             onSuccess={handleSuccess}
             onResendCode={() => {
-              // Handle resend logic here
               console.log('Resending confirmation code to:', confirmationEmail);
             }}
           />
