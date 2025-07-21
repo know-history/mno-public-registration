@@ -40,22 +40,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    checkUser();
+    if (typeof window !== "undefined") {
+      checkUser();
+    } else {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
   }, []);
 
   const checkUser = async () => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      
+
       const currentUser = await auth.getCurrentUser();
 
       if (currentUser) {
         const user: User = {
-          id: currentUser.username || '',
+          id: currentUser.username || "",
           email: currentUser.attributes.email || "",
           given_name: currentUser.attributes.given_name,
           family_name: currentUser.attributes.family_name,
-          user_role: (currentUser.attributes['custom:user_role'] as UserRole) || "applicant",
+          user_role:
+            (currentUser.attributes["custom:user_role"] as UserRole) ||
+            "applicant",
           email_verified: currentUser.attributes.email_verified === "true",
         };
         setState((prev) => ({ ...prev, user, loading: false }));
@@ -68,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...prev,
         user: null,
         loading: false,
-        error: "Failed to load user session",
+        error: null,
       }));
     }
   };
@@ -77,9 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       await auth.signIn({ email, password });
-      await checkUser(); // Refresh user data
+      await checkUser();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Sign in failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Sign in failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
@@ -93,11 +100,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<{ needsConfirmation: boolean }> => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      const result = await auth.signUp({ email, password, given_name, family_name });
+      const result = await auth.signUp({
+        email,
+        password,
+        given_name,
+        family_name,
+      });
       setState((prev) => ({ ...prev, loading: false }));
       return { needsConfirmation: result.needsConfirmation };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Sign up failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Sign up failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
@@ -120,7 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await auth.forgotPassword({ email });
       setState((prev) => ({ ...prev, loading: false }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Reset password failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Reset password failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
@@ -132,7 +146,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await auth.confirmSignUp(email, code);
       setState((prev) => ({ ...prev, loading: false }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Confirmation failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Confirmation failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
@@ -148,7 +163,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await auth.confirmForgotPassword(email, code, newPassword);
       setState((prev) => ({ ...prev, loading: false }));
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Reset confirmation failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Reset confirmation failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
@@ -159,7 +175,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = async () => {
-    await checkUser();
+    if (typeof window !== "undefined") {
+      await checkUser();
+    }
   };
 
   return (
