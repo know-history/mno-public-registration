@@ -58,7 +58,6 @@ export const validateEnvironment = () => {
   const requiredEnvVars = [
     'NEXT_PUBLIC_COGNITO_USER_POOL_ID',
     'NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID',
-    'NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID',
     'NEXT_PUBLIC_AWS_REGION',
     'NEXT_PUBLIC_S3_BUCKET_NAME',
   ];

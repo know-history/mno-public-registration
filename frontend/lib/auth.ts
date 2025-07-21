@@ -2,22 +2,35 @@ import { CognitoAuthService } from './aws-cognito';
 
 const requiredEnvVars = [
   'NEXT_PUBLIC_AWS_REGION',
-  'NEXT_PUBLIC_COGNITO_USER_POOL_ID',
+  'NEXT_PUBLIC_COGNITO_USER_POOL_ID', 
   'NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID'
 ];
+
+const getEnvVar = (key: string): string | undefined => {
+  switch (key) {
+    case 'NEXT_PUBLIC_AWS_REGION':
+      return process.env.NEXT_PUBLIC_AWS_REGION;
+    case 'NEXT_PUBLIC_COGNITO_USER_POOL_ID':
+      return process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
+    case 'NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID':
+      return process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID;
+    default:
+      return undefined;
+  }
+};
 
 const validateConfig = () => {
   if (typeof window === 'undefined') {
     return;
   }
   
-  const missing = requiredEnvVars.filter(key => !process.env[key]);
+  const missing = requiredEnvVars.filter(key => {
+    const value = getEnvVar(key);
+    return !value || value.trim() === '';
+  });
+  
   if (missing.length > 0) {
-    console.error('Environment variables status:', {
-      NEXT_PUBLIC_AWS_REGION: process.env.NEXT_PUBLIC_AWS_REGION || 'MISSING',
-      NEXT_PUBLIC_COGNITO_USER_POOL_ID: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || 'MISSING',
-      NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID || 'MISSING',
-    });
+    console.error('Missing variables detected:', missing);
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 };
@@ -33,9 +46,9 @@ const getAuthService = () => {
     validateConfig();
     
     authService = new CognitoAuthService({
-      region: process.env.NEXT_PUBLIC_AWS_REGION!,
-      userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!,
-      clientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID!,
+      region: getEnvVar('NEXT_PUBLIC_AWS_REGION')!,
+      userPoolId: getEnvVar('NEXT_PUBLIC_COGNITO_USER_POOL_ID')!,
+      clientId: getEnvVar('NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID')!,
     });
   }
   return authService;

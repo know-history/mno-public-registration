@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
@@ -29,6 +29,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const [mode, setMode] = useState<AuthMode>(defaultMode);
   const [confirmationEmail, setConfirmationEmail] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode(defaultMode);
+    }
+  }, [defaultMode, isOpen]);
 
   const handleSuccess = () => {
     onSuccess?.();
@@ -100,7 +106,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             email={confirmationEmail}
             onSuccess={handleSuccess}
             onResendCode={() => {
-              // Handle resend logic here
               console.log("Resending confirmation code to:", confirmationEmail);
             }}
           />
