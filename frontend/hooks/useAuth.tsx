@@ -81,8 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSignIn = async (email: string, password: string) => {
     try {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
+      setState((prev) => ({ ...prev, loading: true }));
       await auth.signIn({ email, password });
+      setState((prev) => ({ ...prev, error: null }));
       await checkUser();
     } catch (error) {
       const errorMessage =

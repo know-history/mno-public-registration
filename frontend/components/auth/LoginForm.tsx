@@ -31,8 +31,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    event?.preventDefault();
-    clearError();
     try {
       await signIn(data.email, data.password);
       onSuccess?.();
@@ -50,7 +48,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Input
           {...register("email")}
           type="email"
@@ -123,12 +121,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         )}
 
         <Button
-          type="button"
+          type="submit"
           variant="primary"
           size="lg"
           loading={loading || isSubmitting}
           className="w-full"
-          onClick={handleSubmit(onSubmit)}
         >
           Sign In
         </Button>

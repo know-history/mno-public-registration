@@ -20,6 +20,7 @@ export const LandingPage: React.FC = () => {
   const handleRegisterClick = () => {
     setAuthMode("register");
     setShowAuthModal(true);
+    setKeepModalOpen(true);
   };
 
   const handleCloseAuth = () => {
