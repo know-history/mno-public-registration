@@ -7,7 +7,7 @@ import {
   useContext,
   ReactNode,
 } from "react";
-import { authService } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { User, AuthState, UserRole } from "@/types/auth";
 
 interface AuthContextType extends AuthState {
@@ -46,131 +46,109 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkUser = async () => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      const currentUser = await authService.getCurrentUser();
+      
+      const currentUser = await auth.getCurrentUser();
 
       if (currentUser) {
-        const userAttributes = await authService.getUserAttributes();
         const user: User = {
-          id: currentUser.userId,
-          email: userAttributes.email || "",
-          given_name: userAttributes.given_name,
-          family_name: userAttributes.family_name,
-          user_role:
-            (userAttributes["custom:user_role"] as UserRole) || "applicant",
-          email_verified: userAttributes.email_verified === "true",
+          id: currentUser.username || '',
+          email: currentUser.attributes.email || "",
+          given_name: currentUser.attributes.given_name,
+          family_name: currentUser.attributes.family_name,
+          user_role: (currentUser.attributes['custom:user_role'] as UserRole) || "applicant",
+          email_verified: currentUser.attributes.email_verified === "true",
         };
         setState((prev) => ({ ...prev, user, loading: false }));
       } else {
         setState((prev) => ({ ...prev, user: null, loading: false }));
       }
     } catch (error) {
-      // Don't log auth config errors in development
-      if (
-        error instanceof Error &&
-        error.message.includes("Authentication not configured")
-      ) {
-        setState((prev) => ({ ...prev, user: null, loading: false }));
-      } else {
-        console.error("Error checking user:", error);
-        setState((prev) => ({
-          ...prev,
-          user: null,
-          loading: false,
-          error: "Failed to load user session",
-        }));
-      }
+      console.error("Error checking user:", error);
+      setState((prev) => ({
+        ...prev,
+        user: null,
+        loading: false,
+        error: "Failed to load user session",
+      }));
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const handleSignIn = async (email: string, password: string) => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      await authService.signIn({ email, password });
+      await auth.signIn({ email, password });
+      await checkUser(); // Refresh user data
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Sign in failed";
+      const errorMessage = error instanceof Error ? error.message : "Sign in failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
   };
 
-  const signUp = async (
+  const handleSignUp = async (
     email: string,
     password: string,
     given_name?: string,
     family_name?: string
-  ) => {
+  ): Promise<{ needsConfirmation: boolean }> => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      const result = await authService.signUp({
-        email,
-        password,
-        given_name,
-        family_name,
-      });
+      const result = await auth.signUp({ email, password, given_name, family_name });
       setState((prev) => ({ ...prev, loading: false }));
-      return { needsConfirmation: !result.isSignUpComplete };
+      return { needsConfirmation: result.needsConfirmation };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Sign up failed";
+      const errorMessage = error instanceof Error ? error.message : "Sign up failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
   };
 
-  const signOut = async () => {
+  const handleSignOut = async () => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      await authService.signOut();
+      await auth.signOut();
       setState((prev) => ({ ...prev, user: null, loading: false }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Sign out failed";
-      setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
-      throw error;
+      console.error("Sign out error:", error);
+      setState((prev) => ({ ...prev, user: null, loading: false }));
     }
   };
 
-  const confirmSignUp = async (email: string, code: string) => {
+  const handleResetPassword = async (email: string) => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      await authService.confirmSignUp(email, code);
+      await auth.forgotPassword({ email });
       setState((prev) => ({ ...prev, loading: false }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Confirmation failed";
+      const errorMessage = error instanceof Error ? error.message : "Reset password failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const handleConfirmSignUp = async (email: string, code: string) => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      await authService.resetPassword({ email });
+      await auth.confirmSignUp(email, code);
       setState((prev) => ({ ...prev, loading: false }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Reset password failed";
+      const errorMessage = error instanceof Error ? error.message : "Confirmation failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
   };
 
-  const confirmResetPassword = async (
+  const handleConfirmResetPassword = async (
     email: string,
     code: string,
     newPassword: string
   ) => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
-      await authService.confirmResetPassword(email, code, newPassword);
+      await auth.confirmForgotPassword(email, code, newPassword);
       setState((prev) => ({ ...prev, loading: false }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Password reset confirmation failed";
+      const errorMessage = error instanceof Error ? error.message : "Reset confirmation failed";
       setState((prev) => ({ ...prev, loading: false, error: errorMessage }));
       throw error;
     }
@@ -188,12 +166,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         ...state,
-        signIn,
-        signUp,
-        signOut,
-        confirmSignUp,
-        resetPassword,
-        confirmResetPassword,
+        signIn: handleSignIn,
+        signUp: handleSignUp,
+        signOut: handleSignOut,
+        resetPassword: handleResetPassword,
+        confirmSignUp: handleConfirmSignUp,
+        confirmResetPassword: handleConfirmResetPassword,
         clearError,
         refreshUser,
       }}
