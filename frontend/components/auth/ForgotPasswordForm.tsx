@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { forgotPasswordSchema, ForgotPasswordFormData } from '@/lib/validation';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { forgotPasswordSchema, ForgotPasswordFormData } from "@/lib/validation";
 
 interface ForgotPasswordFormProps {
   onSuccess?: (email: string) => void;
@@ -41,13 +41,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900">Reset Password</h2>
         <p className="mt-2 text-sm text-gray-600">
-          Enter your email address and we'll send you instructions to reset your password
+          Enter your email address and we'll send you instructions to reset your
+          password
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Input
-          {...register('email')}
+          {...register("email")}
           type="email"
           label="Email Address"
           error={errors.email?.message}
@@ -56,7 +57,10 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         />
 
         {error && (
-          <div className="text-red-600 text-sm p-3 bg-red-50 border border-red-200 rounded-md" role="alert">
+          <div
+            className="text-red-600 text-sm p-3 bg-red-50 border border-red-200 rounded-md"
+            role="alert"
+          >
             {error}
           </div>
         )}
@@ -73,7 +77,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
 
         {onSwitchToLogin && (
           <p className="text-center text-sm text-gray-600">
-            Remember your password?{' '}
+            Remember your password?{" "}
             <button
               type="button"
               onClick={onSwitchToLogin}

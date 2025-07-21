@@ -9,10 +9,12 @@ import { AuthModal } from "@/components/auth/AuthModal";
 export const LandingPage: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [keepModalOpen, setKeepModalOpen] = useState(false);
 
   const handleLoginClick = () => {
     setAuthMode("login");
     setShowAuthModal(true);
+    setKeepModalOpen(true);
   };
 
   const handleRegisterClick = () => {
@@ -47,9 +49,16 @@ export const LandingPage: React.FC = () => {
 
       {showAuthModal && (
         <AuthModal
-          isOpen={true}
+          isOpen={showAuthModal && keepModalOpen}
           defaultMode={authMode}
-          onClose={handleCloseAuth}
+          onClose={() => {
+            setShowAuthModal(false);
+            setKeepModalOpen(false);
+          }}
+          onSuccess={() => {
+            setKeepModalOpen(false);
+            setShowAuthModal(false);
+          }}
         />
       )}
     </PageLayout>

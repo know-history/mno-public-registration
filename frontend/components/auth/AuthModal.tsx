@@ -1,69 +1,74 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Modal } from '@/components/ui/Modal';
-import { LoginForm } from './LoginForm';
-import { RegisterForm } from './RegisterForm';
-import { ForgotPasswordForm } from './ForgotPasswordForm';
-import { ConfirmationForm } from './ConfirmationForm';
+import React, { useState } from "react";
+import { Modal } from "@/components/ui/Modal";
+import { LoginForm } from "./LoginForm";
+import { RegisterForm } from "./RegisterForm";
+import { ForgotPasswordForm } from "./ForgotPasswordForm";
+import { ConfirmationForm } from "./ConfirmationForm";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  defaultMode?: 'login' | 'register';
+  defaultMode?: "login" | "register";
 }
 
-type AuthMode = 'login' | 'register' | 'forgot-password' | 'confirmation' | 'reset-password-confirmation';
+type AuthMode =
+  | "login"
+  | "register"
+  | "forgot-password"
+  | "confirmation"
+  | "reset-password-confirmation";
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  defaultMode = 'login',
+  defaultMode = "login",
 }) => {
   const [mode, setMode] = useState<AuthMode>(defaultMode);
-  const [confirmationEmail, setConfirmationEmail] = useState('');
+  const [confirmationEmail, setConfirmationEmail] = useState("");
 
   const handleSuccess = () => {
     onSuccess?.();
     onClose();
   };
 
-  const handleSwitchToRegister = () => setMode('register');
-  const handleSwitchToLogin = () => setMode('login');
-  const handleSwitchToForgotPassword = () => setMode('forgot-password');
-  
+  const handleSwitchToRegister = () => setMode("register");
+  const handleSwitchToLogin = () => setMode("login");
+  const handleSwitchToForgotPassword = () => setMode("forgot-password");
+
   const handleNeedsConfirmation = (email: string) => {
     setConfirmationEmail(email);
-    setMode('confirmation');
+    setMode("confirmation");
   };
 
   const handleForgotPasswordSuccess = (email: string) => {
     setConfirmationEmail(email);
-    setMode('reset-password-confirmation');
+    setMode("reset-password-confirmation");
   };
 
   const getTitle = () => {
     switch (mode) {
-      case 'login':
-        return 'Sign In';
-      case 'register':
-        return 'Create Account';
-      case 'forgot-password':
-        return 'Reset Password';
-      case 'confirmation':
-        return 'Confirm Email';
-      case 'reset-password-confirmation':
-        return 'Check Your Email';
+      case "login":
+        return "Sign In";
+      case "register":
+        return "Create Account";
+      case "forgot-password":
+        return "Reset Password";
+      case "confirmation":
+        return "Confirm Email";
+      case "reset-password-confirmation":
+        return "Check Your Email";
       default:
-        return 'Authentication';
+        return "Authentication";
     }
   };
 
   const renderContent = () => {
     switch (mode) {
-      case 'login':
+      case "login":
         return (
           <LoginForm
             onSuccess={handleSuccess}
@@ -71,8 +76,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             onSwitchToForgotPassword={handleSwitchToForgotPassword}
           />
         );
-      
-      case 'register':
+
+      case "register":
         return (
           <RegisterForm
             onSuccess={handleSuccess}
@@ -80,27 +85,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             onNeedsConfirmation={handleNeedsConfirmation}
           />
         );
-      
-      case 'forgot-password':
+
+      case "forgot-password":
         return (
           <ForgotPasswordForm
             onSuccess={handleForgotPasswordSuccess}
             onSwitchToLogin={handleSwitchToLogin}
           />
         );
-      
-      case 'confirmation':
+
+      case "confirmation":
         return (
           <ConfirmationForm
             email={confirmationEmail}
             onSuccess={handleSuccess}
             onResendCode={() => {
-              console.log('Resending confirmation code to:', confirmationEmail);
+              // Handle resend logic here
+              console.log("Resending confirmation code to:", confirmationEmail);
             }}
           />
         );
-      
-      case 'reset-password-confirmation':
+
+      case "reset-password-confirmation":
         return (
           <div className="text-center py-8">
             <div className="mb-6">
@@ -124,7 +130,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               Check Your Email
             </h3>
             <p className="text-sm text-gray-600 mb-6">
-              We've sent password reset instructions to <strong>{confirmationEmail}</strong>
+              We've sent password reset instructions to{" "}
+              <strong>{confirmationEmail}</strong>
             </p>
             <button
               onClick={handleSwitchToLogin}
@@ -134,19 +141,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           </div>
         );
-      
+
       default:
         return null;
     }
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={getTitle()}
-      size="md"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={getTitle()} size="md">
       {renderContent()}
     </Modal>
   );

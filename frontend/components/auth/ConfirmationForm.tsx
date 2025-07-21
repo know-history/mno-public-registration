@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 interface ConfirmationFormProps {
   email: string;
@@ -17,7 +17,7 @@ export const ConfirmationForm: React.FC<ConfirmationFormProps> = ({
   onResendCode,
 }) => {
   const { confirmSignUp, loading, error, clearError } = useAuth();
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +51,10 @@ export const ConfirmationForm: React.FC<ConfirmationFormProps> = ({
         />
 
         {error && (
-          <div className="text-red-600 text-sm p-3 bg-red-50 border border-red-200 rounded-md" role="alert">
+          <div
+            className="text-red-600 text-sm p-3 bg-red-50 border border-red-200 rounded-md"
+            role="alert"
+          >
             {error}
           </div>
         )}
@@ -69,7 +72,7 @@ export const ConfirmationForm: React.FC<ConfirmationFormProps> = ({
 
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            Didn't receive the code?{' '}
+            Didn't receive the code?{" "}
             <button
               type="button"
               onClick={onResendCode}
