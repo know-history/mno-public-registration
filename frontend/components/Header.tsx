@@ -31,7 +31,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
           </a>
         </div>
 
-        {/* Desktop Navigation */}
         <nav className="hidden lg:flex space-x-8">
           <div className="relative group">
             <button
@@ -225,7 +224,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
           </div>
         </nav>
 
-        {/* Mobile Menu Button */}
         <button
           onClick={toggleMobileMenu}
           className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
@@ -238,7 +236,6 @@ const Header: React.FC<HeaderProps> = ({ onLoginClick }) => {
         </button>
       </div>
 
-      {/* Mobile Navigation */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-gray-200 bg-white">
           <div className="px-4 py-2 space-y-1">

@@ -6,6 +6,7 @@ import {
   createContext,
   useContext,
   ReactNode,
+  useMemo,
 } from "react";
 import { auth } from "@/lib/auth";
 import { User, AuthState, UserRole } from "@/types/auth";
@@ -181,22 +182,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const contextValue = useMemo(
+    () => ({
+      ...state,
+      signIn: handleSignIn,
+      signUp: handleSignUp,
+      signOut: handleSignOut,
+      resetPassword: handleResetPassword,
+      confirmSignUp: handleConfirmSignUp,
+      confirmResetPassword: handleConfirmResetPassword,
+      clearError,
+      refreshUser,
+    }),
+    [
+      state.user?.id,
+      state.loading,
+      handleSignIn,
+      handleSignUp,
+      handleSignOut,
+      handleResetPassword,
+      handleConfirmSignUp,
+      handleConfirmResetPassword,
+      clearError,
+      refreshUser,
+    ]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        ...state,
-        signIn: handleSignIn,
-        signUp: handleSignUp,
-        signOut: handleSignOut,
-        resetPassword: handleResetPassword,
-        confirmSignUp: handleConfirmSignUp,
-        confirmResetPassword: handleConfirmResetPassword,
-        clearError,
-        refreshUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 
