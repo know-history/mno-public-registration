@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 
-import LoginForm from "@/components/LoginForm";
+import LoginForm from "@/components/Auth/LoginForm";
 
 const TopNavBar = () => {
   return (
@@ -600,7 +600,7 @@ const LoginModal = ({ isOpen, onClose }) => {
       onClick={onClose}
     >
       <div
-        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside modal content
+        onClick={(e) => e.stopPropagation()}
       >
         <LoginForm onSuccess={onClose} />
       </div>

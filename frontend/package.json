@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@preline/strong-password": "^3.1.0",
+    "@preline/toggle-password": "^3.1.0",
     "aws-amplify": "^6.15.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.525.0",
