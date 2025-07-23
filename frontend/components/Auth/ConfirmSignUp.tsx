@@ -79,7 +79,7 @@ export default function ConfirmSignUp(
     <div className="space-y-4">
       <h4 className="text-3xl text-slate-900 font-bold text-center">Confirm Your Email</h4>
       <p className="text-sm text-slate-500 text-center">
-        Enter the confirmation code we sent to your email.
+        Enter the confirmation code that was sent to your email.
       </p>
 
       <form

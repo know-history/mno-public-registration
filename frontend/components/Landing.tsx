@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 import {
   ChevronRight,
@@ -12,6 +14,56 @@ import {
 } from "lucide-react";
 
 import LoginForm from "@/components/Auth/LoginForm";
+import { useAuth } from "@/hooks/useAuth";
+
+// TypeScript interfaces
+interface NavigationItem {
+  label: string;
+  href: string;
+}
+
+interface NavigationDropdownProps {
+  title: string;
+  items: NavigationItem[];
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+interface MobileMenuProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  openDropdown: string | null;
+  toggleDropdown: (menuName: string) => void;
+}
+
+interface HeaderProps {
+  openDropdown: string | null;
+  toggleDropdown: (menuName: string) => void;
+}
+
+interface HeroSectionProps {
+  onLoginClick: () => void;
+  isAuthenticated: boolean;
+  onDashboardClick: () => void;
+}
+
+interface MainContentProps {
+  onLoginClick: () => void;
+  onCreateAccountClick: () => void;
+  isAuthenticated: boolean;
+  onDashboardClick: () => void;
+  onLogout: () => void;
+}
+
+interface LoginModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  startWithSignup?: boolean;
+}
+
+interface LandingProps {
+  onDashboardClick?: () => void;
+}
 
 const TopNavBar = () => {
   return (
@@ -96,7 +148,7 @@ const TopNavBar = () => {
   );
 };
 
-const NavigationDropdown = ({ title, items, isOpen, onToggle }) => {
+const NavigationDropdown: React.FC<NavigationDropdownProps> = ({ title, items, isOpen, onToggle }) => {
   return (
     <div className="relative group">
       <button
@@ -107,7 +159,7 @@ const NavigationDropdown = ({ title, items, isOpen, onToggle }) => {
       </button>
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 w-64 bg-white shadow-lg rounded border z-50">
-          {items.map((item, index) => (
+          {items.map((item: NavigationItem, index: number) => (
             <a
               key={index}
               href={item.href}
@@ -122,44 +174,24 @@ const NavigationDropdown = ({ title, items, isOpen, onToggle }) => {
   );
 };
 
-const MobileMenu = ({ isOpen, onToggle, openDropdown, toggleDropdown }) => {
-  const menuItems = [
+const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onToggle, openDropdown, toggleDropdown }) => {
+  const navigationItems = [
     {
-      title: "PROGRAMS & SERVICES",
-      key: "programs",
+      title: "ABOUT THE MNO",
+      key: "about",
       items: [
-        { label: "Healing & Wellness", href: "https://www.metisnation.org/programs-and-services/healing-wellness/" },
-        { label: "Education & Training", href: "https://www.metisnation.org/programs-and-services/education-training/" },
-        { label: "Housing & Infrastructure", href: "https://www.metisnation.org/programs-and-services/housing-infrastructure/" },
-        { label: "Lands, Resources & Consultations", href: "https://www.metisnation.org/programs-and-services/lands-resources-consultations/" },
-        { label: "Intergovernmental Relations", href: "https://www.metisnation.org/programs-and-services/intergovernmental-relations/" },
-        { label: "Economic Development", href: "https://www.metisnation.org/programs-and-services/economic-development/" },
-      ]
-    },
-    {
-      title: "GOVERNANCE",
-      key: "governance",
-      items: [
-        { label: "Self-Government", href: "https://www.metisnation.org/governance/self-government/" },
-        { label: "Governing Structure", href: "https://www.metisnation.org/governance/governing-structure/" },
-        { label: "AGA Business", href: "https://www.metisnation.org/governance/aga-business/" },
-        { label: "Reference Documents", href: "https://www.metisnation.org/governance/reference-documents/" },
-      ]
-    },
-    {
-      title: "COMMUNITY COUNCILS",
-      key: "councils",
-      items: [
-        { label: "Overview and Vacancy Notices", href: "https://www.metisnation.org/community-councils/" },
-        { label: "Council Contacts", href: "https://www.metisnation.org/community-councils/council-contacts/" },
-        { label: "Community Councils Map", href: "https://www.metisnation.org/community-councils/community-councils-map/" },
+        { label: "About the MNO", href: "https://www.metisnation.org/about-the-mno/" },
+        { label: "Leadership", href: "https://www.metisnation.org/about-the-mno/leadership/" },
+        { label: "Council", href: "https://www.metisnation.org/about-the-mno/council/" },
+        { label: "Governance", href: "https://www.metisnation.org/about-the-mno/governance/" },
+        { label: "Contact Us", href: "https://www.metisnation.org/about-the-mno/contact-us/" },
       ]
     },
     {
       title: "REGISTRY",
       key: "registry",
       items: [
-        { label: "Registry Overview", href: "https://www.metisnation.org/registry/" },
+        { label: "Registry", href: "https://www.metisnation.org/registry/" },
         { label: "Citizenship", href: "https://www.metisnation.org/registry/citizenship/" },
         { label: "Harvesting", href: "https://www.metisnation.org/registry/harvesting/" },
         { label: "Rights", href: "https://www.metisnation.org/registry/rights/" },
@@ -180,26 +212,27 @@ const MobileMenu = ({ isOpen, onToggle, openDropdown, toggleDropdown }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="lg:hidden bg-white border-t shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        {menuItems.map((menu) => (
-          <div key={menu.key} className="mb-4">
+    <div className="lg:hidden bg-white border-t">
+      <div className="px-2 pt-2 pb-3 space-y-1">
+        {navigationItems.map((item) => (
+          <div key={item.key}>
             <button
-              className="w-full text-left text-blue-600 font-medium py-2 flex items-center justify-between"
-              onClick={() => toggleDropdown(menu.key)}
+              onClick={() => toggleDropdown(item.key)}
+              className="text-blue-600 hover:text-blue-800 block px-3 py-2 rounded-md text-base font-medium w-full text-left flex items-center justify-between cursor-pointer"
             >
-              {menu.title}
-              <ChevronDown className={`w-4 h-4 transform transition-transform ${openDropdown === menu.key ? 'rotate-180' : ''}`} />
+              {item.title}
+              <ChevronDown className={`w-4 h-4 transform transition-transform ${openDropdown === item.key ? 'rotate-180' : ''}`} />
             </button>
-            {openDropdown === menu.key && (
-              <div className="pl-4 mt-2 space-y-2">
-                {menu.items.map((item, index) => (
+            
+            {openDropdown === item.key && (
+              <div className="ml-4 space-y-1">
+                {item.items.map((subItem, index) => (
                   <a
                     key={index}
-                    href={item.href}
-                    className="block text-sm text-gray-700 hover:text-blue-600 py-1"
+                    href={subItem.href}
+                    className="text-blue-500 hover:text-blue-700 block px-3 py-2 rounded-md text-sm cursor-pointer"
                   >
-                    {item.label}
+                    {subItem.label}
                   </a>
                 ))}
               </div>
@@ -211,46 +244,26 @@ const MobileMenu = ({ isOpen, onToggle, openDropdown, toggleDropdown }) => {
   );
 };
 
-const Header = ({ openDropdown, toggleDropdown }) => {
+const Header: React.FC<HeaderProps> = ({ openDropdown, toggleDropdown }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigationItems = [
     {
-      title: "PROGRAMS & SERVICES",
-      key: "programs",
+      title: "ABOUT THE MNO",
+      key: "about",
       items: [
-        { label: "Healing & Wellness", href: "https://www.metisnation.org/programs-and-services/healing-wellness/" },
-        { label: "Education & Training", href: "https://www.metisnation.org/programs-and-services/education-training/" },
-        { label: "Housing & Infrastructure", href: "https://www.metisnation.org/programs-and-services/housing-infrastructure/" },
-        { label: "Lands, Resources & Consultations", href: "https://www.metisnation.org/programs-and-services/lands-resources-consultations/" },
-        { label: "Intergovernmental Relations", href: "https://www.metisnation.org/programs-and-services/intergovernmental-relations/" },
-        { label: "Economic Development", href: "https://www.metisnation.org/programs-and-services/economic-development/" },
-      ]
-    },
-    {
-      title: "GOVERNANCE",
-      key: "governance",
-      items: [
-        { label: "Self-Government", href: "https://www.metisnation.org/governance/self-government/" },
-        { label: "Governing Structure", href: "https://www.metisnation.org/governance/governing-structure/" },
-        { label: "AGA Business", href: "https://www.metisnation.org/governance/aga-business/" },
-        { label: "Reference Documents", href: "https://www.metisnation.org/governance/reference-documents/" },
-      ]
-    },
-    {
-      title: "COMMUNITY COUNCILS",
-      key: "councils",
-      items: [
-        { label: "Overview and Vacancy Notices", href: "https://www.metisnation.org/community-councils/" },
-        { label: "Council Contacts", href: "https://www.metisnation.org/community-councils/council-contacts/" },
-        { label: "Community Councils Map", href: "https://www.metisnation.org/community-councils/community-councils-map/" },
+        { label: "About the MNO", href: "https://www.metisnation.org/about-the-mno/" },
+        { label: "Leadership", href: "https://www.metisnation.org/about-the-mno/leadership/" },
+        { label: "Council", href: "https://www.metisnation.org/about-the-mno/council/" },
+        { label: "Governance", href: "https://www.metisnation.org/about-the-mno/governance/" },
+        { label: "Contact Us", href: "https://www.metisnation.org/about-the-mno/contact-us/" },
       ]
     },
     {
       title: "REGISTRY",
       key: "registry",
       items: [
-        { label: "Registry Overview", href: "https://www.metisnation.org/registry/" },
+        { label: "Registry", href: "https://www.metisnation.org/registry/" },
         { label: "Citizenship", href: "https://www.metisnation.org/registry/citizenship/" },
         { label: "Harvesting", href: "https://www.metisnation.org/registry/harvesting/" },
         { label: "Rights", href: "https://www.metisnation.org/registry/rights/" },
@@ -313,7 +326,7 @@ const Header = ({ openDropdown, toggleDropdown }) => {
   );
 };
 
-const HeroSection = ({ onLoginClick }) => {
+const HeroSection: React.FC<HeroSectionProps> = ({ onLoginClick, isAuthenticated, onDashboardClick }) => {
   return (
     <div
       className="bg-gradient-to-r from-blue-700 to-blue-800 text-white py-8 sm:py-16"
@@ -341,19 +354,28 @@ const HeroSection = ({ onLoginClick }) => {
             </a>
           </div>
           <h1 className="text-2xl sm:text-4xl font-bold mb-4">Registry Applications</h1>
-          <button
-            onClick={onLoginClick}
-            className="bg-gray-800 hover:bg-gray-700 text-white px-4 sm:px-6 py-2 rounded font-medium transition-colors cursor-pointer text-sm sm:text-base"
-          >
-            LOGIN TO YOUR ACCOUNT
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={onDashboardClick}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-2 rounded font-medium transition-colors cursor-pointer text-sm sm:text-base"
+            >
+              GO TO APPLICATION DASHBOARD
+            </button>
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="bg-gray-800 hover:bg-gray-700 text-white px-4 sm:px-6 py-2 rounded font-medium transition-colors cursor-pointer text-sm sm:text-base"
+            >
+              LOGIN TO YOUR ACCOUNT
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-const MainContent = ({ onLoginClick }) => {
+const MainContent: React.FC<MainContentProps> = ({ onLoginClick, onCreateAccountClick, isAuthenticated, onDashboardClick, onLogout }) => {
   return (
     <div
       className="py-8 sm:py-16 min-h-96"
@@ -383,36 +405,67 @@ const MainContent = ({ onLoginClick }) => {
             </p>
 
             <div className="space-y-3">
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base">
+              <button 
+                onClick={isAuthenticated ? onDashboardClick : onLoginClick}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
+              >
                 <span>Change Address / Renew Citizen Card</span>
                 <ChevronRight className="w-5 h-5 flex-shrink-0" />
               </button>
 
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base">
+              <button 
+                onClick={isAuthenticated ? onDashboardClick : onLoginClick}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
+              >
                 <span>Apply for Citizenship</span>
                 <ChevronRight className="w-5 h-5 flex-shrink-0" />
               </button>
 
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base">
+              <button 
+                onClick={isAuthenticated ? onDashboardClick : onLoginClick}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
+              >
                 <span>Apply for Harvester's Certificate</span>
                 <ChevronRight className="w-5 h-5 flex-shrink-0" />
               </button>
 
-              <button
-                onClick={onLoginClick}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
-              >
-                <span>Create an Account</span>
-                <ChevronRight className="w-5 h-5 flex-shrink-0" />
-              </button>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={onDashboardClick}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
+                  >
+                    <span>Application Dashboard</span>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </button>
 
-              <button
-                onClick={onLoginClick}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
-              >
-                <span>Login to your Account</span>
-                <ChevronRight className="w-5 h-5 flex-shrink-0" />
-              </button>
+                  <button
+                    onClick={onLogout}
+                    className="w-full bg-red-400 hover:bg-red-500 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
+                  >
+                    <span>Logout</span>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={onCreateAccountClick}
+                    className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
+                  >
+                    <span>Create an Account</span>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </button>
+
+                  <button
+                    onClick={onLoginClick}
+                    className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
+                  >
+                    <span>Login to your Account</span>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -591,37 +644,78 @@ const BottomFooter = () => {
   );
 };
 
-const LoginModal = ({ isOpen, onClose }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, startWithSignup = false }) => {
   if (!isOpen) return null;
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   return (
     <div
       className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50"
-      onClick={onClose}
+      onClick={handleBackdropClick}
     >
       <div
         onClick={(e) => e.stopPropagation()}
       >
-        <LoginForm onSuccess={onClose} />
+        <LoginForm onSuccess={onClose} startWithSignup={startWithSignup} />
       </div>
     </div>
   );
 };
 
-const Landing = () => {
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+const Landing: React.FC<LandingProps> = ({ onDashboardClick = () => console.error('No onDashboardClick provided') }) => {
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [startWithSignup, setStartWithSignup] = useState<boolean>(false);
+  const [isInConfirmation, setIsInConfirmation] = useState<boolean>(false);
+  const { user, signOut } = useAuth();
 
-  const toggleDropdown = (menuName) => {
+  console.log('Landing component rendered, onDashboardClick received:', !!onDashboardClick);
+
+  const toggleDropdown = (menuName: string) => {
     setOpenDropdown(openDropdown === menuName ? null : menuName);
   };
 
   const handleLoginClick = () => {
+    setStartWithSignup(false);
+    setShowLoginModal(true);
+  };
+
+  const handleCreateAccountClick = () => {
+    setStartWithSignup(true);
     setShowLoginModal(true);
   };
 
   const handleCloseLogin = () => {
     setShowLoginModal(false);
+    setStartWithSignup(false);
+    setIsInConfirmation(false);
+  };
+
+  const handleModalStateChange = (state: { needsConfirmation: boolean }) => {
+    setIsInConfirmation(state.needsConfirmation);
+  };
+
+  const handleDashboardClick = () => {
+    console.log('handleDashboardClick called in Landing.tsx'); // Debug log
+    console.log('onDashboardClick prop:', onDashboardClick); // Debug log
+    if (onDashboardClick) {
+      onDashboardClick();
+    } else {
+      console.error('onDashboardClick prop is undefined or null');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -629,13 +723,29 @@ const Landing = () => {
       <div className="min-h-screen bg-gray-100">
         <TopNavBar />
         <Header openDropdown={openDropdown} toggleDropdown={toggleDropdown} />
-        <HeroSection onLoginClick={handleLoginClick} />
-        <MainContent onLoginClick={handleLoginClick} />
+        <HeroSection 
+          onLoginClick={handleLoginClick} 
+          onDashboardClick={handleDashboardClick}
+          isAuthenticated={!!user}
+        />
+        <MainContent 
+          onLoginClick={handleLoginClick} 
+          onCreateAccountClick={handleCreateAccountClick}
+          onDashboardClick={handleDashboardClick}
+          onLogout={handleLogout}
+          isAuthenticated={!!user}
+        />
         <Footer />
         <BottomFooter />
       </div>
 
-      <LoginModal isOpen={showLoginModal} onClose={handleCloseLogin} />
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={handleCloseLogin} 
+        startWithSignup={startWithSignup}
+        isInConfirmation={isInConfirmation}
+        onStateChange={handleModalStateChange}
+      />
     </>
   );
 };

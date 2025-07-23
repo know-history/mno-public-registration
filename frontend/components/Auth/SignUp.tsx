@@ -27,8 +27,6 @@ export default function SignUp(
     numbers: false,
     specialChars: false,
   });
-  const levels = ['Empty', 'Weak', 'Medium', 'Strong', 'Very Strong', 'Super Strong'];
-  const [levelText, setLevelText] = useState(levels[0]);
 
   const watchedFields = form.watch();
 
@@ -46,18 +44,16 @@ export default function SignUp(
   const canSubmit = passwordsMatch && requiredFieldsFilled;
 
   useEffect(() => {
-    const pwd = watchedFields.password || '';
-    const minLength = pwd.length >= 6;
-    const lowercase = /[a-z]/.test(pwd);
-    const uppercase = /[A-Z]/.test(pwd);
-    const numbers = /\d/.test(pwd);
-    const specialChars = /[^A-Za-z0-9]/.test(pwd);
+    const password = watchedFields.password || '';
+    const minLength = password.length >= 6;
+    const lowercase = /[a-z]/.test(password);
+    const uppercase = /[A-Z]/.test(password);
+    const numbers = /\d/.test(password);
+    const specialChars = /[^A-Za-z0-9]/.test(password);
 
     const newRules = { minLength, lowercase, uppercase, numbers, specialChars };
     setRulesMet(newRules);
 
-    const count = Object.values(newRules).filter(Boolean).length;
-    setLevelText(levels[Math.min(count, levels.length - 1)]);
   }, [watchedFields.password]);
 
   const toggleInputType = (id: string) => {
@@ -101,10 +97,6 @@ export default function SignUp(
       </div>
 
       <div className="mb-3 text-gray-700 dark:text-neutral-200">
-        <div>
-          <span className="text-sm text-gray-600">Level:</span>{' '}
-          <span className="text-sm font-semibold text-gray-600">{levelText}</span>
-        </div>
 
         <h4 className="my-2 text-sm font-semibold text-gray-600">
           Your password must contain:
@@ -112,21 +104,21 @@ export default function SignUp(
 
         <ul className="space-y-1 text-sm text-gray-500 dark:text-neutral-500">
           <li className={`flex items-center gap-x-2 ${rulesMet.minLength ? 'text-teal-500' : ''}`}>
-            Minimum number of characters is 6.
+            A minimum of 8 characters.
           </li>
           <li className={`flex items-center gap-x-2 ${rulesMet.lowercase ? 'text-teal-500' : ''}`}>
-            Should contain lowercase.
+            A lowercase character.
           </li>
           <li className={`flex items-center gap-x-2 ${rulesMet.uppercase ? 'text-teal-500' : ''}`}>
-            Should contain uppercase.
+            An uppercase character.
           </li>
           <li className={`flex items-center gap-x-2 ${rulesMet.numbers ? 'text-teal-500' : ''}`}>
-            Should contain numbers.
+            A number.
           </li>
           <li
             className={`flex items-center gap-x-2 ${rulesMet.specialChars ? 'text-teal-500' : ''}`}
           >
-            Should contain special characters.
+            A special character.
           </li>
         </ul>
       </div>

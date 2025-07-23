@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,16 +37,26 @@ export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 interface LoginFormProps {
   onSuccess?: () => void;
+  startWithSignup?: boolean;
+  onStateChange?: (state: { needsConfirmation: boolean }) => void;
 }
 
-export default function LoginForm({ onSuccess }: LoginFormProps) {
+export default function LoginForm({ onSuccess, startWithSignup = false, onStateChange }: LoginFormProps) {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState('');
   const [confirmationCode, setConfirmationCode] = useState<string[]>(new Array(6).fill(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isSignup, setIsSignup] = useState(false);
+  const [isSignup, setIsSignup] = useState(startWithSignup);
+
+  useEffect(() => {
+    setIsSignup(startWithSignup);
+  }, [startWithSignup]);
+
+  useEffect(() => {
+    onStateChange?.({ needsConfirmation });
+  }, [needsConfirmation, onStateChange]);
 
   const { signIn, signUp, confirmSignUp, resetPassword } = useAuth();
 
@@ -69,7 +79,15 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       await signIn(data.email, data.password);
       onSuccess?.();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      
+      if (errorMessage.includes('UserNotConfirmedException') || errorMessage.includes('User is not confirmed')) {
+        setConfirmationEmail(data.email);
+        setNeedsConfirmation(true);
+        setError('Your account is not confirmed. Please enter the confirmation code sent to your email.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -117,6 +135,50 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     }
   };
 
+  const handleReopenConfirmation = () => {
+    if (confirmationEmail) {
+      setNeedsConfirmation(true);
+      setError('');
+    }
+  };
+
+  const switchToSignup = () => {
+    setError('');
+    setIsSignup(true);
+  };
+
+  const switchToLogin = () => {
+    setError('');
+    setIsSignup(false);
+  };
+
+  const switchToForgotPassword = () => {
+    setError('');
+    setIsForgotPassword(true);
+  };
+
+  const switchBackFromForgotPassword = () => {
+    setError('');
+    setIsForgotPassword(false);
+  };
+
+  const switchBackFromSignup = () => {
+    setError('');
+    setNeedsConfirmation(false);
+    setIsSignup(false);
+  };
+
+  const handleCloseModal = () => {
+    if (needsConfirmation) {
+      setError('Please complete the confirmation process or use "Back to Sign Up" to cancel.');
+      return;
+    }
+    
+    setIsForgotPassword(false);
+    setError('');
+    onSuccess?.();
+  };
+
   return (
     <div
       className="w-full max-w-lg bg-white shadow-lg rounded-lg p-8 relative"
@@ -124,10 +186,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     >
       <button
         className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        onClick={() => {
-          setIsForgotPassword(false);
-          onSuccess?.();
-        }}
+        onClick={handleCloseModal}
       >
         ✕
       </button>
@@ -139,7 +198,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           confirmationCode={confirmationCode}
           onChangeCodeAction={setConfirmationCode}
           onSubmitAction={handleConfirmation}
-          onBackAction={() => setNeedsConfirmation(false)}
+          onBackAction={switchBackFromSignup}
         />
       ) : isForgotPassword ? (
         <ForgotPassword
@@ -147,24 +206,37 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           loading={loading}
           error={error}
           onSubmit={handleForgotPassword}
-          onBack={() => setIsForgotPassword(false)}
+          onBack={switchBackFromForgotPassword}
         />
       ) : isSignup ? (
-        <SignUp
-          form={signupForm}
-          loading={loading}
-          error={error}
-          onSubmitAction={handleSignUp}
-          onBackAction={() => setIsSignup(false)}
-        />
+        <div>
+          <SignUp
+            form={signupForm}
+            loading={loading}
+            error={error}
+            onSubmitAction={handleSignUp}
+            onBackAction={switchBackFromSignup}
+          />
+          {/* Add "Resend Code" button if user previously started signup */}
+          {confirmationEmail && !needsConfirmation && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={handleReopenConfirmation}
+                className="text-blue-600 text-sm hover:underline"
+              >
+                Already have an account? Resend confirmation code
+              </button>
+            </div>
+          )}
+        </div>
       ) : (
         <Login
           form={loginForm}
           loading={loading}
           error={error}
           onSubmit={handleLogin}
-          onForgotPassword={() => setIsForgotPassword(true)}
-          onSignUp={() => setIsSignup(true)}
+          onForgotPassword={switchToForgotPassword}
+          onSignUp={switchToSignup}
         />
       )}
 

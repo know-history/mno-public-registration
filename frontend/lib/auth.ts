@@ -45,6 +45,7 @@ export const authService = {
             email,
             given_name: given_name || '',
             family_name: family_name || '',
+            "custom:user_role": "applicant",
           }
         }
       });

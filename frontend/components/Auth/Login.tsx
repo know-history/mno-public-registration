@@ -44,7 +44,7 @@ export default function Login(
 
         <button
           type="button"
-          className="px-5 py-2.5 !mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg tracking-wide"
+          className="px-5 py-2.5 !mt-10 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg tracking-wide cursor-pointer"
           onClick={form.handleSubmit(onSubmit)}
           disabled={loading}
         >
