@@ -2,8 +2,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/hooks/useAuth';
+import { ModalProvider } from "@/contexts/ModalContext";
+import { GlobalModals } from '@/components/ui/GlobalModals';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: 'MNO Registry Applications',
@@ -32,14 +34,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#2563eb" />
-      </head>
       <body className={inter.className}>
         <AuthProvider>
-          {children}
+          <ModalProvider>
+            {children}
+            <GlobalModals />
+          </ModalProvider>
         </AuthProvider>
       </body>
     </html>

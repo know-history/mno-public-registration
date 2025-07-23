@@ -18,12 +18,6 @@ export const registerSchema = z
     confirmPassword: z.string(),
     given_name: z.string().min(1, "First name is required"),
     family_name: z.string().min(1, "Last name is required"),
-    terms: z
-      .boolean()
-      .refine(
-        (val) => val === true,
-        "You must accept the terms and conditions"
-      ),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",

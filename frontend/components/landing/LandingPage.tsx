@@ -1,30 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { HeroSection } from "@/components/layout/HeroSection";
 import { MainContent } from "./MainContent";
-import { AuthModal } from "@/components/auth/AuthModal";
+import { useModal } from "@/contexts/ModalContext";
 
 export const LandingPage: React.FC = () => {
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [keepModalOpen, setKeepModalOpen] = useState(false);
+  const { openAuthModal } = useModal();
 
   const handleLoginClick = () => {
-    setAuthMode("login");
-    setShowAuthModal(true);
-    setKeepModalOpen(true);
+    openAuthModal("login");
   };
 
   const handleRegisterClick = () => {
-    setAuthMode("register");
-    setShowAuthModal(true);
-    setKeepModalOpen(true);
-  };
-
-  const handleCloseAuth = () => {
-    setShowAuthModal(false);
+    openAuthModal("register");
   };
 
   const breadcrumbItems = [
@@ -47,21 +37,6 @@ export const LandingPage: React.FC = () => {
         onLoginClick={handleLoginClick}
         onRegisterClick={handleRegisterClick}
       />
-
-      {showAuthModal && (
-        <AuthModal
-          isOpen={showAuthModal && keepModalOpen}
-          defaultMode={authMode}
-          onClose={() => {
-            setShowAuthModal(false);
-            setKeepModalOpen(false);
-          }}
-          onSuccess={() => {
-            setKeepModalOpen(false);
-            setShowAuthModal(false);
-          }}
-        />
-      )}
     </PageLayout>
   );
 };
