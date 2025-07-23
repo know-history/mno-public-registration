@@ -1,12 +1,58 @@
-import { 
-  signIn, 
-  signUp, 
-  confirmSignUp, 
-  signOut,
-  getCurrentUser,
-  fetchAuthSession ,
-  resetPassword,
-} from 'aws-amplify/auth';
+import { CognitoAuthService } from './aws-cognito';
+
+const requiredEnvVars = [
+  'NEXT_PUBLIC_AWS_REGION',
+  'NEXT_PUBLIC_COGNITO_USER_POOL_ID', 
+  'NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID'
+];
+
+const getEnvVar = (key: string): string | undefined => {
+  switch (key) {
+    case 'NEXT_PUBLIC_AWS_REGION':
+      return process.env.NEXT_PUBLIC_AWS_REGION;
+    case 'NEXT_PUBLIC_COGNITO_USER_POOL_ID':
+      return process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
+    case 'NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID':
+      return process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID;
+    default:
+      return undefined;
+  }
+};
+
+const validateConfig = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  
+  const missing = requiredEnvVars.filter(key => {
+    const value = getEnvVar(key);
+    return !value || value.trim() === '';
+  });
+  
+  if (missing.length > 0) {
+    console.error('Missing variables detected:', missing);
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+};
+
+let authService: CognitoAuthService | null = null;
+
+const getAuthService = () => {
+  if (typeof window === 'undefined') {
+    throw new Error('Auth service only available in browser environment');
+  }
+  
+  if (!authService) {
+    validateConfig();
+    
+    authService = new CognitoAuthService({
+      region: getEnvVar('NEXT_PUBLIC_AWS_REGION')!,
+      userPoolId: getEnvVar('NEXT_PUBLIC_COGNITO_USER_POOL_ID')!,
+      clientId: getEnvVar('NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID')!,
+    });
+  }
+  return authService;
+};
 
 export interface SignUpParams {
   email: string;
@@ -24,89 +70,63 @@ export interface ForgotPasswordParams {
   email: string;
 }
 
-export const authService = {
-  resetPassword: async ({ email } : ForgotPasswordParams)=> {
-    try {
-      const result = await resetPassword({username: email});
-      return result;
-    } catch (error) {
-      console.error('Reset password error', error);
-      throw error;
-    }
+export const auth = {
+  signUp: async (params: SignUpParams) => {
+    const service = getAuthService();
+    return await service.signUp(params.email, params.password, params.given_name, params.family_name);
   },
 
-  signUp: async ({ email, password, given_name, family_name }: SignUpParams) => {
-    try {
-      const result = await signUp({
-        username: email,
-        password,
-        options: {
-          userAttributes: {
-            email,
-            given_name: given_name || '',
-            family_name: family_name || '',
-          }
-        }
-      });
-      return result;
-    } catch (error) {
-      console.error('Sign up error:', error);
-      throw error;
-    }
+  confirmSignUp: async (email: string, code: string) => {
+    const service = getAuthService();
+    return await service.confirmSignUp(email, code);
   },
 
-  confirmSignUp: async (email: string, confirmationCode: string) => {
-    try {
-      const result = await confirmSignUp({
-        username: email,
-        confirmationCode
-      });
-      return result;
-    } catch (error) {
-      console.error('Confirm sign up error:', error);
-      throw error;
-    }
-  },
-
-  signIn: async ({ email, password }: SignInParams) => {
-    try {
-      const result = await signIn({ 
-        username: email, 
-        password 
-      });
-      return result;
-    } catch (error) {
-      console.error('Sign in error:', error);
-      throw error;
-    }
+  signIn: async (params: SignInParams) => {
+    const service = getAuthService();
+    return await service.signIn(params.email, params.password);
   },
 
   signOut: async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
-      throw error;
-    }
+    const service = getAuthService();
+    return await service.signOut();
   },
 
   getCurrentUser: async () => {
-    try {
-      const user = await getCurrentUser();
-      return user;
-    } catch (error) {
-      console.error('Get current user error:', error);
+    if (typeof window === 'undefined') {
       return null;
     }
+    
+    const service = getAuthService();
+    return await service.getCurrentUser();
   },
 
-  getCurrentSession: async () => {
+  forgotPassword: async (params: ForgotPasswordParams) => {
+    const service = getAuthService();
+    return await service.forgotPassword(params.email);
+  },
+
+  confirmForgotPassword: async (email: string, code: string, newPassword: string) => {
+    const service = getAuthService();
+    return await service.confirmForgotPassword(email, code, newPassword);
+  },
+
+  isAuthenticated: () => {
+    if (typeof window === 'undefined') return false;
     try {
-      const session = await fetchAuthSession();
-      return session;
-    } catch (error) {
-      console.error('Get current session error:', error);
-      return null;
+      const service = getAuthService();
+      return service.isAuthenticated();
+    } catch {
+      return false;
     }
   }
 };
+
+export const {
+  signUp,
+  confirmSignUp,
+  signIn,
+  signOut,
+  getCurrentUser,
+  forgotPassword,
+  confirmForgotPassword,
+} = auth;
