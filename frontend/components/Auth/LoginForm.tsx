@@ -48,7 +48,15 @@ export default function LoginForm({ onSuccess, startWithSignup = false, onStateC
   const [confirmationCode, setConfirmationCode] = useState<string[]>(new Array(6).fill(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isSignup, setIsSignup] = useState(startWithSignup);
+
+  const safeOnSuccess = () => {
+    if (needsConfirmation) {
+      return;
+    }
+    onSuccess?.();
+  };
 
   useEffect(() => {
     setIsSignup(startWithSignup);
@@ -75,18 +83,44 @@ export default function LoginForm({ onSuccess, startWithSignup = false, onStateC
   const handleLogin = async (data: LoginFormData) => {
     setLoading(true);
     setError('');
+    setSuccessMessage('');
+    
     try {
-      await signIn(data.email, data.password);
-      onSuccess?.();
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      const result = await signIn(data.email, data.password);
+      safeOnSuccess();
+    } catch (err: any) {
+      const errorText = String(err?.message || '').toLowerCase();
+      const errorStringified = JSON.stringify(err).toLowerCase();
+      const errorToString = String(err).toLowerCase();
       
-      if (errorMessage.includes('UserNotConfirmedException') || errorMessage.includes('User is not confirmed')) {
+      const isUnconfirmed = 
+        errorText.includes('not confirmed') ||
+        errorText.includes('usernotconfirmedexception') ||
+        errorStringified.includes('not confirmed') ||
+        errorStringified.includes('usernotconfirmedexception') ||
+        errorToString.includes('not confirmed') ||
+        errorToString.includes('usernotconfirmedexception');
+      
+      if (isUnconfirmed) {
         setConfirmationEmail(data.email);
         setNeedsConfirmation(true);
-        setError('Your account is not confirmed. Please enter the confirmation code sent to your email.');
+        
+        try {
+          const { resendSignUpCode } = await import('aws-amplify/auth');
+          await resendSignUpCode({ username: data.email });
+          setError('Your account is not confirmed. A new confirmation code has been sent to your email.');
+        } catch (resendError) {
+          setError('Your account is not confirmed. Please enter the confirmation code.');
+        }
+        
+        setTimeout(() => {
+          onStateChange?.({ needsConfirmation: true });
+        }, 100);
+        
+        return;
+        
       } else {
-        setError(errorMessage);
+        setError(err?.message || 'Login failed');
       }
     } finally {
       setLoading(false);
@@ -98,7 +132,7 @@ export default function LoginForm({ onSuccess, startWithSignup = false, onStateC
     setError('');
     try {
       await resetPassword(data.email);
-      onSuccess?.();
+      safeOnSuccess();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Reset Password failed');
     } finally {
@@ -127,7 +161,15 @@ export default function LoginForm({ onSuccess, startWithSignup = false, onStateC
       const code = confirmationCode.join('');
       await confirmSignUp(confirmationEmail, code);
       setNeedsConfirmation(false);
-      onSuccess?.();
+      
+      setError('');
+      setIsSignup(false);
+      setIsForgotPassword(false);
+      
+      setTimeout(() => {
+        setSuccessMessage('Account confirmed successfully! Please log in with your credentials.');
+      }, 100);
+      
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Confirmation failed');
     } finally {
@@ -144,26 +186,31 @@ export default function LoginForm({ onSuccess, startWithSignup = false, onStateC
 
   const switchToSignup = () => {
     setError('');
+    setSuccessMessage('');
     setIsSignup(true);
   };
 
   const switchToLogin = () => {
     setError('');
+    setSuccessMessage('');
     setIsSignup(false);
   };
 
   const switchToForgotPassword = () => {
     setError('');
+    setSuccessMessage('');
     setIsForgotPassword(true);
   };
 
   const switchBackFromForgotPassword = () => {
     setError('');
+    setSuccessMessage('');
     setIsForgotPassword(false);
   };
 
   const switchBackFromSignup = () => {
     setError('');
+    setSuccessMessage('');
     setNeedsConfirmation(false);
     setIsSignup(false);
   };
@@ -176,7 +223,7 @@ export default function LoginForm({ onSuccess, startWithSignup = false, onStateC
     
     setIsForgotPassword(false);
     setError('');
-    onSuccess?.();
+    safeOnSuccess();
   };
 
   return (
@@ -216,8 +263,8 @@ export default function LoginForm({ onSuccess, startWithSignup = false, onStateC
             error={error}
             onSubmitAction={handleSignUp}
             onBackAction={switchBackFromSignup}
+            onClose={handleCloseModal}
           />
-          {/* Add "Resend Code" button if user previously started signup */}
           {confirmationEmail && !needsConfirmation && (
             <div className="mt-4 text-center">
               <button
@@ -234,9 +281,11 @@ export default function LoginForm({ onSuccess, startWithSignup = false, onStateC
           form={loginForm}
           loading={loading}
           error={error}
+          successMessage={successMessage}
           onSubmit={handleLogin}
           onForgotPassword={switchToForgotPassword}
           onSignUp={switchToSignup}
+          onClose={handleCloseModal}
         />
       )}
 

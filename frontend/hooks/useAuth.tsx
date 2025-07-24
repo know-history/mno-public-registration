@@ -37,8 +37,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      await authService.signIn({ email, password });
-      await checkUser();
+      const result = await authService.signIn({ email, password });
+      
+      if (result && typeof result === 'object' && 'isSignedIn' in result && !result.isSignedIn) {
+        const confirmError = new Error('User is not confirmed.');
+        (confirmError as any).name = 'UserNotConfirmedException';
+        throw confirmError;
+      }
+      
+      try {
+        const currentUser = await authService.getCurrentUser();
+        
+        if (!currentUser) {
+          const confirmError = new Error('User is not confirmed.');
+          (confirmError as any).name = 'UserNotConfirmedException';
+          throw confirmError;
+        }
+        
+        setUser(currentUser);
+      } catch (userError: any) {
+        if (userError?.message?.includes('not authenticated') || 
+            userError?.name === 'UserUnAuthenticatedException') {
+          const confirmError = new Error('User is not confirmed.');
+          (confirmError as any).name = 'UserNotConfirmedException';
+          throw confirmError;
+        }
+        throw userError;
+      }
     } catch (error) {
       throw error;
     }

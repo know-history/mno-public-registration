@@ -16,7 +16,6 @@ import {
 import LoginForm from "@/components/Auth/LoginForm";
 import { useAuth } from "@/hooks/useAuth";
 
-// TypeScript interfaces
 interface NavigationItem {
   label: string;
   href: string;
@@ -59,6 +58,8 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   startWithSignup?: boolean;
+  isInConfirmation?: boolean;
+  onStateChange?: (state: { needsConfirmation: boolean }) => void;
 }
 
 interface LandingProps {
@@ -177,21 +178,41 @@ const NavigationDropdown: React.FC<NavigationDropdownProps> = ({ title, items, i
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onToggle, openDropdown, toggleDropdown }) => {
   const navigationItems = [
     {
-      title: "ABOUT THE MNO",
-      key: "about",
+      title: "PROGRAMS & SERVICES",
+      key: "programs",
       items: [
-        { label: "About the MNO", href: "https://www.metisnation.org/about-the-mno/" },
-        { label: "Leadership", href: "https://www.metisnation.org/about-the-mno/leadership/" },
-        { label: "Council", href: "https://www.metisnation.org/about-the-mno/council/" },
-        { label: "Governance", href: "https://www.metisnation.org/about-the-mno/governance/" },
-        { label: "Contact Us", href: "https://www.metisnation.org/about-the-mno/contact-us/" },
+        { label: "Healing & Wellness", href: "https://www.metisnation.org/programs-and-services/healing-wellness/" },
+        { label: "Education & Training", href: "https://www.metisnation.org/programs-and-services/education-training/" },
+        { label: "Housing & Infrastructure", href: "https://www.metisnation.org/programs-and-services/housing-infrastructure/" },
+        { label: "Lands, Resources & Consultations", href: "https://www.metisnation.org/programs-and-services/lands-resources-consultations/" },
+        { label: "Intergovernmental Relations", href: "https://www.metisnation.org/programs-and-services/intergovernmental-relations/" },
+        { label: "Economic Development", href: "https://www.metisnation.org/programs-and-services/economic-development/" },
+      ]
+    },
+    {
+      title: "GOVERNANCE",
+      key: "governance",
+      items: [
+        { label: "Self-Government", href: "https://www.metisnation.org/governance/self-government/" },
+        { label: "Governing Structure", href: "https://www.metisnation.org/governance/governing-structure/" },
+        { label: "AGA Business", href: "https://www.metisnation.org/governance/aga-business/" },
+        { label: "Reference Documents", href: "https://www.metisnation.org/governance/reference-documents/" },
+      ]
+    },
+    {
+      title: "COMMUNITY COUNCILS",
+      key: "councils",
+      items: [
+        { label: "Overview and Vacancy Notices", href: "https://www.metisnation.org/community-councils/" },
+        { label: "Council Contacts", href: "https://www.metisnation.org/community-councils/council-contacts/" },
+        { label: "Community Councils Map", href: "https://www.metisnation.org/community-councils/community-councils-map/" },
       ]
     },
     {
       title: "REGISTRY",
       key: "registry",
       items: [
-        { label: "Registry", href: "https://www.metisnation.org/registry/" },
+        { label: "Registry Overview", href: "https://www.metisnation.org/registry/" },
         { label: "Citizenship", href: "https://www.metisnation.org/registry/citizenship/" },
         { label: "Harvesting", href: "https://www.metisnation.org/registry/harvesting/" },
         { label: "Rights", href: "https://www.metisnation.org/registry/rights/" },
@@ -249,21 +270,41 @@ const Header: React.FC<HeaderProps> = ({ openDropdown, toggleDropdown }) => {
 
   const navigationItems = [
     {
-      title: "ABOUT THE MNO",
-      key: "about",
+      title: "PROGRAMS & SERVICES",
+      key: "programs",
       items: [
-        { label: "About the MNO", href: "https://www.metisnation.org/about-the-mno/" },
-        { label: "Leadership", href: "https://www.metisnation.org/about-the-mno/leadership/" },
-        { label: "Council", href: "https://www.metisnation.org/about-the-mno/council/" },
-        { label: "Governance", href: "https://www.metisnation.org/about-the-mno/governance/" },
-        { label: "Contact Us", href: "https://www.metisnation.org/about-the-mno/contact-us/" },
+        { label: "Healing & Wellness", href: "https://www.metisnation.org/programs-and-services/healing-wellness/" },
+        { label: "Education & Training", href: "https://www.metisnation.org/programs-and-services/education-training/" },
+        { label: "Housing & Infrastructure", href: "https://www.metisnation.org/programs-and-services/housing-infrastructure/" },
+        { label: "Lands, Resources & Consultations", href: "https://www.metisnation.org/programs-and-services/lands-resources-consultations/" },
+        { label: "Intergovernmental Relations", href: "https://www.metisnation.org/programs-and-services/intergovernmental-relations/" },
+        { label: "Economic Development", href: "https://www.metisnation.org/programs-and-services/economic-development/" },
+      ]
+    },
+    {
+      title: "GOVERNANCE",
+      key: "governance",
+      items: [
+        { label: "Self-Government", href: "https://www.metisnation.org/governance/self-government/" },
+        { label: "Governing Structure", href: "https://www.metisnation.org/governance/governing-structure/" },
+        { label: "AGA Business", href: "https://www.metisnation.org/governance/aga-business/" },
+        { label: "Reference Documents", href: "https://www.metisnation.org/governance/reference-documents/" },
+      ]
+    },
+    {
+      title: "COMMUNITY COUNCILS",
+      key: "councils",
+      items: [
+        { label: "Overview and Vacancy Notices", href: "https://www.metisnation.org/community-councils/" },
+        { label: "Council Contacts", href: "https://www.metisnation.org/community-councils/council-contacts/" },
+        { label: "Community Councils Map", href: "https://www.metisnation.org/community-councils/community-councils-map/" },
       ]
     },
     {
       title: "REGISTRY",
       key: "registry",
       items: [
-        { label: "Registry", href: "https://www.metisnation.org/registry/" },
+        { label: "Registry Overview", href: "https://www.metisnation.org/registry/" },
         { label: "Citizenship", href: "https://www.metisnation.org/registry/citizenship/" },
         { label: "Harvesting", href: "https://www.metisnation.org/registry/harvesting/" },
         { label: "Rights", href: "https://www.metisnation.org/registry/rights/" },
@@ -644,10 +685,14 @@ const BottomFooter = () => {
   );
 };
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, startWithSignup = false }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, startWithSignup = false, isInConfirmation = false, onStateChange }) => {
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
+    if (isInConfirmation) {
+      return;
+    }
+    
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -661,7 +706,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, startWithSignu
       <div
         onClick={(e) => e.stopPropagation()}
       >
-        <LoginForm onSuccess={onClose} startWithSignup={startWithSignup} />
+        <LoginForm 
+          onSuccess={onClose} 
+          startWithSignup={startWithSignup}
+          onStateChange={onStateChange}
+        />
       </div>
     </div>
   );
@@ -673,8 +722,6 @@ const Landing: React.FC<LandingProps> = ({ onDashboardClick = () => console.erro
   const [startWithSignup, setStartWithSignup] = useState<boolean>(false);
   const [isInConfirmation, setIsInConfirmation] = useState<boolean>(false);
   const { user, signOut } = useAuth();
-
-  console.log('Landing component rendered, onDashboardClick received:', !!onDashboardClick);
 
   const toggleDropdown = (menuName: string) => {
     setOpenDropdown(openDropdown === menuName ? null : menuName);
@@ -701,8 +748,6 @@ const Landing: React.FC<LandingProps> = ({ onDashboardClick = () => console.erro
   };
 
   const handleDashboardClick = () => {
-    console.log('handleDashboardClick called in Landing.tsx'); // Debug log
-    console.log('onDashboardClick prop:', onDashboardClick); // Debug log
     if (onDashboardClick) {
       onDashboardClick();
     } else {
