@@ -10,7 +10,6 @@ export default function Home() {
   const [showDashboard, setShowDashboard] = useState(false);
 
   const handleDashboardClick = () => {
-    console.log('handleDashboardClick called in page.tsx'); // Debug log
     setShowDashboard(true);
   };
 
@@ -23,7 +22,6 @@ export default function Home() {
   }
 
   if (showDashboard && user) {
-    console.log('Showing dashboard');
     return (
       <main className="min-h-screen">
         <Dashboard onBackToLanding={() => setShowDashboard(false)} />
@@ -31,7 +29,6 @@ export default function Home() {
     );
   }
 
-  console.log('Showing landing page, passing onDashboardClick:', !!handleDashboardClick); // Debug log
   return (
     <main className="min-h-screen">
       <Landing onDashboardClick={handleDashboardClick} />
