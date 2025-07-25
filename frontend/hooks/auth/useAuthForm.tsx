@@ -20,8 +20,17 @@ interface UseAuthFormReturn<T extends FieldValues> {
   setValue: UseFormReturn<T>['setValue'];
   getValues: UseFormReturn<T>['getValues'];
   control: UseFormReturn<T>['control'];
+  getFieldState: UseFormReturn<T>['getFieldState'];
+  clearErrors: UseFormReturn<T>['clearErrors'];
+  trigger: UseFormReturn<T>['trigger'];
+  resetField: UseFormReturn<T>['resetField'];
+  setError: UseFormReturn<T>['setError'];
+  setFocus: UseFormReturn<T>['setFocus'];
+  unregister: UseFormReturn<T>['unregister'];
+  subscribe: UseFormReturn<T>['subscribe'];
+  handleSubmit: UseFormReturn<T>['handleSubmit'];
   
-  handleSubmit: (onSubmit: (data: T) => void | Promise<void>) => (e?: React.BaseSyntheticEvent) => Promise<void>;
+  handleAuthSubmit: (onSubmit: (data: T) => void | Promise<void>) => (e?: React.BaseSyntheticEvent) => Promise<void>;
   
   isSubmitting: boolean;
   submitError: string;
@@ -30,7 +39,7 @@ interface UseAuthFormReturn<T extends FieldValues> {
   isConfirmationRequired: boolean;
   
   dismissError: () => void;
-  setError: (error: unknown) => void;
+  setFormError: (error: unknown) => void;
   clearError: () => void;
   resetForm: () => void;
 }
@@ -65,7 +74,7 @@ export function useAuthForm<T extends FieldValues>(
     mode: "onChange" as const,
   }) as UseFormReturn<T>;
 
-  const handleSubmit = useCallback(
+  const handleAuthSubmit = useCallback(
     (onSubmit: (data: T) => void | Promise<void>) => {
       return form.handleSubmit(async (data) => {
         if (isSubmitting) return;
@@ -111,8 +120,17 @@ export function useAuthForm<T extends FieldValues>(
     setValue: form.setValue,
     getValues: form.getValues,
     control: form.control,
+    getFieldState: form.getFieldState,
+    clearErrors: form.clearErrors,
+    trigger: form.trigger,
+    resetField: form.resetField,
+    setError: form.setError,
+    setFocus: form.setFocus,
+    unregister: form.unregister,
+    subscribe: form.subscribe,
+    handleSubmit: form.handleSubmit,
     
-    handleSubmit,
+    handleAuthSubmit,
     
     isSubmitting,
     submitError,
@@ -121,7 +139,7 @@ export function useAuthForm<T extends FieldValues>(
     isConfirmationRequired,
     
     dismissError,
-    setError,
+    setFormError: setError,
     clearError,
     resetForm,
   };

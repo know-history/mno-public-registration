@@ -1,43 +1,66 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SubmitButtonProps } from "@/lib/auth/types/form.types";
+
+interface SubmitButtonProps {
+  children: React.ReactNode;
+  loading?: boolean;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+  loadingText?: string;
+  type?: 'submit' | 'button' | 'reset';
+  onClick?: () => void;
+}
+
+const variants = {
+  primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
+  secondary: "bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500",
+  danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
+};
+
+const sizes = {
+  sm: "px-3 py-2 text-sm",
+  md: "px-4 py-3 text-base",
+  lg: "px-6 py-4 text-lg",
+};
 
 export function SubmitButton({
   children,
   loading = false,
   disabled = false,
-  variant = "primary",
+  variant = 'primary',
+  size = 'md',
   className,
+  loadingText,
+  type = 'submit',
+  onClick,
+  ...props
 }: SubmitButtonProps) {
-  const isDisabled = loading || disabled;
-
-  const baseClasses =
-    "w-full py-3.5 text-base font-semibold rounded-lg transition-all";
-
-  const variantClasses = {
-    primary: isDisabled
-      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-      : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl cursor-pointer",
-    secondary: isDisabled
-      ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400 cursor-pointer",
-  };
+  const isDisabled = disabled || loading;
 
   return (
     <button
-      type="submit"
+      type={type}
       disabled={isDisabled}
-      className={cn(baseClasses, variantClasses[variant], className)}
-    >
-      {loading ? (
-        <span className="flex items-center justify-center">
-          <Loader2 className="animate-spin h-5 w-5 mr-2" />
-          {typeof children === "string" ? "Loading..." : children}
-        </span>
-      ) : (
-        children
+      onClick={onClick}
+      className={cn(
+        "w-full font-semibold rounded-lg transition-all duration-200",
+        "focus:outline-none focus:ring-2 focus:ring-offset-2",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+        variants[variant],
+        sizes[size],
+        className
       )}
+      {...props}
+    >
+      <div className="flex items-center justify-center">
+        {loading && (
+          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+        )}
+        {loading && loadingText ? loadingText : children}
+      </div>
     </button>
   );
 }
