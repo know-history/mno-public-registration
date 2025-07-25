@@ -1,37 +1,51 @@
+import { ReactNode } from "react";
+
+export interface PasswordRequirement {
+  key: string;
+  label: string;
+  test: (password: string) => boolean;
+  met: boolean;
+}
+
 export interface FormFieldProps {
   name: string;
-  type?: "text" | "email" | "password" | "date";
+  type?: string;
   label: string;
   placeholder?: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   disabled?: boolean;
   required?: boolean;
+  autoComplete?: string;
   className?: string;
+  inputClassName?: string;
 }
 
-export interface PasswordFieldProps extends Omit<FormFieldProps, "type"> {
-  showToggle?: boolean;
-  strength?: boolean;
-}
-
-export interface SubmitButtonProps {
-  children: React.ReactNode;
-  loading?: boolean;
+export interface PasswordFieldProps {
+  name: string;
+  label: string;
+  placeholder?: string;
   disabled?: boolean;
-  variant?: "primary" | "secondary";
+  required?: boolean;
+  showToggle?: boolean;
+  showStrength?: boolean;
+  showRequirements?: boolean;
   className?: string;
 }
 
-export interface AuthFormProps {
-  loading?: boolean;
-  error?: string;
-  onSubmit: (data: any) => Promise<void>;
-  onBack?: () => void;
+export interface AuthModalProps {
+  children: ReactNode;
   onClose?: () => void;
+  title?: string;
+  subtitle?: string;
+  showCloseButton?: boolean;
+  closeOnEscape?: boolean;
+  closeOnOverlayClick?: boolean;
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export interface ConfirmationProps extends AuthFormProps {
-  email: string;
-  onResendCode?: () => Promise<void>;
-  type: "signup" | "passwordReset";
+export interface RateLimitConfig {
+  maxAttempts: number;
+  windowMs: number;
+  escalationMs: number;
 }

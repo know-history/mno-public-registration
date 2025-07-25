@@ -2,17 +2,29 @@ import React, { useState, useRef, useCallback } from "react";
 import { useFormContext } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PasswordFieldProps } from "@/lib/auth/types/form.types";
-import { updatePasswordRequirements } from "@/lib/auth/utils/passwordValidation";
+import { usePasswordValidation } from "@/hooks/auth/usePasswordValidation";
+
+interface PasswordFieldProps {
+  name: string;
+  label: string;
+  placeholder?: string;
+  disabled?: boolean;
+  required?: boolean;
+  showToggle?: boolean;
+  showStrength?: boolean;
+  showRequirements?: boolean;
+  className?: string;
+}
 
 export function PasswordField({
   name,
   label,
-  placeholder,
+  placeholder = "Enter your password",
   disabled = false,
   required = false,
   showToggle = true,
-  strength = false,
+  showStrength = false,
+  showRequirements = false,
   className,
 }: PasswordFieldProps) {
   const { register, formState, watch } = useFormContext();
@@ -22,9 +34,14 @@ export function PasswordField({
   const error = formState.errors[name]?.message as string | undefined;
   const passwordValue = watch(name) || "";
 
+  const { requirements, strength, isValid } =
+    usePasswordValidation(passwordValue);
+
   const mergedPasswordRef = useCallback(
     (node: HTMLInputElement | null) => {
-      const rhfRef = register(name).ref;
+      const rhfRef = register(name, {
+        required: required ? `${label} is required` : false,
+      }).ref;
 
       if (typeof rhfRef === "function") rhfRef(node);
       else if (rhfRef)
@@ -33,7 +50,7 @@ export function PasswordField({
 
       passwordInputRef.current = node;
     },
-    [register, name]
+    [register, name, required, label]
   );
 
   const togglePasswordVisibility = () => {
@@ -41,19 +58,36 @@ export function PasswordField({
     setTimeout(() => passwordInputRef.current?.focus(), 0);
   };
 
-  const passwordRequirements = strength
-    ? updatePasswordRequirements(passwordValue)
-    : [];
+  const getStrengthColor = (strength: number) => {
+    if (strength >= 80) return "text-green-600";
+    if (strength >= 60) return "text-yellow-600";
+    if (strength >= 40) return "text-orange-600";
+    return "text-red-600";
+  };
+
+  const getStrengthBarColor = (strength: number) => {
+    if (strength >= 80) return "bg-green-500";
+    if (strength >= 60) return "bg-yellow-500";
+    if (strength >= 40) return "bg-orange-500";
+    return "bg-red-500";
+  };
+
+  const getStrengthLabel = (strength: number) => {
+    if (strength >= 80) return "Strong";
+    if (strength >= 60) return "Good";
+    if (strength >= 40) return "Fair";
+    return "Weak";
+  };
 
   return (
     <div className={cn("space-y-4", className)}>
-      {strength && passwordRequirements.length > 0 && (
+      {showRequirements && passwordValue && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
           <h4 className="text-base font-semibold text-gray-800 mb-3">
             Password Requirements
           </h4>
-          <ul className="space-y-2 text-base">
-            {passwordRequirements.map((requirement) => (
+          <ul className="space-y-2 text-sm">
+            {requirements.map((requirement) => (
               <li
                 key={requirement.key}
                 className={cn(
@@ -91,48 +125,65 @@ export function PasswordField({
             type={showPassword ? "text" : "password"}
             placeholder={placeholder}
             disabled={disabled}
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck="false"
             className={cn(
-              "px-4 py-3.5 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all",
-              showToggle ? "pr-14" : "pr-4",
-              error
-                ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                : "",
-              disabled
-                ? "bg-gray-50 text-gray-500 cursor-not-allowed"
-                : "cursor-text"
+              "w-full text-base border-2 border-gray-200 rounded-lg outline-none transition-all",
+              "px-4 py-3.5 bg-white text-slate-900 font-medium",
+              "hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100",
+              showToggle && "pr-12",
+              disabled &&
+                "bg-gray-100 text-slate-500 cursor-not-allowed border-gray-200",
+              error && "border-red-300 focus:border-red-500 focus:ring-red-100"
             )}
           />
 
           {showToggle && (
-            <>
-              <div className="absolute top-2 bottom-2 right-12 w-[1px] bg-gray-300" />
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  togglePasswordVisibility();
-                }}
-                disabled={disabled}
-                className={cn(
-                  "absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition",
-                  disabled ? "cursor-not-allowed" : "cursor-pointer"
-                )}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <Eye className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              disabled={disabled}
+              className={cn(
+                "absolute right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded",
+                disabled && "cursor-not-allowed opacity-50"
+              )}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
           )}
         </div>
 
-        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+        {error && <p className="text-xs text-red-500 mt-1 px-1">{error}</p>}
+
+        {showStrength && passwordValue && !error && (
+          <div className="mt-2 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-600">Password strength:</span>
+              <span
+                className={cn(
+                  "text-xs font-medium",
+                  getStrengthColor(strength)
+                )}
+              >
+                {getStrengthLabel(strength)}
+              </span>
+            </div>
+
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className={cn(
+                  "h-2 rounded-full transition-all duration-300",
+                  getStrengthBarColor(strength)
+                )}
+                style={{ width: `${strength}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
