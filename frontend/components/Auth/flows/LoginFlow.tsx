@@ -4,7 +4,13 @@ import { Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthForm } from "@/hooks/auth";
 import { loginSchema } from "@/lib/auth/schemas";
-import { FormField, PasswordField, ErrorAlert, SuccessAlert, SubmitButton } from "@/components/ui/shared";
+import {
+  FormField,
+  PasswordField,
+  ErrorAlert,
+  SuccessAlert,
+  SubmitButton,
+} from "@/components/ui/shared";
 
 interface LoginFlowProps {
   onSuccess?: () => void;
@@ -20,7 +26,7 @@ export function LoginFlow({
   successMessage,
 }: LoginFlowProps) {
   const { signIn } = useAuth();
-  
+
   const form = useAuthForm(loginSchema, {
     context: "login",
     onSuccess,
@@ -39,11 +45,12 @@ export function LoginFlow({
 
       <FormProvider {...form}>
         <div className="space-y-6">
-          {successMessage && (
-            <SuccessAlert message={successMessage} />
-          )}
+          {successMessage && <SuccessAlert message={successMessage} />}
 
-          <form onSubmit={form.handleAuthSubmit(handleLogin)} className="space-y-6">
+          <form
+            onSubmit={form.handleAuthSubmit(handleLogin)}
+            className="space-y-6"
+          >
             <FormField
               name="email"
               type="email"
@@ -80,7 +87,7 @@ export function LoginFlow({
             <button
               type="button"
               onClick={onSwitchToForgotPassword}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
             >
               Forgot your password?
             </button>
@@ -92,7 +99,7 @@ export function LoginFlow({
               <button
                 type="button"
                 onClick={onSwitchToSignup}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
               >
                 Sign up
               </button>

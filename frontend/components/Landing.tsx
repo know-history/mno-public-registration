@@ -13,7 +13,8 @@ import {
   X,
 } from "lucide-react";
 
-import AuthModal from "@/components/auth/AuthModal";
+import { AuthModal } from "@/components/ui/shared";
+import { AuthFlow, AuthFlowStep } from "@/components/auth/AuthFlow";
 import { useAuth } from "@/hooks/useAuth";
 import Image from "next/image";
 
@@ -836,29 +837,20 @@ const AuthModalWrapper: React.FC<AuthModalWrapperProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (isInConfirmation) {
-      return;
-    }
-
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
+  const canClose = !isInConfirmation;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50"
-      onClick={handleBackdropClick}
+    <AuthModal 
+      onClose={canClose ? onClose : undefined}
+      showCloseButton={canClose}
+      closeOnEscape={canClose}
+      closeOnOverlayClick={canClose}
     >
-      <div onClick={(e) => e.stopPropagation()}>
-        <AuthModal
-          onSuccess={onClose}
-          startWithSignup={startWithSignup}
-          onStateChange={onStateChange}
-        />
-      </div>
-    </div>
+      <AuthFlow
+        initialStep={startWithSignup ? AuthFlowStep.SIGNUP : AuthFlowStep.LOGIN}
+        onSuccess={onClose}
+      />
+    </AuthModal>
   );
 };
 

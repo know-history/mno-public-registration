@@ -4,7 +4,13 @@ import { Mail, User, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthForm } from "@/hooks/auth";
 import { signupSchema } from "@/lib/auth/schemas";
-import { FormField, PasswordField, ErrorAlert, SubmitButton } from "@/components/ui/shared";
+import {
+  FormField,
+  PasswordField,
+  ErrorAlert,
+  SubmitButton,
+} from "@/components/ui/shared";
+import { DatePicker } from "@/components/form/DatePicker";
 
 interface SignupFlowProps {
   onSuccess?: (email: string) => void;
@@ -13,7 +19,7 @@ interface SignupFlowProps {
 
 export function SignupFlow({ onSuccess, onSwitchToLogin }: SignupFlowProps) {
   const { signUp } = useAuth();
-  
+
   const form = useAuthForm(signupSchema, {
     context: "signup",
     onSuccess: (data) => {
@@ -35,12 +41,17 @@ export function SignupFlow({ onSuccess, onSwitchToLogin }: SignupFlowProps) {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Create account</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          Create account
+        </h2>
         <p className="text-gray-600">Join us today</p>
       </div>
 
       <FormProvider {...form}>
-        <form onSubmit={form.handleAuthSubmit(handleSignup)} className="space-y-6">
+        <form
+          onSubmit={form.handleAuthSubmit(handleSignup)}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-2 gap-4">
             <FormField
               name="given_name"
@@ -71,11 +82,10 @@ export function SignupFlow({ onSuccess, onSwitchToLogin }: SignupFlowProps) {
             autoComplete="email"
           />
 
-          <FormField
+          <DatePicker
             name="date_of_birth"
-            type="date"
             label="Date of Birth"
-            icon={<Calendar className="w-5 h-5" />}
+            placeholder="Select your date of birth"
             required
           />
 
@@ -115,7 +125,7 @@ export function SignupFlow({ onSuccess, onSwitchToLogin }: SignupFlowProps) {
               <button
                 type="button"
                 onClick={onSwitchToLogin}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
               >
                 Sign in
               </button>

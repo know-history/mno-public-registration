@@ -53,9 +53,35 @@ export function PasswordField({
     [register, name, required, label]
   );
 
+  // Enhanced iOS focus preservation
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
-    setTimeout(() => passwordInputRef.current?.focus(), 0);
+    
+    // Enhanced focus preservation for mobile/iOS
+    const currentFocus = passwordInputRef.current;
+    if (currentFocus) {
+      // Store current selection
+      const start = currentFocus.selectionStart;
+      const end = currentFocus.selectionEnd;
+      
+      // Use multiple methods to ensure focus is maintained
+      setTimeout(() => {
+        if (currentFocus) {
+          currentFocus.focus();
+          // Restore selection if it existed
+          if (start !== null && end !== null) {
+            currentFocus.setSelectionRange(start, end);
+          }
+        }
+      }, 0);
+      
+      // Additional timeout for iOS Safari
+      setTimeout(() => {
+        if (currentFocus && document.activeElement !== currentFocus) {
+          currentFocus.focus();
+        }
+      }, 10);
+    }
   };
 
   const getStrengthColor = (strength: number) => {
@@ -92,7 +118,9 @@ export function PasswordField({
                 key={requirement.key}
                 className={cn(
                   "flex items-center",
-                  requirement.met ? "text-green-600" : "text-gray-500"
+                  requirement.met
+                    ? "text-green-600"
+                    : "text-gray-500"
                 )}
               >
                 <div
@@ -142,7 +170,7 @@ export function PasswordField({
               onClick={togglePasswordVisibility}
               disabled={disabled}
               className={cn(
-                "absolute right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors",
+                "absolute right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer",
                 "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded",
                 disabled && "cursor-not-allowed opacity-50"
               )}
@@ -157,34 +185,34 @@ export function PasswordField({
           )}
         </div>
 
-        {error && <p className="text-xs text-red-500 mt-1 px-1">{error}</p>}
-
-        {showStrength && passwordValue && !error && (
-          <div className="mt-2 space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-600">Password strength:</span>
-              <span
-                className={cn(
-                  "text-xs font-medium",
-                  getStrengthColor(strength)
-                )}
-              >
-                {getStrengthLabel(strength)}
-              </span>
-            </div>
-
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={cn(
-                  "h-2 rounded-full transition-all duration-300",
-                  getStrengthBarColor(strength)
-                )}
-                style={{ width: `${strength}%` }}
-              />
-            </div>
-          </div>
+        {error && (
+          <p className="text-xs text-red-500 mt-1 px-1">
+            {error}
+          </p>
         )}
       </div>
+
+      {showStrength && passwordValue && (
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700">
+              Password strength
+            </span>
+            <span className={cn("text-sm font-medium", getStrengthColor(strength))}>
+              {getStrengthLabel(strength)}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className={cn(
+                "h-2 rounded-full transition-all duration-300",
+                getStrengthBarColor(strength)
+              )}
+              style={{ width: `${strength}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

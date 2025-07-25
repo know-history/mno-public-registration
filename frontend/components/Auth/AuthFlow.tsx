@@ -26,12 +26,50 @@ export function AuthFlow({
   onSuccess,
   onClose,
   initialStep = AuthFlowStep.LOGIN,
-  title = "Authentication",
+  title,
   subtitle,
 }: AuthFlowProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [confirmationEmail, setConfirmationEmail] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const getStepTitle = (step: AuthFlowStep): string => {
+    if (title) return title;
+    
+    switch (step) {
+      case AuthFlowStep.LOGIN:
+        return "Welcome back";
+      case AuthFlowStep.SIGNUP:
+        return "Create account";
+      case AuthFlowStep.FORGOT_PASSWORD:
+        return "Reset password";
+      case AuthFlowStep.CONFIRM_SIGNUP:
+        return "Confirm your account";
+      case AuthFlowStep.CONFIRM_PASSWORD_RESET:
+        return "Confirm password reset";
+      default:
+        return "Authentication";
+    }
+  };
+
+  const getStepSubtitle = (step: AuthFlowStep): string => {
+    if (subtitle) return subtitle;
+    
+    switch (step) {
+      case AuthFlowStep.LOGIN:
+        return "Sign in to your account";
+      case AuthFlowStep.SIGNUP:
+        return "Join us today";
+      case AuthFlowStep.FORGOT_PASSWORD:
+        return "Enter your email and we'll send you a reset code";
+      case AuthFlowStep.CONFIRM_SIGNUP:
+        return "Please check your email for a confirmation code";
+      case AuthFlowStep.CONFIRM_PASSWORD_RESET:
+        return "Enter the code sent to your email";
+      default:
+        return "";
+    }
+  };
 
   const handleLoginSuccess = () => {
     setSuccessMessage("");
@@ -152,7 +190,13 @@ export function AuthFlow({
   };
 
   return (
-    <AuthModal onClose={onClose} title={title} subtitle={subtitle} size="md">
+    <AuthModal 
+      onClose={onClose} 
+      title={getStepTitle(currentStep)} 
+      subtitle={getStepSubtitle(currentStep)} 
+      size="md"
+      showCloseButton
+    >
       {renderCurrentStep()}
     </AuthModal>
   );

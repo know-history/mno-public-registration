@@ -32,13 +32,6 @@ export function PasswordResetFlow({
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Reset password</h2>
-        <p className="text-gray-600">
-          Enter your email and we'll send you a reset code
-        </p>
-      </div>
-
       <FormProvider {...form}>
         <div className="space-y-6">
           {successMessage && (
@@ -77,7 +70,7 @@ export function PasswordResetFlow({
               <button
                 type="button"
                 onClick={onSwitchToLogin}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
               >
                 Back to sign in
               </button>

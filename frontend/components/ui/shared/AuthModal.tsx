@@ -79,12 +79,12 @@ export function AuthModal({
           <div className="flex items-start justify-between p-6 border-b border-gray-100">
             <div className="flex-1">
               {title && (
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <h2 className="text-2xl text-center font-bold text-gray-900 mb-2">
                   {title}
                 </h2>
               )}
               {subtitle && (
-                <p className="text-gray-600 text-base leading-relaxed">
+                <p className="text-gray-600 text-center text-base leading-relaxed">
                   {subtitle}
                 </p>
               )}

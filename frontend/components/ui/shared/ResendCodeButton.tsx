@@ -115,7 +115,9 @@ export function ResendCodeButton({
           "w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all",
           "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50",
           "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-          "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white",
+          isDisabled 
+            ? "opacity-50 cursor-not-allowed hover:bg-white" 
+            : "cursor-pointer",
           className
         )}
       >
