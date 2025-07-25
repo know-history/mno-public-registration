@@ -1,4 +1,4 @@
-import { Amplify } from 'aws-amplify';
+import { Amplify } from "aws-amplify";
 
 const awsConfig = {
   Auth: {
@@ -6,14 +6,14 @@ const awsConfig = {
       userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!,
       userPoolClientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID!,
       identityPoolId: process.env.NEXT_PUBLIC_COGNITO_IDENTITY_POOL_ID!,
-    }
+    },
   },
   Storage: {
     S3: {
       bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
       region: process.env.NEXT_PUBLIC_AWS_REGION!,
-    }
-  }
+    },
+  },
 };
 
 Amplify.configure(awsConfig);

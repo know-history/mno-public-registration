@@ -5,39 +5,54 @@ import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import ForgotPassword from "@/components/Auth/ForgotPassword";
-import Login from "@/components/Auth/Login";
-import SignUp from "@/components/Auth/SignUp";
+import ForgotPassword from "@/components/auth/ForgotPassword";
+import Login from "@/components/auth/Login";
+import SignUp from "@/components/auth/SignUp";
 import ConfirmSignUp from "./ConfirmSignUp";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 const signupSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   password_confirmation: z
     .string()
     .min(8, "Password must be at least 8 characters"),
   given_name: z.string().min(1, "First name is required"),
   family_name: z.string().min(1, "Last name is required"),
-  data_of_birth: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: "Date of birth must be a valid date",
-    }),
+  date_of_birth: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Date of birth must be a valid date",
+  }),
 });
 
 const resetPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address"),
 });
+
+const confirmResetPasswordSchema = z
+  .object({
+    email: z.email("Invalid email address"),
+    code: z.string().length(6, "Code must be 6 digits"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    password_confirmation: z
+      .string()
+      .min(8, "Password must be at least 8 characters"),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: "Passwords do not match",
+    path: ["password_confirmation"],
+  });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type SignupFormData = z.infer<typeof signupSchema>;
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+export type ConfirmForgotPasswordFormData = z.infer<
+  typeof confirmResetPasswordSchema
+>;
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -84,8 +99,12 @@ export default function LoginForm({
     resolver: zodResolver(loginSchema),
   });
 
-  const resetPasswordForm = useForm({
+  const resetPasswordForm = useForm<{ email: string }>({
     resolver: zodResolver(resetPasswordSchema),
+  });
+
+  const confirmResetPasswordForm = useForm<ConfirmForgotPasswordFormData>({
+    resolver: zodResolver(confirmResetPasswordSchema),
   });
 
   const signupForm = useForm({
@@ -98,10 +117,10 @@ export default function LoginForm({
     setSuccessMessage("");
 
     try {
-      const result = await signIn(data.email, data.password);
+      await signIn(data.email, data.password);
       safeOnSuccess();
-    } catch (err: any) {
-      const errorText = String(err?.message || "").toLowerCase();
+    } catch (err: unknown) {
+      const errorText = String((err as Error)?.message || "").toLowerCase();
       const errorStringified = JSON.stringify(err).toLowerCase();
       const errorToString = String(err).toLowerCase();
 
@@ -123,7 +142,7 @@ export default function LoginForm({
           setError(
             "Your account is not confirmed. A new confirmation code has been sent to your email."
           );
-        } catch (resendError) {
+        } catch {
           setError(
             "Your account is not confirmed. Please enter the confirmation code."
           );
@@ -135,7 +154,7 @@ export default function LoginForm({
 
         return;
       } else {
-        setError(err?.message || "Login failed");
+        setError((err as Error)?.message || "Login failed");
       }
     } finally {
       setLoading(false);
@@ -209,12 +228,6 @@ export default function LoginForm({
     setError("");
     setSuccessMessage("");
     setIsSignup(true);
-  };
-
-  const switchToLogin = () => {
-    setError("");
-    setSuccessMessage("");
-    setIsSignup(false);
   };
 
   const switchToForgotPassword = () => {
@@ -291,7 +304,7 @@ export default function LoginForm({
           <div className="fixed bottom-4 left-4 right-4 text-center z-50">
             <button
               onClick={handleReopenConfirmation}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-base hover:bg-blue-700"
             >
               Already have an account? Resend confirmation code
             </button>

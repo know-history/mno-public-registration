@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { X, AlertCircle } from "lucide-react";
+import { X, AlertCircle, ArrowLeft } from "lucide-react";
 
 interface ConfirmSignUpProps {
   loading: boolean;
@@ -133,91 +133,97 @@ export default function ConfirmSignUp({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-y-auto px-4 py-8">
-      <button
-        onClick={handleCloseClick}
-        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-        aria-label="Close"
-      >
-        <X className="w-6 h-6" />
-      </button>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto px-4 py-8">
+      <div className="min-h-full flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md relative">
+          {/* Header with Back and Close */}
+          <div className="flex items-center justify-between p-6 pb-4">
+            <button
+              onClick={onBackAction}
+              className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Sign Up
+            </button>
 
-      <div className="max-w-md mx-auto mt-12 space-y-6">
-        <div className="text-center">
-          <h4 className="text-3xl text-[#333] font-bold">Confirm Your Email</h4>
-          <p className="text-sm text-[#333] mt-4">
-            Enter the confirmation code that was sent to your email.
-          </p>
-        </div>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSubmitAction();
-          }}
-          className="space-y-4"
-        >
-          <div className="flex justify-center gap-2 px-2">
-            {confirmationCode.map((digit, index) => (
-              <input
-                key={index}
-                type="text"
-                maxLength={1}
-                value={digit}
-                onChange={handleInput}
-                onKeyDown={handleKeyDown}
-                onFocus={handleFocus}
-                onPaste={handlePaste}
-                ref={(el) => {
-                  inputRefs.current[index] = el;
-                }}
-                className="w-12 h-12 border border-gray-300 rounded-lg text-[#333] text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            ))}
+            <button
+              onClick={handleCloseClick}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {dismissibleError && (
-            <div
-              className="flex items-center bg-red-100 text-red-800 p-3 rounded-lg relative"
-              role="alert"
-            >
-              <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
-              <span className="text-sm font-medium flex-1">
-                {dismissibleError}
-              </span>
-              <button
-                onClick={dismissError}
-                className="ml-3 flex-shrink-0 hover:bg-red-200 rounded-lg transition-all p-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
+          {/* Body */}
+          <div className="px-6 pb-8">
+            <div className="text-center mb-8">
+              <h4 className="text-3xl font-bold text-gray-900">Confirm Your Email</h4>
+              <p className="text-gray-600 mt-4">
+                Enter the confirmation code that was sent to your email.
+              </p>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={
-              loading ||
-              confirmationCode.some((d) => d === "") ||
-              confirmationCode.length !== 6
-            }
-            className={`w-full py-2.5 text-white font-medium rounded-lg ${
-              loading || confirmationCode.some((d) => d === "")
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {loading ? "Confirming..." : "Confirm"}
-          </button>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSubmitAction();
+              }}
+              className="space-y-6"
+            >
+              <div className="flex justify-center gap-2 px-2">
+                {confirmationCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={handleInput}
+                    onKeyDown={handleKeyDown}
+                    onFocus={handleFocus}
+                    onPaste={handlePaste}
+                    ref={(el) => {
+                      inputRefs.current[index] = el;
+                    }}
+                    className="w-12 h-12 border border-gray-300 rounded-lg text-gray-900 text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                ))}
+              </div>
 
-          <button
-            type="button"
-            onClick={onBackAction}
-            className="text-blue-600 text-center hover:underline block w-full"
-          >
-            Back to Sign Up
-          </button>
-        </form>
+              {dismissibleError && (
+                <div
+                  className="flex items-center bg-red-50 text-red-700 p-4 rounded-lg border border-red-200"
+                  role="alert"
+                >
+                  <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <span className="text-base font-medium flex-1">{dismissibleError}</span>
+                  <button
+                    onClick={dismissError}
+                    className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={
+                  loading ||
+                  confirmationCode.some((d) => d === "") ||
+                  confirmationCode.length !== 6
+                }
+                className={`w-full py-3.5 text-base font-semibold rounded-lg transition-all ${
+                  loading || confirmationCode.some((d) => d === "")
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                }`}
+              >
+                {loading ? "Confirming..." : "Confirm"}
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );

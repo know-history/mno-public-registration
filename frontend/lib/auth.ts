@@ -1,41 +1,74 @@
-import { 
-  signIn, 
-  signUp, 
-  confirmSignUp, 
+import {
+  signIn,
+  signUp,
+  confirmSignUp,
   signOut,
   getCurrentUser,
-  fetchAuthSession ,
+  fetchAuthSession,
   resetPassword,
-} from 'aws-amplify/auth';
+  resendSignUpCode,
+  confirmResetPassword,
+} from "aws-amplify/auth";
 
-export interface SignUpParams {
+interface SignUpParams {
   email: string;
   password: string;
   given_name?: string;
   family_name?: string;
 }
 
-export interface SignInParams {
+interface SignInParams {
   email: string;
   password: string;
 }
 
-export interface ForgotPasswordParams {
+interface ForgotPasswordParams {
+  email: string;
+}
+
+interface ResendSignUpCodeParams {
   email: string;
 }
 
 export const authService = {
-  resetPassword: async ({ email } : ForgotPasswordParams)=> {
+  resetPassword: async ({ email }: ForgotPasswordParams) => {
     try {
-      const result = await resetPassword({username: email});
+      const result = await resetPassword({ username: email });
       return result;
     } catch (error) {
-      console.error('Reset password error', error);
+      console.error("Reset password error", error);
       throw error;
     }
   },
 
-  signUp: async ({ email, password, given_name, family_name }: SignUpParams) => {
+  confirmResetPassword: async ({
+    email,
+    code,
+    newPassword,
+  }: {
+    email: string;
+    code: string;
+    newPassword: string;
+  }) => {
+    try {
+      const result = await confirmResetPassword({
+        username: email,
+        confirmationCode: code,
+        newPassword: newPassword,
+      });
+      return result;
+    } catch (error) {
+      console.error("Confirm reset password error:", error);
+      throw error;
+    }
+  },
+
+  signUp: async ({
+    email,
+    password,
+    given_name,
+    family_name,
+  }: SignUpParams) => {
     try {
       const result = await signUp({
         username: email,
@@ -43,15 +76,15 @@ export const authService = {
         options: {
           userAttributes: {
             email,
-            given_name: given_name || '',
-            family_name: family_name || '',
+            given_name: given_name || "",
+            family_name: family_name || "",
             "custom:user_role": "applicant",
-          }
-        }
+          },
+        },
       });
       return result;
     } catch (error) {
-      console.error('Sign up error:', error);
+      console.error("Sign up error:", error);
       throw error;
     }
   },
@@ -60,24 +93,24 @@ export const authService = {
     try {
       const result = await confirmSignUp({
         username: email,
-        confirmationCode
+        confirmationCode,
       });
       return result;
     } catch (error) {
-      console.error('Confirm sign up error:', error);
+      console.error("Confirm sign up error:", error);
       throw error;
     }
   },
 
   signIn: async ({ email, password }: SignInParams) => {
     try {
-      const result = await signIn({ 
-        username: email, 
-        password 
+      const result = await signIn({
+        username: email,
+        password,
       });
       return result;
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error("Sign in error:", error);
       throw error;
     }
   },
@@ -86,17 +119,25 @@ export const authService = {
     try {
       await signOut();
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error("Sign out error:", error);
       throw error;
     }
   },
 
-  getCurrentUser: async () => {
+  getCurrentUser: async (silentCheck: boolean = false) => {
     try {
       const user = await getCurrentUser();
       return user;
-    } catch (error) {
-      console.error('Get current user error:', error);
+    } catch (error: unknown) {
+      if (
+        !silentCheck &&
+        typeof error === "object" &&
+        error !== null &&
+        "name" in error &&
+        (error as { name?: string }).name !== "UserUnAuthenticatedException"
+      ) {
+        console.error("Get current user error:", error);
+      }
       return null;
     }
   },
@@ -106,8 +147,20 @@ export const authService = {
       const session = await fetchAuthSession();
       return session;
     } catch (error) {
-      console.error('Get current session error:', error);
+      console.error("Get current session error:", error);
       return null;
     }
-  }
+  },
+
+  resendSignUpCode: async ({ email }: ResendSignUpCodeParams) => {
+    try {
+      const result = await resendSignUpCode({
+        username: email,
+      });
+      return result;
+    } catch (error) {
+      console.error("Resend sign up code error:", error);
+      return null;
+    }
+  },
 };

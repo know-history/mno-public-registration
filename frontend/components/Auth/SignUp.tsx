@@ -1,7 +1,23 @@
-import { useEffect, useState } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { UseFormReturn, FormProvider } from "react-hook-form";
 import { SignupFormData } from "./LoginForm";
-import { X, Eye, EyeOff, AlertCircle } from "lucide-react";
+import {
+  X,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  ArrowLeft,
+  Mail,
+  Loader2,
+  User,
+  Info,
+} from "lucide-react";
+import { DatePicker } from "@/components/form/DatePicker";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 interface SignUpProps {
   form: UseFormReturn<SignupFormData>;
@@ -24,6 +40,67 @@ export default function SignUp({
   const [showPasswordConfirmation, setShowPasswordConfirmation] =
     useState(false);
   const [dismissibleError, setDismissibleError] = useState<string>("");
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const mergedPasswordRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      const rhfRef = form.register("password", {
+        required: "Password is required",
+      }).ref;
+
+      if (typeof rhfRef === "function") rhfRef(node);
+      else if (rhfRef)
+        (rhfRef as React.MutableRefObject<HTMLInputElement | null>).current =
+          node;
+
+      passwordInputRef.current = node;
+    },
+    [form]
+  );
+
+  const [rulesMet, setRulesMet] = useState({
+    minLength: false,
+    lowercase: false,
+    uppercase: false,
+    numbers: false,
+    specialChars: false,
+  });
+
+  const watchedFields = form.watch();
+  const passwordsMatch =
+    watchedFields.password === watchedFields.password_confirmation;
+  const requiredFieldsFilled =
+    watchedFields.given_name &&
+    watchedFields.family_name &&
+    watchedFields.email &&
+    watchedFields.date_of_birth &&
+    watchedFields.password &&
+    watchedFields.password_confirmation;
+
+  const allRulesMet = Object.values(rulesMet).every(Boolean);
+  const canSubmit = passwordsMatch && requiredFieldsFilled && allRulesMet;
+
+  const dobLabel = (
+    <>
+      Date of Birth
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="ml-1 flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="More information about Date of Birth"
+          >
+            <Info className="w-3 h-3" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3 text-sm text-gray-700">
+          We collect your date of birth to customize the application you will be
+          submitting. Applicants under 16 years old will require their
+          application to be created under an account held by their parent or
+          guardian.
+        </PopoverContent>
+      </Popover>
+    </>
+  );
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -63,27 +140,6 @@ export default function SignUp({
     }
   }, [error]);
 
-  const [rulesMet, setRulesMet] = useState({
-    minLength: false,
-    lowercase: false,
-    uppercase: false,
-    numbers: false,
-    specialChars: false,
-  });
-
-  const watchedFields = form.watch();
-  const passwordsMatch =
-    watchedFields.password === watchedFields.password_confirmation;
-  const requiredFieldsFilled =
-    watchedFields.given_name &&
-    watchedFields.family_name &&
-    watchedFields.email &&
-    watchedFields.data_of_birth &&
-    watchedFields.password &&
-    watchedFields.password_confirmation;
-
-  const canSubmit = passwordsMatch && requiredFieldsFilled;
-
   useEffect(() => {
     const password = watchedFields.password || "";
     setRulesMet({
@@ -95,231 +151,284 @@ export default function SignUp({
     });
   }, [watchedFields.password]);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const togglePasswordConfirmationVisibility = () => {
-    setShowPasswordConfirmation(!showPasswordConfirmation);
-  };
-
   const dismissError = () => {
     setDismissibleError("");
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-y-auto px-4 py-8">
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-        aria-label="Close"
-      >
-        <X className="w-6 h-6" />
-      </button>
-
-      <div className="max-w-md mx-auto mt-12 space-y-6">
-        <div className="text-center">
-          <h4 className="text-3xl font-bold text-[#333]">Sign Up</h4>
-          <p className="mt-2 text-base text-[#333]">
-            Please enter your details.
-          </p>
-        </div>
-
-        <form
-          onSubmit={form.handleSubmit(onSubmitAction)}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <input
-                {...form.register("given_name")}
-                placeholder="First Name *"
-                className="px-4 py-3 w-full border border-gray-300 rounded-lg text-[#333] placeholder-gray-500"
-              />
-              {form.formState.errors.given_name && (
-                <p className="text-xs text-red-500 ml-1">
-                  {form.formState.errors.given_name.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <input
-                {...form.register("family_name")}
-                placeholder="Last Name *"
-                className="px-4 py-3 w-full border border-gray-300 rounded-lg text-[#333] placeholder-gray-500"
-              />
-              {form.formState.errors.family_name && (
-                <p className="text-xs text-red-500 ml-1">
-                  {form.formState.errors.family_name.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <input
-              {...form.register("email")}
-              type="email"
-              placeholder="Email *"
-              className="px-4 py-3 w-full border border-gray-300 rounded-lg text-[#333] placeholder-gray-500"
-            />
-            {form.formState.errors.email && (
-              <p className="text-xs text-red-500 ml-1">
-                {form.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <div className="relative w-full">
-              <input
-                {...form.register("data_of_birth")}
-                type="date"
-                placeholder="Date of Birth *"
-                className="px-4 py-3 w-full border border-gray-300 rounded-lg text-[#333]"
-                style={{
-                  colorScheme: "light",
-                  maxWidth: "100%",
-                  boxSizing: "border-box",
-                }}
-              />
-              <label className="absolute -top-2 left-3 bg-white px-1 text-xs text-[#333]">
-                Date of Birth *
-              </label>
-            </div>
-            {form.formState.errors.data_of_birth && (
-              <p className="text-xs text-red-500 ml-1">
-                {form.formState.errors.data_of_birth.message}
-              </p>
-            )}
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="text-base font-semibold text-[#333] mb-2">
-              Your password must contain:
-            </h4>
-            <ul className="space-y-1 text-sm text-[#333]">
-              {Object.entries(rulesMet).map(([rule, met]) => (
-                <li
-                  key={rule}
-                  className={met ? "text-teal-500" : "text-[#333]"}
-                >
-                  {rule === "minLength" && "A minimum of 8 characters."}
-                  {rule === "lowercase" && "A lowercase character."}
-                  {rule === "uppercase" && "An uppercase character."}
-                  {rule === "numbers" && "A number."}
-                  {rule === "specialChars" && "A special character."}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="space-y-1">
-            <div className="relative">
-              <input
-                {...form.register("password")}
-                type={showPassword ? "text" : "password"}
-                placeholder="Password *"
-                className="px-4 py-3 w-full border border-gray-300 rounded-lg pr-12 text-[#333] placeholder-gray-500"
-                autoComplete="new-password"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck="false"
-              />
-              <button
-                type="button"
-                onClick={togglePasswordVisibility}
-                className="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600 flex items-center"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-            {form.formState.errors.password && (
-              <p className="text-xs text-red-500 ml-1">
-                {form.formState.errors.password.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <div className="relative">
-              <input
-                {...form.register("password_confirmation")}
-                type={showPasswordConfirmation ? "text" : "password"}
-                placeholder="Password Confirmation *"
-                className="px-4 py-3 w-full border border-gray-300 rounded-lg pr-12 text-[#333] placeholder-gray-500"
-                autoComplete="new-password"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck="false"
-              />
-              <button
-                type="button"
-                onClick={togglePasswordConfirmationVisibility}
-                className="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-gray-600 flex items-center"
-              >
-                {showPasswordConfirmation ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-            {form.formState.errors.password_confirmation && (
-              <p className="text-xs text-red-500 ml-1">
-                {form.formState.errors.password_confirmation.message}
-              </p>
-            )}
-          </div>
-
-          {!passwordsMatch && watchedFields.password_confirmation && (
-            <div className="text-red-600 text-sm ml-1">
-              Passwords do not match.
-            </div>
-          )}
-
-          {dismissibleError && (
-            <div
-              className="flex items-center bg-red-100 text-red-800 p-3 rounded-lg relative"
-              role="alert"
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto px-4 py-8">
+      <div className="min-h-full flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md relative">
+          <div className="flex items-center justify-between p-6 pb-4">
+            <button
+              onClick={onBackAction}
+              className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors"
             >
-              <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
-              <span className="text-sm font-medium flex-1">
-                {dismissibleError}
-              </span>
-              <button
-                onClick={dismissError}
-                className="ml-3 flex-shrink-0 hover:bg-red-200 rounded-lg transition-all p-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Sign In
+            </button>
+
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="px-6 pb-8">
+            <div className="text-center mb-8">
+              <h4 className="text-3xl font-bold text-gray-900 mb-2">
+                Create Account
+              </h4>
+              <p className="text-gray-600">
+                Join us to get started with your application.
+              </p>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading || !canSubmit}
-            className={`w-full py-2.5 text-white font-medium rounded-lg ${
-              loading || !canSubmit
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {loading ? "Creating account..." : "Submit"}
-          </button>
+            <FormProvider {...form}>
+              <form
+                onSubmit={form.handleSubmit(async (data) => {
+                  const dob = new Date(data.date_of_birth);
+                  const today = new Date();
+                  const age = today.getFullYear() - dob.getFullYear();
+                  const monthDiff = today.getMonth() - dob.getMonth();
+                  const dayDiff = today.getDate() - dob.getDate();
 
-          <button
-            type="button"
-            onClick={onBackAction}
-            className="text-blue-600 text-center hover:underline block w-full"
-          >
-            Back to login
-          </button>
-        </form>
+                  const isUnder16 =
+                    age < 16 ||
+                    (age === 16 &&
+                      (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)));
+
+                  if (isUnder16) {
+                    setDismissibleError(
+                      "You must be at least 16 years old to create an account."
+                    );
+                    return;
+                  }
+
+                  await onSubmitAction(data);
+                })}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative flex items-center">
+                    <label className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10">
+                      First Name
+                    </label>
+                    <input
+                      {...form.register("given_name")}
+                      type="text"
+                      placeholder="Enter first name"
+                      className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                    />
+                    <User className="absolute right-4 w-[18px] h-[18px] text-gray-400" />
+                    {form.formState.errors.given_name && (
+                      <p className="text-xs text-red-500 ml-1 absolute -bottom-5 left-0">
+                        {form.formState.errors.given_name.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="relative flex items-center">
+                    <label className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10">
+                      Last Name
+                    </label>
+                    <input
+                      {...form.register("family_name")}
+                      type="text"
+                      placeholder="Enter last name"
+                      className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                    />
+                    <User className="absolute right-4 w-[18px] h-[18px] text-gray-400" />
+                    {form.formState.errors.family_name && (
+                      <p className="text-xs text-red-500 ml-1 absolute -bottom-5 left-0">
+                        {form.formState.errors.family_name.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="relative flex items-center">
+                  <label className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10">
+                    Email
+                  </label>
+                  <input
+                    {...form.register("email")}
+                    type="email"
+                    placeholder="Enter email"
+                    className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                  />
+                  <Mail className="absolute right-4 w-[18px] h-[18px] text-gray-400" />
+                  {form.formState.errors.email && (
+                    <p className="text-xs text-red-500 ml-1 absolute -bottom-5 left-0">
+                      {form.formState.errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="relative flex flex-col w-full">
+                  <DatePicker
+                    name="date_of_birth"
+                    label={dobLabel}
+                    placeholder="Enter date of birth"
+                  />
+                </div>
+
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+                  <h4 className="text-base font-semibold text-gray-800 mb-3">
+                    Password Requirements
+                  </h4>
+                  <ul className="space-y-2 text-base">
+                    {Object.entries(rulesMet).map(([rule, met]) => (
+                      <li
+                        key={rule}
+                        className={`flex items-center ${met ? "text-green-600" : "text-gray-500"}`}
+                      >
+                        <div
+                          className={`w-1.5 h-1.5 rounded-full mr-3 ${met ? "bg-green-500" : "bg-gray-300"}`}
+                        ></div>
+                        {rule === "minLength" && "At least 8 characters"}
+                        {rule === "lowercase" && "One lowercase letter"}
+                        {rule === "uppercase" && "One uppercase letter"}
+                        {rule === "numbers" && "One number"}
+                        {rule === "specialChars" && "One special character"}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="relative flex items-center">
+                  <label className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10">
+                    Password
+                  </label>
+                  <input
+                    {...form.register("password", {
+                      required: "Password is required",
+                    })}
+                    ref={mergedPasswordRef}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter password"
+                    className="px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
+                  />
+                  <div className="absolute top-2 bottom-2 right-12 w-[1px] bg-gray-300"></div>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      setShowPassword((prev) => !prev);
+                      setTimeout(() => passwordInputRef.current?.focus(), 0);
+                    }}
+                    className="absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <Eye className="w-5 h-5 text-gray-400" />
+                    )}
+                  </button>
+                  {form.formState.errors.password && (
+                    <p className="text-xs text-red-500 ml-1 absolute -bottom-5 left-0">
+                      {form.formState.errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="relative flex items-center">
+                  <label className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10">
+                    Confirm Password
+                  </label>
+                  <input
+                    {...form.register("password_confirmation", {
+                      required: "Please confirm your password",
+                    })}
+                    type={showPasswordConfirmation ? "text" : "password"}
+                    placeholder="Confirm password"
+                    className="px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
+                  />
+                  <div className="absolute top-2 bottom-2 right-12 w-[1px] bg-gray-300"></div>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setShowPasswordConfirmation((prev) => !prev)}
+                    className="absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition"
+                    aria-label={
+                      showPasswordConfirmation
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                  >
+                    {showPasswordConfirmation ? (
+                      <EyeOff className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <Eye className="w-5 h-5 text-gray-400" />
+                    )}
+                  </button>
+
+                  {form.formState.errors.password_confirmation && (
+                    <p className="text-xs text-red-500 ml-1 absolute -bottom-5 left-0">
+                      {form.formState.errors.password_confirmation.message}
+                    </p>
+                  )}
+                </div>
+
+                {!passwordsMatch && watchedFields.password_confirmation && (
+                  <div className="text-red-600 text-base ml-1 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    Passwords do not match.
+                  </div>
+                )}
+
+                {dismissibleError && (
+                  <div
+                    className="flex items-center bg-red-50 text-red-700 p-4 rounded-lg border border-red-200"
+                    role="alert"
+                  >
+                    <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+                    <span className="text-base font-medium flex-1">
+                      {dismissibleError}
+                    </span>
+                    <button
+                      onClick={dismissError}
+                      className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || !canSubmit}
+                  className={`w-full py-3.5 text-base font-semibold rounded-lg transition-all ${
+                    loading || !canSubmit
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                  }`}
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white pr-2" />
+                      Creating Account...
+                    </span>
+                  ) : (
+                    "Create Account"
+                  )}
+                </button>
+              </form>
+            </FormProvider>
+          </div>
+        </div>
       </div>
     </div>
   );
