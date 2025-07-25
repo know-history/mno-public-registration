@@ -26,49 +26,31 @@ interface ForgotPasswordParams {
   email: string;
 }
 
+interface ConfirmResetPasswordParams {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
 interface ResendSignUpCodeParams {
   email: string;
 }
 
 export const authService = {
-  resetPassword: async ({ email }: ForgotPasswordParams) => {
+  async signIn({ email, password }: SignInParams) {
     try {
-      const result = await resetPassword({ username: email });
-      return result;
-    } catch (error) {
-      console.error("Reset password error", error);
-      throw error;
-    }
-  },
-
-  confirmResetPassword: async ({
-    email,
-    code,
-    newPassword,
-  }: {
-    email: string;
-    code: string;
-    newPassword: string;
-  }) => {
-    try {
-      const result = await confirmResetPassword({
+      const result = await signIn({
         username: email,
-        confirmationCode: code,
-        newPassword: newPassword,
+        password,
       });
       return result;
     } catch (error) {
-      console.error("Confirm reset password error:", error);
+      console.error("Sign in error:", error);
       throw error;
     }
   },
 
-  signUp: async ({
-    email,
-    password,
-    given_name,
-    family_name,
-  }: SignUpParams) => {
+  async signUp({ email, password, given_name, family_name }: SignUpParams) {
     try {
       const result = await signUp({
         username: email,
@@ -89,7 +71,7 @@ export const authService = {
     }
   },
 
-  confirmSignUp: async (email: string, confirmationCode: string) => {
+  async confirmSignUp(email: string, confirmationCode: string) {
     try {
       const result = await confirmSignUp({
         username: email,
@@ -102,20 +84,7 @@ export const authService = {
     }
   },
 
-  signIn: async ({ email, password }: SignInParams) => {
-    try {
-      const result = await signIn({
-        username: email,
-        password,
-      });
-      return result;
-    } catch (error) {
-      console.error("Sign in error:", error);
-      throw error;
-    }
-  },
-
-  signOut: async () => {
+  async signOut() {
     try {
       await signOut();
     } catch (error) {
@@ -124,7 +93,47 @@ export const authService = {
     }
   },
 
-  getCurrentUser: async (silentCheck: boolean = false) => {
+  async resetPassword({ email }: ForgotPasswordParams) {
+    try {
+      const result = await resetPassword({ username: email });
+      return result;
+    } catch (error) {
+      console.error("Reset password error:", error);
+      throw error;
+    }
+  },
+
+  async confirmResetPassword({
+    email,
+    code,
+    newPassword,
+  }: ConfirmResetPasswordParams) {
+    try {
+      const result = await confirmResetPassword({
+        username: email,
+        confirmationCode: code,
+        newPassword: newPassword,
+      });
+      return result;
+    } catch (error) {
+      console.error("Confirm reset password error:", error);
+      throw error;
+    }
+  },
+
+  async resendSignUpCode({ email }: ResendSignUpCodeParams) {
+    try {
+      const result = await resendSignUpCode({
+        username: email,
+      });
+      return result;
+    } catch (error) {
+      console.error("Resend sign up code error:", error);
+      throw error;
+    }
+  },
+
+  async getCurrentUser(silentCheck: boolean = false) {
     try {
       const user = await getCurrentUser();
       return user;
@@ -138,29 +147,17 @@ export const authService = {
       ) {
         console.error("Get current user error:", error);
       }
-      return null;
+      throw error;
     }
   },
 
-  getCurrentSession: async () => {
+  async getCurrentSession() {
     try {
       const session = await fetchAuthSession();
       return session;
     } catch (error) {
       console.error("Get current session error:", error);
-      return null;
-    }
-  },
-
-  resendSignUpCode: async ({ email }: ResendSignUpCodeParams) => {
-    try {
-      const result = await resendSignUpCode({
-        username: email,
-      });
-      return result;
-    } catch (error) {
-      console.error("Resend sign up code error:", error);
-      return null;
+      throw error;
     }
   },
 };

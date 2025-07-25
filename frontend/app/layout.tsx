@@ -2,7 +2,7 @@
 
 import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
-import "@/lib/aws-config";
+import "@/lib/config/aws";
 
 export default function RootLayout({
   children,
