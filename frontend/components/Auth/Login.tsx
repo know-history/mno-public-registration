@@ -28,6 +28,10 @@ export default function Login({
   const [dismissibleError, setDismissibleError] = useState<string>("");
   const [dismissibleSuccess, setDismissibleSuccess] = useState<string>("");
   const passwordInputRef = useRef<HTMLInputElement>(null);
+  
+  const watchedFields = form.watch();
+  const canSubmit = watchedFields.email && watchedFields.password;
+
   const mergedPasswordRef = useCallback(
     (node: HTMLInputElement | null) => {
       const rhfRef = form.register("password", {
@@ -109,7 +113,7 @@ export default function Login({
           <div className="flex items-center justify-end p-6 pb-4">
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
@@ -118,12 +122,13 @@ export default function Login({
 
           <div className="px-6 pb-8">
             <div className="text-center mb-8">
-              <h4 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h4>
-              <p className="text-gray-600">
-                Login to your account to continue.
+              <h4 className="text-3xl font-bold text-gray-900">Welcome Back</h4>
+              <p className="text-gray-600 mt-4">
+                Please sign in to your account
               </p>
             </div>
-            <form className="space-y-8">
+
+            <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
               <div className="relative flex items-center">
                 <label className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10">
                   Email
@@ -131,10 +136,10 @@ export default function Login({
                 <input
                   {...form.register("email", { required: "Email is required" })}
                   type="email"
-                  placeholder="Enter email"
-                  className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                  placeholder="Enter email address"
+                  className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all cursor-text"
                 />
-                <Mail className="absolute right-4 w-[18px] h-[18px] text-gray-400" />
+                <Mail className="absolute right-4 w-5 h-5 text-gray-400" strokeWidth={1.8} />
                 {form.formState.errors.email && (
                   <p className="text-xs text-red-500 ml-1 absolute -bottom-5 left-0">
                     {form.formState.errors.email.message}
@@ -153,7 +158,7 @@ export default function Login({
                   ref={mergedPasswordRef}
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter password"
-                  className="px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                  className="px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all cursor-text"
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck="false"
@@ -166,7 +171,7 @@ export default function Login({
                     setShowPassword((prev) => !prev);
                     setTimeout(() => passwordInputRef.current?.focus(), 0);
                   }}
-                  className="absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition"
+                  className="absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition cursor-pointer"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -175,12 +180,33 @@ export default function Login({
                     <Eye className="w-5 h-5 text-gray-400" />
                   )}
                 </button>
+
                 {form.formState.errors.password && (
                   <p className="text-xs text-red-500 ml-1 absolute -bottom-5 left-0">
                     {form.formState.errors.password.message}
                   </p>
                 )}
               </div>
+
+              {dismissibleSuccess && (
+                <div
+                  className="flex items-center bg-green-50 text-green-700 p-4 rounded-lg border border-green-200"
+                  role="alert"
+                >
+                  <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-base font-medium flex-1">
+                    {dismissibleSuccess}
+                  </span>
+                  <button
+                    onClick={dismissSuccess}
+                    className="ml-3 flex-shrink-0 hover:bg-green-100 rounded-lg transition-all p-1 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               {dismissibleError && (
                 <div
@@ -193,25 +219,7 @@ export default function Login({
                   </span>
                   <button
                     onClick={dismissError}
-                    className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              {dismissibleSuccess && (
-                <div
-                  className="flex items-center bg-green-50 text-green-700 p-4 rounded-lg border border-green-200"
-                  role="alert"
-                >
-                  <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span className="text-base font-medium flex-1">
-                    {dismissibleSuccess}
-                  </span>
-                  <button
-                    onClick={dismissSuccess}
-                    className="ml-3 flex-shrink-0 hover:bg-green-100 rounded-lg transition-all p-1"
+                    className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -219,10 +227,13 @@ export default function Login({
               )}
 
               <button
-                type="button"
-                className="w-full py-3.5 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl transition-all"
-                onClick={form.handleSubmit(onSubmit)}
-                disabled={loading}
+                type="submit"
+                disabled={loading || !canSubmit}
+                className={`w-full py-3.5 text-base font-semibold rounded-lg transition-all ${
+                  loading || !canSubmit
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl cursor-pointer"
+                }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -239,7 +250,7 @@ export default function Login({
               <div className="text-center">
                 <button
                   type="button"
-                  className="text-blue-600 hover:text-blue-800 font-medium text-base transition-colors"
+                  className="text-blue-600 hover:text-blue-800 font-medium text-base transition-colors cursor-pointer"
                   onClick={onForgotPassword}
                 >
                   Forgot Your Password?
@@ -257,7 +268,7 @@ export default function Login({
 
               <button
                 type="button"
-                className="w-full py-3 text-base font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 transition-all"
+                className="w-full py-3 text-base font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 transition-all cursor-pointer"
                 onClick={onSignUp}
               >
                 Create Account

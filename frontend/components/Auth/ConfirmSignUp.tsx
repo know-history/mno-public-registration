@@ -11,6 +11,7 @@ interface ConfirmSignUpProps {
   onSubmitAction: () => void | Promise<void>;
   onBackAction: () => void;
   onClose?: () => void;
+  onResendCode?: () => Promise<void>;
 }
 
 export default function ConfirmSignUp({
@@ -21,9 +22,24 @@ export default function ConfirmSignUp({
   onSubmitAction,
   onBackAction,
   onClose,
+  onResendCode,
 }: ConfirmSignUpProps) {
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [dismissibleError, setDismissibleError] = useState<string>("");
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendAttempts, setResendAttempts] = useState(0);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (resendCountdown > 0) {
+      interval = setInterval(() => {
+        setResendCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendCountdown]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -50,13 +66,13 @@ export default function ConfirmSignUp({
     if (error) {
       let processedError = error;
 
-      if (error.includes("CodeMismatchException")) {
-        processedError = "Invalid confirmation code. Please try again.";
+      if (error.includes("CodeMismatchException") || error.includes("Invalid verification code")) {
+        processedError = "Invalid confirmation code. Please check your email and try again.";
       } else if (error.includes("ExpiredCodeException")) {
-        processedError =
-          "Confirmation code has expired. Please request a new one.";
+        processedError = "Confirmation code expired. Please request a new one.";
       } else if (error.includes("LimitExceededException")) {
-        processedError = "Too many attempts. Please try again later.";
+        processedError = "Too many attempts. Please wait before trying again.";
+        setIsRateLimited(true);
       } else if (error.includes("NotAuthorizedException")) {
         processedError = "Invalid confirmation code";
       }
@@ -64,6 +80,7 @@ export default function ConfirmSignUp({
       setDismissibleError(processedError);
     } else {
       setDismissibleError("");
+      setIsRateLimited(false);
     }
   }, [error]);
 
@@ -77,6 +94,34 @@ export default function ConfirmSignUp({
 
   const dismissError = () => {
     setDismissibleError("");
+  };
+
+  const handleResendCode = async () => {
+    if (!onResendCode || resendCountdown > 0 || isRateLimited) return;
+    
+    if (resendAttempts >= 2) {
+      setIsRateLimited(true);
+      setResendCountdown(600);
+      setDismissibleError("Too many resend attempts. Please wait before trying again.");
+      return;
+    }
+    
+    setResendLoading(true);
+    try {
+      await onResendCode();
+      setResendAttempts(prev => prev + 1);
+      
+      const countdown = resendAttempts === 0 ? 60 : 120;
+      setResendCountdown(countdown);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("LimitExceededException")) {
+        setIsRateLimited(true);
+        setResendCountdown(600);
+      }
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -136,11 +181,10 @@ export default function ConfirmSignUp({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto px-4 py-8">
       <div className="min-h-full flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md relative">
-          {/* Header with Back and Close */}
           <div className="flex items-center justify-between p-6 pb-4">
             <button
               onClick={onBackAction}
-              className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors"
+              className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Sign Up
@@ -148,14 +192,13 @@ export default function ConfirmSignUp({
 
             <button
               onClick={handleCloseClick}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Body */}
           <div className="px-6 pb-8">
             <div className="text-center mb-8">
               <h4 className="text-3xl font-bold text-gray-900">Confirm Your Email</h4>
@@ -171,23 +214,52 @@ export default function ConfirmSignUp({
               }}
               className="space-y-6"
             >
-              <div className="flex justify-center gap-2 px-2">
-                {confirmationCode.map((digit, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    maxLength={1}
-                    value={digit}
-                    onChange={handleInput}
-                    onKeyDown={handleKeyDown}
-                    onFocus={handleFocus}
-                    onPaste={handlePaste}
-                    ref={(el) => {
-                      inputRefs.current[index] = el;
-                    }}
-                    className="w-12 h-12 border border-gray-300 rounded-lg text-gray-900 text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                ))}
+              <div className="flex flex-col">
+                <div className="flex justify-center gap-2 px-2 mb-3">
+                  {confirmationCode.map((digit, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      maxLength={1}
+                      value={digit}
+                      onChange={handleInput}
+                      onKeyDown={handleKeyDown}
+                      onFocus={handleFocus}
+                      onPaste={handlePaste}
+                      ref={(el) => {
+                        inputRefs.current[index] = el;
+                      }}
+                      className="w-12 h-12 border border-gray-300 rounded-lg text-gray-900 text-center text-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  ))}
+                </div>
+
+                {onResendCode && (
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600">
+                      It may take a minute to receive your code. Didn't receive it?{" "}
+                      <button
+                        type="button"
+                        onClick={handleResendCode}
+                        disabled={resendCountdown > 0 || resendLoading || isRateLimited}
+                        className={`font-medium transition-colors underline ${
+                          resendCountdown > 0 || resendLoading || isRateLimited
+                            ? "text-gray-400 cursor-not-allowed no-underline"
+                            : "text-blue-600 hover:text-blue-800 cursor-pointer"
+                        }`}
+                      >
+                        {resendLoading 
+                          ? "Sending new code..." 
+                          : isRateLimited
+                            ? `Wait ${Math.floor(resendCountdown / 60)}m ${resendCountdown % 60}s to try again`
+                            : resendCountdown > 0 
+                              ? `Try again in ${resendCountdown}s` 
+                              : "Resend a new code"
+                        }
+                      </button>
+                    </p>
+                  </div>
+                )}
               </div>
 
               {dismissibleError && (
@@ -199,7 +271,7 @@ export default function ConfirmSignUp({
                   <span className="text-base font-medium flex-1">{dismissibleError}</span>
                   <button
                     onClick={dismissError}
-                    className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1"
+                    className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -213,7 +285,7 @@ export default function ConfirmSignUp({
                   confirmationCode.some((d) => d === "") ||
                   confirmationCode.length !== 6
                 }
-                className={`w-full py-3.5 text-base font-semibold rounded-lg transition-all ${
+                className={`w-full py-3.5 text-base font-semibold rounded-lg transition-all cursor-pointer ${
                   loading || confirmationCode.some((d) => d === "")
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"

@@ -86,7 +86,7 @@ export default function SignUp({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="ml-1 flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="ml-1 flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             aria-label="More information about Date of Birth"
           >
             <Info className="w-3 h-3" />
@@ -118,38 +118,23 @@ export default function SignUp({
   }, [onClose]);
 
   useEffect(() => {
-    if (error) {
-      let processedError = error;
-
-      if (
-        error.includes("UsernameExistsException") ||
-        error.includes("User already exists")
-      ) {
-        processedError = "User already exists";
-      } else if (error.includes("InvalidPasswordException")) {
-        processedError = "Password does not meet requirements";
-      } else if (error.includes("InvalidParameterException")) {
-        processedError = "Invalid input provided";
-      } else if (error.includes("CodeMismatchException")) {
-        processedError = "Invalid confirmation code";
-      }
-
-      setDismissibleError(processedError);
-    } else {
-      setDismissibleError("");
-    }
-  }, [error]);
-
-  useEffect(() => {
     const password = watchedFields.password || "";
     setRulesMet({
       minLength: password.length >= 8,
       lowercase: /[a-z]/.test(password),
       uppercase: /[A-Z]/.test(password),
       numbers: /\d/.test(password),
-      specialChars: /[^A-Za-z0-9]/.test(password),
+      specialChars: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
     });
   }, [watchedFields.password]);
+
+  useEffect(() => {
+    if (error) {
+      setDismissibleError(error);
+    } else {
+      setDismissibleError("");
+    }
+  }, [error]);
 
   const dismissError = () => {
     setDismissibleError("");
@@ -162,7 +147,7 @@ export default function SignUp({
           <div className="flex items-center justify-between p-6 pb-4">
             <button
               onClick={onBackAction}
-              className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors"
+              className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Sign In
@@ -170,7 +155,7 @@ export default function SignUp({
 
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
@@ -179,40 +164,18 @@ export default function SignUp({
 
           <div className="px-6 pb-8">
             <div className="text-center mb-8">
-              <h4 className="text-3xl font-bold text-gray-900 mb-2">
-                Create Account
-              </h4>
-              <p className="text-gray-600">
-                Join us to get started with your application.
+              <h4 className="text-3xl font-bold text-gray-900">Create Account</h4>
+              <p className="text-gray-600 mt-4">
+                Join us today and get started
               </p>
             </div>
 
             <FormProvider {...form}>
               <form
-                onSubmit={form.handleSubmit(async (data) => {
-                  const dob = new Date(data.date_of_birth);
-                  const today = new Date();
-                  const age = today.getFullYear() - dob.getFullYear();
-                  const monthDiff = today.getMonth() - dob.getMonth();
-                  const dayDiff = today.getDate() - dob.getDate();
-
-                  const isUnder16 =
-                    age < 16 ||
-                    (age === 16 &&
-                      (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)));
-
-                  if (isUnder16) {
-                    setDismissibleError(
-                      "You must be at least 16 years old to create an account."
-                    );
-                    return;
-                  }
-
-                  await onSubmitAction(data);
-                })}
+                onSubmit={form.handleSubmit(onSubmitAction)}
                 className="space-y-6"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="relative flex items-center">
                     <label className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10">
                       First Name
@@ -221,7 +184,7 @@ export default function SignUp({
                       {...form.register("given_name")}
                       type="text"
                       placeholder="Enter first name"
-                      className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                      className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all cursor-text"
                     />
                     <User className="absolute right-4 w-[18px] h-[18px] text-gray-400" />
                     {form.formState.errors.given_name && (
@@ -239,7 +202,7 @@ export default function SignUp({
                       {...form.register("family_name")}
                       type="text"
                       placeholder="Enter last name"
-                      className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                      className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all cursor-text"
                     />
                     <User className="absolute right-4 w-[18px] h-[18px] text-gray-400" />
                     {form.formState.errors.family_name && (
@@ -258,7 +221,7 @@ export default function SignUp({
                     {...form.register("email")}
                     type="email"
                     placeholder="Enter email"
-                    className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                    className="px-4 py-3.5 pr-8 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all cursor-text"
                   />
                   <Mail className="absolute right-4 w-[18px] h-[18px] text-gray-400" />
                   {form.formState.errors.email && (
@@ -269,6 +232,14 @@ export default function SignUp({
                 </div>
 
                 <div className="relative flex flex-col w-full">
+                  <style jsx>{`
+                    input[type="date"] {
+                      cursor: pointer;
+                    }
+                    input[type="date"]::-webkit-calendar-picker-indicator {
+                      cursor: pointer;
+                    }
+                  `}</style>
                   <DatePicker
                     name="date_of_birth"
                     label={dobLabel}
@@ -310,7 +281,7 @@ export default function SignUp({
                     ref={mergedPasswordRef}
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter password"
-                    className="px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                    className="px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all cursor-text"
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck="false"
@@ -323,7 +294,7 @@ export default function SignUp({
                       setShowPassword((prev) => !prev);
                       setTimeout(() => passwordInputRef.current?.focus(), 0);
                     }}
-                    className="absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition"
+                    className="absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition cursor-pointer"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
@@ -351,7 +322,7 @@ export default function SignUp({
                     })}
                     type={showPasswordConfirmation ? "text" : "password"}
                     placeholder="Confirm password"
-                    className="px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all"
+                    className="px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all cursor-text"
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck="false"
@@ -361,7 +332,7 @@ export default function SignUp({
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => setShowPasswordConfirmation((prev) => !prev)}
-                    className="absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition"
+                    className="absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition cursor-pointer"
                     aria-label={
                       showPasswordConfirmation
                         ? "Hide password"
@@ -400,7 +371,7 @@ export default function SignUp({
                     </span>
                     <button
                       onClick={dismissError}
-                      className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1"
+                      className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1 cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -413,7 +384,7 @@ export default function SignUp({
                   className={`w-full py-3.5 text-base font-semibold rounded-lg transition-all ${
                     loading || !canSubmit
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl cursor-pointer"
                   }`}
                 >
                   {loading ? (

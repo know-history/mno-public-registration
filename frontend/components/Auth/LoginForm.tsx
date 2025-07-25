@@ -9,6 +9,7 @@ import ForgotPassword from "@/components/auth/ForgotPassword";
 import Login from "@/components/auth/Login";
 import SignUp from "@/components/auth/SignUp";
 import ConfirmSignUp from "./ConfirmSignUp";
+import ConfirmForgotPassword from "./ConfirmForgotPassword";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 const loginSchema = z.object({
@@ -67,6 +68,7 @@ export default function LoginForm({
 }: LoginFormProps) {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [needsPasswordReset, setNeedsPasswordReset] = useState(false); // New state for password reset confirmation
   const [confirmationEmail, setConfirmationEmail] = useState("");
   const [confirmationCode, setConfirmationCode] = useState<string[]>(
     new Array(6).fill("")
@@ -79,7 +81,7 @@ export default function LoginForm({
   useLockBodyScroll(true);
 
   const safeOnSuccess = () => {
-    if (needsConfirmation) {
+    if (needsConfirmation || needsPasswordReset) {
       return;
     }
     onSuccess?.();
@@ -90,10 +92,19 @@ export default function LoginForm({
   }, [startWithSignup]);
 
   useEffect(() => {
-    onStateChange?.({ needsConfirmation });
-  }, [needsConfirmation, onStateChange]);
+    onStateChange?.({
+      needsConfirmation: needsConfirmation || needsPasswordReset,
+    });
+  }, [needsConfirmation, needsPasswordReset, onStateChange]);
 
-  const { signIn, signUp, confirmSignUp, resetPassword } = useAuth();
+  const {
+    signIn,
+    signUp,
+    confirmSignUp,
+    resetPassword,
+    confirmResetPassword,
+    resendSignUpCode,
+  } = useAuth();
 
   const loginForm = useForm({
     resolver: zodResolver(loginSchema),
@@ -166,11 +177,96 @@ export default function LoginForm({
     setError("");
     try {
       await resetPassword(data.email);
-      safeOnSuccess();
+      setConfirmationEmail(data.email);
+      setNeedsPasswordReset(true);
+      setIsForgotPassword(false);
+      confirmResetPasswordForm.setValue("email", data.email);
+      setSuccessMessage(
+        "If an account with this email exists, you will receive a password reset code shortly."
+      );
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Reset Password failed");
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      if (errorMessage.includes("LimitExceededException")) {
+        setError(
+          "Too many reset attempts. Please wait a few minutes before trying again."
+        );
+      } else {
+        setConfirmationEmail(data.email);
+        setNeedsPasswordReset(true);
+        setIsForgotPassword(false);
+        confirmResetPasswordForm.setValue("email", data.email);
+        setSuccessMessage(
+          "If an account with this email exists, you will receive a password reset code shortly."
+        );
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmResetPassword = async (
+    data: ConfirmForgotPasswordFormData
+  ) => {
+    setLoading(true);
+    setError("");
+    try {
+      await confirmResetPassword(data.email, data.code, data.password);
+      setNeedsPasswordReset(false);
+      setError("");
+      setIsForgotPassword(false);
+
+      setTimeout(() => {
+        setSuccessMessage(
+          "Password reset successfully! Please log in with your new password."
+        );
+      }, 100);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Password reset confirmation failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendSignUpCode = async () => {
+    if (!confirmationEmail) return;
+
+    try {
+      await resendSignUpCode(confirmationEmail);
+      setTimeout(() => {
+        setError("");
+      }, 100);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      if (errorMessage.includes("LimitExceededException")) {
+        setError("Too many resend attempts. Please wait before trying again.");
+      } else {
+      }
+    }
+  };
+
+  const handleResendPasswordResetCode = async () => {
+    if (!confirmationEmail) return;
+
+    try {
+      await resetPassword(confirmationEmail);
+      setTimeout(() => {
+        setError("");
+      }, 100);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      if (errorMessage.includes("LimitExceededException")) {
+        setError(
+          "Too many reset attempts. Please wait a few minutes before trying again."
+        );
+      } else {
+      }
     }
   };
 
@@ -217,13 +313,6 @@ export default function LoginForm({
     }
   };
 
-  const handleReopenConfirmation = () => {
-    if (confirmationEmail) {
-      setNeedsConfirmation(true);
-      setError("");
-    }
-  };
-
   const switchToSignup = () => {
     setError("");
     setSuccessMessage("");
@@ -240,6 +329,14 @@ export default function LoginForm({
     setError("");
     setSuccessMessage("");
     setIsForgotPassword(false);
+    setNeedsPasswordReset(false);
+  };
+
+  const switchBackFromPasswordReset = () => {
+    setError("");
+    setSuccessMessage("");
+    setNeedsPasswordReset(false);
+    setIsForgotPassword(true);
   };
 
   const switchBackFromSignup = () => {
@@ -250,9 +347,11 @@ export default function LoginForm({
   };
 
   const handleCloseModal = () => {
-    if (needsConfirmation) {
+    if (needsConfirmation || needsPasswordReset) {
       setError(
-        'Please complete the confirmation process or use "Back to Sign Up" to cancel.'
+        needsConfirmation
+          ? 'Please complete the confirmation process or use "Back to Sign Up" to cancel.'
+          : 'Please complete the password reset process or use "Back to Forgot Password" to cancel.'
       );
       return;
     }
@@ -262,6 +361,21 @@ export default function LoginForm({
     safeOnSuccess();
   };
 
+  if (needsPasswordReset) {
+    return (
+      <ConfirmForgotPassword
+        form={confirmResetPasswordForm}
+        loading={loading}
+        error={error}
+        onSubmit={handleConfirmResetPassword}
+        onBack={switchBackFromPasswordReset}
+        onClose={handleCloseModal}
+        onResendCode={handleResendPasswordResetCode}
+      />
+    );
+  }
+
+  // Show signup confirmation modal
   if (needsConfirmation) {
     return (
       <ConfirmSignUp
@@ -272,6 +386,7 @@ export default function LoginForm({
         onSubmitAction={handleConfirmation}
         onBackAction={switchBackFromSignup}
         onClose={handleCloseModal}
+        onResendCode={handleResendSignUpCode}
       />
     );
   }
@@ -282,6 +397,7 @@ export default function LoginForm({
         form={resetPasswordForm}
         loading={loading}
         error={error}
+        successMessage={successMessage}
         onSubmit={handleForgotPassword}
         onBack={switchBackFromForgotPassword}
         onClose={handleCloseModal}
@@ -291,26 +407,14 @@ export default function LoginForm({
 
   if (isSignup) {
     return (
-      <>
-        <SignUp
-          form={signupForm}
-          loading={loading}
-          error={error}
-          onSubmitAction={handleSignUp}
-          onBackAction={switchBackFromSignup}
-          onClose={handleCloseModal}
-        />
-        {confirmationEmail && !needsConfirmation && (
-          <div className="fixed bottom-4 left-4 right-4 text-center z-50">
-            <button
-              onClick={handleReopenConfirmation}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-base hover:bg-blue-700"
-            >
-              Already have an account? Resend confirmation code
-            </button>
-          </div>
-        )}
-      </>
+      <SignUp
+        form={signupForm}
+        loading={loading}
+        error={error}
+        onSubmitAction={handleSignUp}
+        onBackAction={switchBackFromSignup}
+        onClose={handleCloseModal}
+      />
     );
   }
 

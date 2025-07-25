@@ -7,6 +7,7 @@ interface ForgotPasswordProps {
   form: UseFormReturn<ResetPasswordFormData>;
   loading: boolean;
   error: string;
+  successMessage?: string;
   onSubmit: (data: ResetPasswordFormData) => Promise<void>;
   onBack: () => void;
   onClose?: () => void;
@@ -16,11 +17,16 @@ export default function ForgotPassword({
   form,
   loading,
   error,
+  successMessage,
   onSubmit,
   onBack,
   onClose,
 }: ForgotPasswordProps) {
   const [dismissibleError, setDismissibleError] = useState<string>("");
+  const [dismissibleSuccess, setDismissibleSuccess] = useState<string>("");
+
+  const watchedFields = form.watch();
+  const isValidEmail = watchedFields.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(watchedFields.email);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -51,8 +57,6 @@ export default function ForgotPassword({
         processedError = "User not found";
       } else if (error.includes("LimitExceededException")) {
         processedError = "Too many attempts. Please try again later.";
-      } else if (error.includes("InvalidParameterException")) {
-        processedError = "Invalid email address";
       }
 
       setDismissibleError(processedError);
@@ -60,6 +64,14 @@ export default function ForgotPassword({
       setDismissibleError("");
     }
   }, [error]);
+
+  useEffect(() => {
+    if (successMessage) {
+      setDismissibleSuccess(successMessage);
+    } else {
+      setDismissibleSuccess("");
+    }
+  }, [successMessage]);
 
   const handleCloseClick = () => {
     if (onClose) {
@@ -73,6 +85,10 @@ export default function ForgotPassword({
     setDismissibleError("");
   };
 
+  const dismissSuccess = () => {
+    setDismissibleSuccess("");
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto px-4 py-8">
       <div className="min-h-full flex items-center justify-center p-4">
@@ -80,7 +96,7 @@ export default function ForgotPassword({
           <div className="flex items-center justify-between p-6 pb-4">
             <button
               onClick={onBack}
-              className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors"
+              className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Sign In
@@ -88,7 +104,7 @@ export default function ForgotPassword({
 
             <button
               onClick={handleCloseClick}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
@@ -97,11 +113,11 @@ export default function ForgotPassword({
 
           <div className="px-6 pb-8">
             <div className="text-center mb-8">
-              <h4 className="text-3xl font-bold text-gray-900 mb-2">
-                Reset Password
+              <h4 className="text-3xl font-bold text-gray-900">
+                Forgot Your Password?
               </h4>
-              <p className="text-gray-600">
-                We&apos;ll send you a reset link to your email.
+              <p className="text-gray-600 mt-4">
+                Enter your email address and we'll send you a link to reset your password.
               </p>
             </div>
 
@@ -124,6 +140,26 @@ export default function ForgotPassword({
                 )}
               </div>
 
+              {dismissibleSuccess && (
+                <div
+                  className="flex items-center bg-green-50 text-green-700 p-4 rounded-lg border border-green-200"
+                  role="alert"
+                >
+                  <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-base font-medium flex-1">
+                    {dismissibleSuccess}
+                  </span>
+                  <button
+                    onClick={dismissSuccess}
+                    className="ml-3 flex-shrink-0 hover:bg-green-100 rounded-lg transition-all p-1 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               {dismissibleError && (
                 <div
                   className="flex items-center bg-red-50 text-red-700 p-4 rounded-lg border border-red-200"
@@ -135,7 +171,7 @@ export default function ForgotPassword({
                   </span>
                   <button
                     onClick={dismissError}
-                    className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1"
+                    className="ml-3 flex-shrink-0 hover:bg-red-100 rounded-lg transition-all p-1 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -144,13 +180,17 @@ export default function ForgotPassword({
 
               <button
                 type="button"
-                className="w-full py-3.5 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl transition-all"
+                className={`w-full py-3.5 text-base font-semibold rounded-lg transition-all ${
+                  loading || !isValidEmail
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl cursor-pointer"
+                }`}
                 onClick={form.handleSubmit(onSubmit)}
-                disabled={loading}
+                disabled={loading || !isValidEmail}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
-                    <Loader2 className="animate-spin h-5 w-5 text-white pr-2" />
+                    <Loader2 className="animate-spin h-5 w-5 text-white mr-2" />
                     Sending Reset Link...
                   </span>
                 ) : (
