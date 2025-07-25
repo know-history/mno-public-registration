@@ -237,7 +237,7 @@ export default function ConfirmSignUp({
                 {onResendCode && (
                   <div className="text-center">
                     <p className="text-sm text-gray-600">
-                      It may take a minute to receive your code. Didn't receive it?{" "}
+                      It may take a minute to receive your code. Didn&apos;t receive it?{" "}
                       <button
                         type="button"
                         onClick={handleResendCode}
