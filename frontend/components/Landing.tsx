@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 
-import LoginForm from "@/components/auth/LoginForm";
+import AuthModal from "@/components/auth/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import Image from "next/image";
 
@@ -55,7 +55,7 @@ interface MainContentProps {
   onLogout: () => void;
 }
 
-interface LoginModalProps {
+interface AuthModalWrapperProps {
   isOpen: boolean;
   onClose: () => void;
   startWithSignup?: boolean;
@@ -827,7 +827,7 @@ const BottomFooter = () => {
   );
 };
 
-const LoginModal: React.FC<LoginModalProps> = ({
+const AuthModalWrapper: React.FC<AuthModalWrapperProps> = ({
   isOpen,
   onClose,
   startWithSignup = false,
@@ -852,7 +852,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
       onClick={handleBackdropClick}
     >
       <div onClick={(e) => e.stopPropagation()}>
-        <LoginForm
+        <AuthModal
           onSuccess={onClose}
           startWithSignup={startWithSignup}
           onStateChange={onStateChange}
@@ -866,7 +866,7 @@ const Landing: React.FC<LandingProps> = ({
   onDashboardClick = () => console.error("No onDashboardClick provided"),
 }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [startWithSignup, setStartWithSignup] = useState<boolean>(false);
   const [isInConfirmation, setIsInConfirmation] = useState<boolean>(false);
   const { user, signOut } = useAuth();
@@ -877,16 +877,16 @@ const Landing: React.FC<LandingProps> = ({
 
   const handleLoginClick = () => {
     setStartWithSignup(false);
-    setShowLoginModal(true);
+    setShowAuthModal(true);
   };
 
   const handleCreateAccountClick = () => {
     setStartWithSignup(true);
-    setShowLoginModal(true);
+    setShowAuthModal(true);
   };
 
   const handleCloseLogin = () => {
-    setShowLoginModal(false);
+    setShowAuthModal(false);
     setStartWithSignup(false);
     setIsInConfirmation(false);
   };
@@ -932,8 +932,8 @@ const Landing: React.FC<LandingProps> = ({
         <BottomFooter />
       </div>
 
-      <LoginModal
-        isOpen={showLoginModal}
+      <AuthModalWrapper
+        isOpen={showAuthModal}
         onClose={handleCloseLogin}
         startWithSignup={startWithSignup}
         isInConfirmation={isInConfirmation}

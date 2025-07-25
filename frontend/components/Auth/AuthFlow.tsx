@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { AuthModal } from "@/components/ui/shared";
-import { LoginFlow } from "./LoginFlow";
-import { SignupFlow } from "./SignupFlow";
-import { PasswordResetFlow } from "./PasswordResetFlow";
-import { ConfirmSignupFlow } from "./ConfirmSignupFlow";
-import { ConfirmPasswordResetFlow } from "./ConfirmPasswordResetFlow";
+import { LoginFlow } from "@/components/auth/flows/LoginFlow";
+import { SignupFlow } from "@/components/auth/flows/SignupFlow";
+import { PasswordResetFlow } from "@/components/auth/flows/PasswordResetFlow";
+import { ConfirmSignupFlow } from "@/components/auth/flows/ConfirmSignupFlow";
+import { ConfirmPasswordResetFlow } from "@/components/auth/flows/ConfirmPasswordResetFlow";
 
 export enum AuthFlowStep {
   LOGIN = "login",
@@ -41,7 +41,9 @@ export function AuthFlow({
   const handleSignupSuccess = (email: string) => {
     setConfirmationEmail(email);
     setCurrentStep(AuthFlowStep.CONFIRM_SIGNUP);
-    setSuccessMessage("Account created! Please check your email for a confirmation code.");
+    setSuccessMessage(
+      "Account created! Please check your email for a confirmation code."
+    );
   };
 
   const handlePasswordResetSuccess = (email: string) => {
@@ -51,12 +53,16 @@ export function AuthFlow({
   };
 
   const handleConfirmSignupSuccess = () => {
-    setSuccessMessage("Account confirmed successfully! Please log in with your credentials.");
+    setSuccessMessage(
+      "Account confirmed successfully! Please log in with your credentials."
+    );
     setCurrentStep(AuthFlowStep.LOGIN);
   };
 
   const handleConfirmPasswordResetSuccess = () => {
-    setSuccessMessage("Password reset successfully! Please log in with your new password.");
+    setSuccessMessage(
+      "Password reset successfully! Please log in with your new password."
+    );
     setCurrentStep(AuthFlowStep.LOGIN);
   };
 
@@ -146,12 +152,7 @@ export function AuthFlow({
   };
 
   return (
-    <AuthModal
-      onClose={onClose}
-      title={title}
-      subtitle={subtitle}
-      size="md"
-    >
+    <AuthModal onClose={onClose} title={title} subtitle={subtitle} size="md">
       {renderCurrentStep()}
     </AuthModal>
   );
