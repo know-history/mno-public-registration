@@ -549,7 +549,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           {isAuthenticated ? (
             <button
               onClick={onDashboardClick}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-2 rounded font-medium transition-colors cursor-pointer text-base sm:text-base"
+              className="bg-gray-800 hover:bg-gray-700 text-white px-4 sm:px-6 py-2 rounded font-medium transition-colors cursor-pointer text-base sm:text-base"
             >
               GO TO APPLICATION DASHBOARD
             </button>
@@ -631,7 +631,7 @@ const MainContent: React.FC<MainContentProps> = ({
                 <>
                   <button
                     onClick={onDashboardClick}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-base sm:text-base"
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-base sm:text-base"
                   >
                     <span>Application Dashboard</span>
                     <ChevronRight className="w-5 h-5 flex-shrink-0" />

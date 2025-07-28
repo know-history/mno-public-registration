@@ -10,6 +10,7 @@ import { SubmitButton } from "@/components/ui/shared/SubmitButton";
 import { ErrorAlert } from "@/components/ui/shared/ErrorAlert";
 import { ResendCodeButton } from "@/components/ui/shared/ResendCodeButton";
 import { PasswordRequirements } from "@/components/ui/shared/PasswordRequirements";
+import { CodeInput } from "@/components/ui/shared/CodeInput";
 
 const confirmResetPasswordSchema = z
   .object({
@@ -36,6 +37,7 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
   const { confirmResetPassword, resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
   const [dismissibleError, setDismissibleError] = useState("");
+  const [confirmationCode, setConfirmationCode] = useState("");
 
   const form = useForm<ConfirmForgotPasswordFormData>({
     resolver: zodResolver(confirmResetPasswordSchema),
@@ -49,9 +51,10 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
 
   const watchedFields = form.watch();
   const passwordsMatch = watchedFields.password === watchedFields.password_confirmation;
+  const codeComplete = confirmationCode.length === 6;
   const canSubmit = 
     watchedFields.email &&
-    watchedFields.code?.length === 6 &&
+    codeComplete &&
     watchedFields.password &&
     watchedFields.password_confirmation &&
     passwordsMatch;
@@ -61,7 +64,8 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
       setLoading(true);
       setDismissibleError("");
 
-      await confirmResetPassword(data.email, data.code, data.password);
+      // Use confirmationCode state instead of form data for the code
+      await confirmResetPassword(data.email, confirmationCode, data.password);
       onSuccess();
     } catch (err: unknown) {
       let processedError = err instanceof Error ? err.message : "Password reset failed";
@@ -82,10 +86,17 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
     }
   };
 
+  const handleManualSubmit = async () => {
+    const formData = form.getValues();
+    await handleSubmit(formData);
+  };
+
   const handleResendCode = async () => {
     try {
       await resetPassword(email);
       setDismissibleError("");
+      // Reset the code input when resending
+      setConfirmationCode("");
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to resend code";
       setDismissibleError(errorMessage);
@@ -107,14 +118,14 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
           className="opacity-75"
         />
 
-        {/* Confirmation Code */}
-        <FormField
-          name="code"
-          label="Confirmation Code"
-          placeholder="Enter 6-digit code"
-          required
-          className="text-center"
-        />
+        {/* Confirmation Code - Using CodeInput blocks */}
+        <div className="text-center">
+          <CodeInput
+            value={confirmationCode}
+            onChange={setConfirmationCode}
+            error={!!dismissibleError}
+          />
+        </div>
 
         {/* Resend Code */}
         <div className="text-center text-sm text-gray-600">
@@ -122,30 +133,40 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
           <ResendCodeButton onResend={handleResendCode} />
         </div>
 
-        {/* New Password */}
-        <PasswordField
-          name="password"
-          label="New Password"
-          placeholder="Enter new password"
-          required
-          showRequirements={true}
-        />
+        {/* Show password fields only when code is complete */}
+        {codeComplete && (
+          <>
+            {/* Password Requirements - Using reusable component */}
+            <PasswordRequirements 
+              password={watchedFields.password || ""}
+            />
 
-        {/* Confirm New Password */}
-        <PasswordField
-          name="password_confirmation"
-          label="Confirm New Password"
-          placeholder="Confirm new password"
-          required
-          showRequirements={false}
-        />
+            {/* New Password */}
+            <PasswordField
+              name="password"
+              label="New Password"
+              placeholder="Enter new password"
+              required
+              showRequirements={false}
+            />
 
-        {/* Password Match Warning */}
-        {!passwordsMatch && watchedFields.password_confirmation && (
-          <div className="text-red-600 text-sm ml-1 flex items-center">
-            <span className="mr-2">⚠️</span>
-            Passwords do not match.
-          </div>
+            {/* Confirm New Password */}
+            <PasswordField
+              name="password_confirmation"
+              label="Confirm New Password"
+              placeholder="Confirm new password"
+              required
+              showRequirements={false}
+            />
+
+            {/* Password Match Warning */}
+            {!passwordsMatch && watchedFields.password_confirmation && (
+              <div className="text-red-600 text-sm ml-1 flex items-center">
+                <span className="mr-2">⚠️</span>
+                Passwords do not match.
+              </div>
+            )}
+          </>
         )}
 
         {/* Dismissible Error */}
@@ -162,6 +183,8 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
           disabled={!canSubmit}
           text="Reset Password"
           loadingText="Resetting password..."
+          type="button"
+          onClick={handleManualSubmit}
         />
       </form>
     </FormProvider>

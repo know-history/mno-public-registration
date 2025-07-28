@@ -11,16 +11,12 @@ interface PasswordRequirement {
 
 interface PasswordRequirementsProps {
   password?: string;
-  showProgress?: boolean;
   className?: string;
-  variant?: "static" | "dynamic";
 }
 
 export function PasswordRequirements({
   password = "",
-  showProgress = true,
   className,
-  variant = "dynamic",
 }: PasswordRequirementsProps) {
   const requirements: PasswordRequirement[] = [
     {
@@ -55,37 +51,6 @@ export function PasswordRequirements({
     },
   ];
 
-  const getIndicator = (requirement: PasswordRequirement) => {
-    if (variant === "static") {
-      return <span className="text-xs mr-2">○</span>;
-    }
-    
-    if (showProgress) {
-      return (
-        <span className="text-xs mr-2">
-          {requirement.met ? "●" : "○"}
-        </span>
-      );
-    }
-    
-    return (
-      <div
-        className={cn(
-          "w-1.5 h-1.5 rounded-full mr-3",
-          requirement.met ? "bg-green-500" : "bg-gray-300"
-        )}
-      />
-    );
-  };
-
-  const getTextColor = (requirement: PasswordRequirement) => {
-    if (variant === "static") {
-      return "text-gray-600";
-    }
-    
-    return requirement.met ? "text-green-600" : "text-gray-500";
-  };
-
   return (
     <div className={cn("bg-blue-50 p-4 rounded-lg", className)}>
       <h4 className="text-sm font-medium text-slate-700 mb-2">
@@ -97,10 +62,12 @@ export function PasswordRequirements({
             key={requirement.key}
             className={cn(
               "flex items-center",
-              getTextColor(requirement)
+              requirement.met ? "text-green-600" : "text-gray-500"
             )}
           >
-            {getIndicator(requirement)}
+            <span className="text-xs mr-2">
+              {requirement.met ? "●" : "○"}
+            </span>
             {requirement.label}
           </li>
         ))}

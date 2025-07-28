@@ -4,12 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  FormField,
-  SubmitButton,
-  ErrorAlert,
-  SuccessAlert,
-} from "@/components/ui/shared";
+import { FormField } from "@/components/ui/shared/FormField";
+import { SubmitButton } from "@/components/ui/shared/SubmitButton";
+import { ErrorAlert } from "@/components/ui/shared/ErrorAlert";
+import { SuccessAlert } from "@/components/ui/shared/SuccessAlert";
 
 const resetPasswordSchema = z.object({
   email: z.email("Invalid email address"),
@@ -44,15 +42,15 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
       setSuccessMessage("");
 
       await resetPassword(data.email);
-
+      
       setSuccessMessage("Password reset code sent! Check your email.");
-
+      
+      // Wait a moment to show success message, then proceed
       setTimeout(() => {
         onSuccess(data.email);
       }, 1500);
     } catch (err: unknown) {
-      let processedError =
-        err instanceof Error ? err.message : "Failed to send reset code";
+      let processedError = err instanceof Error ? err.message : "Failed to send reset code";
 
       if (processedError.includes("UserNotFoundException")) {
         processedError = "No account found with this email address";
@@ -71,8 +69,12 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {successMessage && <SuccessAlert message={successMessage} />}
+        {/* Success Message */}
+        {successMessage && (
+          <SuccessAlert message={successMessage} />
+        )}
 
+        {/* Email Field */}
         <FormField
           name="email"
           type="email"
@@ -83,16 +85,26 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
           autoComplete="email"
         />
 
+        {/* Dismissible Error */}
         {dismissibleError && (
-          <ErrorAlert message={dismissibleError} onDismiss={dismissError} />
+          <ErrorAlert
+            message={dismissibleError}
+            onDismiss={dismissError}
+          />
         )}
 
+        {/* Submit Button */}
         <SubmitButton
           loading={loading}
-          disabled={!canSubmit}
+          disabled={!canSubmit || !!successMessage}
           text="Send Reset Code"
           loadingText="Sending code..."
         />
+
+        {/* Info Text */}
+        <div className="text-center text-sm text-gray-600">
+          We&#39;ll send a 6-digit confirmation code to your email address.
+        </div>
       </form>
     </FormProvider>
   );

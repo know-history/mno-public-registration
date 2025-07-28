@@ -95,12 +95,11 @@ export function PasswordField({
         </p>
       )}
 
+      {/* Password Requirements - Clean and Simple like the old version */}
       {showRequirements && (
         <div className="mt-4">
           <PasswordRequirements 
             password={passwordValue}
-            variant="dynamic"
-            showProgress={true}
           />
         </div>
       )}
