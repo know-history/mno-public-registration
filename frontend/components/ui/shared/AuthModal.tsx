@@ -1,37 +1,34 @@
 import React, { useEffect } from "react";
 import { X, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface AuthModalProps {
   children: React.ReactNode;
   onClose?: () => void;
-  onBack?: () => void;
   title?: string;
   subtitle?: string;
-  showCloseButton?: boolean;
   showBackButton?: boolean;
   backButtonText?: string;
+  onBack?: () => void;
+  showCloseButton?: boolean;
   closeOnEscape?: boolean;
-  closeOnOverlayClick?: boolean;
   className?: string;
 }
 
 export function AuthModal({
   children,
   onClose,
-  onBack,
   title,
   subtitle,
-  showCloseButton = true,
   showBackButton = false,
   backButtonText = "Back",
+  onBack,
+  showCloseButton = true,
   closeOnEscape = true,
-  closeOnOverlayClick = true,
-  className,
+  className = "",
 }: AuthModalProps) {
+  
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    
     return () => {
       document.body.style.overflow = "";
     };
@@ -39,74 +36,59 @@ export function AuthModal({
 
   useEffect(() => {
     if (!closeOnEscape || !onClose) return;
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+    
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
     };
-
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [closeOnEscape, onClose]);
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (closeOnOverlayClick && onClose && e.target === e.currentTarget) {
-      onClose();
-    }
-  };
+    
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose, closeOnEscape]);
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto px-4 py-8"
-      onClick={handleOverlayClick}
+      className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4"
     >
-      <div className="min-h-full flex items-center justify-center p-4">
-        <div 
-          className={cn(
-            "bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md relative",
-            className
-          )}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between p-6 pb-4">
-            {showBackButton && onBack ? (
-              <button
-                onClick={onBack}
-                className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                {backButtonText}
-              </button>
-            ) : (
-              <div />
-            )}
-
-            {showCloseButton && onClose && (
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          {title && (
-            <div className="px-6 pb-4">
-              <div className="text-center">
-                <h4 className="text-3xl font-bold text-gray-900">{title}</h4>
-                {subtitle && (
-                  <p className="text-gray-600 mt-4">{subtitle}</p>
-                )}
-              </div>
-            </div>
+      <div 
+        className={`bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto ${className}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative p-6 pb-4">
+          {showBackButton && onBack && (
+            <button
+              onClick={onBack}
+              className="absolute left-6 top-6 flex items-center text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              <span className="text-sm font-medium">{backButtonText}</span>
+            </button>
           )}
 
-          <div className="px-6 pb-8">
-            {children}
+          {showCloseButton && onClose && (
+            <button
+              onClick={onClose}
+              className="absolute right-6 top-6 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          )}
+
+          <div className={`text-center ${showBackButton ? 'mt-8' : 'mt-2'}`}>
+            {title && (
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p className="text-gray-600 text-sm">
+                {subtitle}
+              </p>
+            )}
           </div>
+        </div>
+
+        <div className="px-6 pb-6">
+          {children}
         </div>
       </div>
     </div>

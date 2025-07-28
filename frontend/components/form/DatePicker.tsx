@@ -29,13 +29,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 }) => {
   const { control, formState } = useFormContext();
   const error = formState.errors[name]?.message as string | undefined;
+  const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <div className="relative w-full">
       {label && (
         <label 
           htmlFor={name}
-          className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10 cursor-pointer"
+          className="flex items-center space-x-1 text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10 cursor-pointer"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -45,7 +46,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         control={control}
         name={name}
         rules={{
-          required: required ? `${label} is required` : false,
+          required: required ? "Date of birth is required" : false,
         }}
         render={({ field }) => {
           const parseLocalDate = (dateString: string) => {
@@ -58,13 +59,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             : undefined;
 
           return (
-            <Popover>
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
               <PopoverTrigger asChild>
                 <button
                   type="button"
                   disabled={disabled}
                   className={cn(
-                    "px-4 py-3.5 pr-12 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all text-left",
+                    "px-4 py-3.5 pr-12 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all text-left cursor-pointer",
                     !field.value && "text-gray-500",
                     disabled 
                       ? "opacity-50 cursor-not-allowed" 
@@ -82,12 +83,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 <Calendar
                   mode="single"
                   selected={selectedDate}
+                  defaultMonth={selectedDate || new Date()} // Focus on selected date or today
                   onSelect={(date) => {
                     if (date) {
                       const year = date.getFullYear();
                       const month = String(date.getMonth() + 1).padStart(2, "0");
                       const day = String(date.getDate()).padStart(2, "0");
                       field.onChange(`${year}-${month}-${day}`);
+                      setIsOpen(false); // Auto-dismiss calendar after selection
                     } else {
                       field.onChange("");
                     }

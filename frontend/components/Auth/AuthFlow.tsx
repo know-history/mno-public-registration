@@ -1,10 +1,12 @@
-import React, { useState, useRef } from "react";
-import { AuthModal } from "@/components/ui/shared";
-import { LoginFlow } from "@/components/auth/flows/LoginFlow";
-import { SignupFlow } from "@/components/auth/flows/SignupFlow";
-import { PasswordResetFlow } from "@/components/auth/flows/PasswordResetFlow";
-import { ConfirmSignupFlow } from "@/components/auth/flows/ConfirmSignupFlow";
-import { ConfirmPasswordResetFlow } from "@/components/auth/flows/ConfirmPasswordResetFlow";
+import React, { useState } from "react";
+import { AuthModal } from "@/components/ui/shared/AuthModal";
+import {
+  LoginForm,
+  SignupForm,
+  ForgotPasswordForm,
+  ConfirmPasswordResetForm,
+  ConfirmSignupForm,
+} from "@/components/auth/forms";
 
 export enum AuthFlowStep {
   LOGIN = "login",
@@ -29,11 +31,6 @@ export function AuthFlow({
   const [confirmationEmail, setConfirmationEmail] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // References to the current step components to access their back handlers
-  const confirmSignupRef = useRef<any>(null);
-  const confirmPasswordResetRef = useRef<any>(null);
-
-  // Get modal props based on current step
   const getModalProps = () => {
     switch (currentStep) {
       case AuthFlowStep.LOGIN:
@@ -64,25 +61,16 @@ export function AuthFlow({
           subtitle: "Enter the confirmation code that was sent to your email",
           showBackButton: true,
           backButtonText: "Back to Sign Up",
-          // Use the component's back handler with confirmation, fallback to normal navigation
-          onBack: () => {
-            // For confirmation steps, we want normal back navigation since the component
-            // handles its own confirmation logic via the onBack prop
-            setCurrentStep(AuthFlowStep.SIGNUP);
-          },
+          onBack: () => setCurrentStep(AuthFlowStep.SIGNUP),
         };
       case AuthFlowStep.CONFIRM_PASSWORD_RESET:
         return {
           title: "Reset Your Password",
-          subtitle: "Enter the confirmation code sent to your email and choose a new password",
+          subtitle:
+            "Enter the confirmation code sent to your email and choose a new password",
           showBackButton: true,
           backButtonText: "Back to Forgot Password",
-          // Use the component's back handler with confirmation, fallback to normal navigation
-          onBack: () => {
-            // For confirmation steps, we want normal back navigation since the component
-            // handles its own confirmation logic via the onBack prop
-            setCurrentStep(AuthFlowStep.FORGOT_PASSWORD);
-          },
+          onBack: () => setCurrentStep(AuthFlowStep.FORGOT_PASSWORD),
         };
       default:
         return {
@@ -101,15 +89,11 @@ export function AuthFlow({
   const handleSignupSuccess = (email: string) => {
     setConfirmationEmail(email);
     setCurrentStep(AuthFlowStep.CONFIRM_SIGNUP);
-    setSuccessMessage(
-      "Account created! Please check your email for a confirmation code."
-    );
   };
 
-  const handlePasswordResetSuccess = (email: string) => {
+  const handleForgotPasswordSuccess = (email: string) => {
     setConfirmationEmail(email);
     setCurrentStep(AuthFlowStep.CONFIRM_PASSWORD_RESET);
-    setSuccessMessage("Reset code sent! Please check your email.");
   };
 
   const handleConfirmSignupSuccess = () => {
@@ -126,88 +110,44 @@ export function AuthFlow({
     setCurrentStep(AuthFlowStep.LOGIN);
   };
 
-  const handleSwitchToLogin = () => {
-    setSuccessMessage("");
-    setCurrentStep(AuthFlowStep.LOGIN);
-  };
-
-  const handleSwitchToSignup = () => {
-    setSuccessMessage("");
-    setCurrentStep(AuthFlowStep.SIGNUP);
-  };
-
-  const handleSwitchToForgotPassword = () => {
-    setSuccessMessage("");
-    setCurrentStep(AuthFlowStep.FORGOT_PASSWORD);
-  };
-
   const renderCurrentStep = () => {
     switch (currentStep) {
       case AuthFlowStep.LOGIN:
         return (
-          <LoginFlow
+          <LoginForm
+            successMessage={successMessage}
             onSuccess={handleLoginSuccess}
-            onSwitchToSignup={handleSwitchToSignup}
-            onSwitchToForgotPassword={handleSwitchToForgotPassword}
-            successMessage={successMessage}
+            onForgotPassword={() =>
+              setCurrentStep(AuthFlowStep.FORGOT_PASSWORD)
+            }
+            onSignUp={() => setCurrentStep(AuthFlowStep.SIGNUP)}
           />
         );
-
       case AuthFlowStep.SIGNUP:
-        return (
-          <SignupFlow
-            onSuccess={handleSignupSuccess}
-            onSwitchToLogin={handleSwitchToLogin}
-          />
-        );
-
+        return <SignupForm onSuccess={handleSignupSuccess} />;
       case AuthFlowStep.FORGOT_PASSWORD:
-        return (
-          <PasswordResetFlow
-            onSuccess={handlePasswordResetSuccess}
-            onSwitchToLogin={handleSwitchToLogin}
-            successMessage={successMessage}
-          />
-        );
-
+        return <ForgotPasswordForm onSuccess={handleForgotPasswordSuccess} />;
       case AuthFlowStep.CONFIRM_SIGNUP:
         return (
-          <ConfirmSignupFlow
+          <ConfirmSignupForm
             email={confirmationEmail}
             onSuccess={handleConfirmSignupSuccess}
-            onBack={() => setCurrentStep(AuthFlowStep.SIGNUP)} // Pass the back handler with confirmation logic
-            successMessage={successMessage}
           />
         );
-
       case AuthFlowStep.CONFIRM_PASSWORD_RESET:
         return (
-          <ConfirmPasswordResetFlow
+          <ConfirmPasswordResetForm
             email={confirmationEmail}
             onSuccess={handleConfirmPasswordResetSuccess}
-            onBack={() => setCurrentStep(AuthFlowStep.FORGOT_PASSWORD)} // Pass the back handler with confirmation logic
-            successMessage={successMessage}
           />
         );
-
       default:
-        return (
-          <LoginFlow
-            onSuccess={handleLoginSuccess}
-            onSwitchToSignup={handleSwitchToSignup}
-            onSwitchToForgotPassword={handleSwitchToForgotPassword}
-          />
-        );
+        return null;
     }
   };
 
-  const modalProps = getModalProps();
-
   return (
-    <AuthModal 
-      onClose={onClose}
-      {...modalProps}
-    >
+    <AuthModal onClose={onClose} {...getModalProps()}>
       {renderCurrentStep()}
     </AuthModal>
   );

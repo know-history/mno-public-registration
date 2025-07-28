@@ -39,7 +39,6 @@ export interface AuthModalProps {
   subtitle?: string;
   showCloseButton?: boolean;
   closeOnEscape?: boolean;
-  closeOnOverlayClick?: boolean;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
