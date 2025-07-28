@@ -76,21 +76,21 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   {field.value
                     ? format(selectedDate!, "MMMM do, yyyy")
                     : <span className="text-gray-500">{placeholder}</span>}
-                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50 absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                  <CalendarIcon className="ml-auto h-5 w-5 opacity-65 absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  defaultMonth={selectedDate || new Date()} // Focus on selected date or today
+                  defaultMonth={selectedDate || new Date()}
                   onSelect={(date) => {
                     if (date) {
                       const year = date.getFullYear();
                       const month = String(date.getMonth() + 1).padStart(2, "0");
                       const day = String(date.getDate()).padStart(2, "0");
                       field.onChange(`${year}-${month}-${day}`);
-                      setIsOpen(false); // Auto-dismiss calendar after selection
+                      setIsOpen(false);
                     } else {
                       field.onChange("");
                     }
