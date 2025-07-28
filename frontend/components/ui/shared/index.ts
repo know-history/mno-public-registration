@@ -1,5 +1,6 @@
 export { FormField } from './FormField';
 export { PasswordField } from './PasswordField';
+export { PasswordRequirements } from './PasswordRequirements';
 export { SubmitButton } from './SubmitButton';
 export { ErrorAlert } from './ErrorAlert';
 export { SuccessAlert } from './SuccessAlert';

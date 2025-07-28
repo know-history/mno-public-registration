@@ -9,6 +9,7 @@ import { PasswordField } from "@/components/ui/shared/PasswordField";
 import { SubmitButton } from "@/components/ui/shared/SubmitButton";
 import { ErrorAlert } from "@/components/ui/shared/ErrorAlert";
 import { ResendCodeButton } from "@/components/ui/shared/ResendCodeButton";
+import { PasswordRequirements } from "@/components/ui/shared/PasswordRequirements";
 
 const confirmResetPasswordSchema = z
   .object({
@@ -31,10 +32,7 @@ interface ConfirmPasswordResetFormProps {
   onSuccess: () => void;
 }
 
-export function ConfirmPasswordResetForm({
-  email,
-  onSuccess,
-}: ConfirmPasswordResetFormProps) {
+export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordResetFormProps) {
   const { confirmResetPassword, resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
   const [dismissibleError, setDismissibleError] = useState("");
@@ -50,9 +48,8 @@ export function ConfirmPasswordResetForm({
   });
 
   const watchedFields = form.watch();
-  const passwordsMatch =
-    watchedFields.password === watchedFields.password_confirmation;
-  const canSubmit =
+  const passwordsMatch = watchedFields.password === watchedFields.password_confirmation;
+  const canSubmit = 
     watchedFields.email &&
     watchedFields.code?.length === 6 &&
     watchedFields.password &&
@@ -67,14 +64,12 @@ export function ConfirmPasswordResetForm({
       await confirmResetPassword(data.email, data.code, data.password);
       onSuccess();
     } catch (err: unknown) {
-      let processedError =
-        err instanceof Error ? err.message : "Password reset failed";
+      let processedError = err instanceof Error ? err.message : "Password reset failed";
 
       if (processedError.includes("CodeMismatchException")) {
         processedError = "Invalid confirmation code. Please try again.";
       } else if (processedError.includes("ExpiredCodeException")) {
-        processedError =
-          "Confirmation code has expired. Please request a new one.";
+        processedError = "Confirmation code has expired. Please request a new one.";
       } else if (processedError.includes("InvalidPasswordException")) {
         processedError = "Password does not meet requirements.";
       } else if (processedError.includes("TooManyFailedAttemptsException")) {
@@ -92,8 +87,7 @@ export function ConfirmPasswordResetForm({
       await resetPassword(email);
       setDismissibleError("");
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to resend code";
+      const errorMessage = err instanceof Error ? err.message : "Failed to resend code";
       setDismissibleError(errorMessage);
     }
   };
@@ -103,6 +97,7 @@ export function ConfirmPasswordResetForm({
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {/* Email Field - Read Only */}
         <FormField
           name="email"
           type="email"
@@ -112,6 +107,7 @@ export function ConfirmPasswordResetForm({
           className="opacity-75"
         />
 
+        {/* Confirmation Code */}
         <FormField
           name="code"
           label="Confirmation Code"
@@ -120,47 +116,22 @@ export function ConfirmPasswordResetForm({
           className="text-center"
         />
 
+        {/* Resend Code */}
         <div className="text-center text-sm text-gray-600">
           It may take a minute to receive your code. Didn&#39;t receive it?{" "}
           <ResendCodeButton onResend={handleResendCode} />
         </div>
 
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="text-sm font-medium text-slate-700 mb-2">
-            Password Requirements
-          </h4>
-          <ul className="text-sm space-y-1 text-gray-600">
-            <li className="flex items-center">
-              <span className="text-xs mr-2">○</span>
-              At least 8 characters
-            </li>
-            <li className="flex items-center">
-              <span className="text-xs mr-2">○</span>
-              One lowercase letter
-            </li>
-            <li className="flex items-center">
-              <span className="text-xs mr-2">○</span>
-              One uppercase letter
-            </li>
-            <li className="flex items-center">
-              <span className="text-xs mr-2">○</span>
-              One number
-            </li>
-            <li className="flex items-center">
-              <span className="text-xs mr-2">○</span>
-              One special character
-            </li>
-          </ul>
-        </div>
-
+        {/* New Password */}
         <PasswordField
           name="password"
           label="New Password"
           placeholder="Enter new password"
           required
-          showRequirements={false}
+          showRequirements={true}
         />
 
+        {/* Confirm New Password */}
         <PasswordField
           name="password_confirmation"
           label="Confirm New Password"
@@ -169,6 +140,7 @@ export function ConfirmPasswordResetForm({
           showRequirements={false}
         />
 
+        {/* Password Match Warning */}
         {!passwordsMatch && watchedFields.password_confirmation && (
           <div className="text-red-600 text-sm ml-1 flex items-center">
             <span className="mr-2">⚠️</span>
@@ -176,10 +148,15 @@ export function ConfirmPasswordResetForm({
           </div>
         )}
 
+        {/* Dismissible Error */}
         {dismissibleError && (
-          <ErrorAlert message={dismissibleError} onDismiss={dismissError} />
+          <ErrorAlert
+            message={dismissibleError}
+            onDismiss={dismissError}
+          />
         )}
 
+        {/* Submit Button */}
         <SubmitButton
           loading={loading}
           disabled={!canSubmit}

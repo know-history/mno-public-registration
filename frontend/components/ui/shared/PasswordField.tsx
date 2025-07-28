@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PasswordRequirements } from "@/components/ui/shared/PasswordRequirements";
 
 interface PasswordFieldProps {
   name: string;
@@ -26,28 +27,9 @@ export function PasswordField({
 }: PasswordFieldProps) {
   const { register, formState, watch } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
-  const [rulesMet, setRulesMet] = useState({
-    minLength: false,
-    lowercase: false,
-    uppercase: false,
-    numbers: false,
-    specialChars: false,
-  });
 
   const error = formState.errors[name]?.message as string | undefined;
   const passwordValue = watch(name) || "";
-
-  useEffect(() => {
-    if (!showRequirements) return;
-
-    setRulesMet({
-      minLength: passwordValue.length >= 8,
-      lowercase: /[a-z]/.test(passwordValue),
-      uppercase: /[A-Z]/.test(passwordValue),
-      numbers: /\d/.test(passwordValue),
-      specialChars: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordValue),
-    });
-  }, [passwordValue, showRequirements]);
 
   return (
     <div className={cn("relative flex flex-col", className)}>
@@ -114,62 +96,12 @@ export function PasswordField({
       )}
 
       {showRequirements && (
-        <div className="bg-blue-50 p-4 rounded-lg mt-4">
-          <h4 className="text-sm font-medium text-slate-700 mb-2">
-            Password Requirements
-          </h4>
-          <ul className="text-sm space-y-1">
-            <li
-              className={`flex items-center ${
-                rulesMet.minLength ? "text-green-600" : "text-gray-500"
-              }`}
-            >
-              <span className="text-xs mr-2">
-                {rulesMet.minLength ? "●" : "○"}
-              </span>
-              At least 8 characters
-            </li>
-            <li
-              className={`flex items-center ${
-                rulesMet.lowercase ? "text-green-600" : "text-gray-500"
-              }`}
-            >
-              <span className="text-xs mr-2">
-                {rulesMet.lowercase ? "●" : "○"}
-              </span>
-              One lowercase letter
-            </li>
-            <li
-              className={`flex items-center ${
-                rulesMet.uppercase ? "text-green-600" : "text-gray-500"
-              }`}
-            >
-              <span className="text-xs mr-2">
-                {rulesMet.uppercase ? "●" : "○"}
-              </span>
-              One uppercase letter
-            </li>
-            <li
-              className={`flex items-center ${
-                rulesMet.numbers ? "text-green-600" : "text-gray-500"
-              }`}
-            >
-              <span className="text-xs mr-2">
-                {rulesMet.numbers ? "●" : "○"}
-              </span>
-              One number
-            </li>
-            <li
-              className={`flex items-center ${
-                rulesMet.specialChars ? "text-green-600" : "text-gray-500"
-              }`}
-            >
-              <span className="text-xs mr-2">
-                {rulesMet.specialChars ? "●" : "○"}
-              </span>
-              One special character
-            </li>
-          </ul>
+        <div className="mt-4">
+          <PasswordRequirements 
+            password={passwordValue}
+            variant="dynamic"
+            showProgress={true}
+          />
         </div>
       )}
     </div>
