@@ -15,10 +15,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { 
-  signupSchema, 
-  type SignupFormData 
-} from "@/lib/auth/schemas";
+import { signupSchema, type SignupFormData } from "@/lib/auth/schemas";
 import { processAuthError } from "@/lib/auth/utils/errorHandling";
 
 interface SignupFormProps {

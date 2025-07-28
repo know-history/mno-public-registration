@@ -23,19 +23,19 @@ export function CodeInput({
   const [codes, setCodes] = useState<string[]>(Array(length).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Update internal state when value prop changes
   useEffect(() => {
-    const newCodes = value.split("").concat(Array(length).fill("")).slice(0, length);
+    const newCodes = value
+      .split("")
+      .concat(Array(length).fill(""))
+      .slice(0, length);
     setCodes(newCodes);
   }, [value, length]);
 
   const handleChange = (index: number, newValue: string) => {
-    // Only allow single digits
     if (newValue.length > 1) {
       newValue = newValue.slice(-1);
     }
 
-    // Only allow numbers
     if (!/^\d*$/.test(newValue)) {
       return;
     }
@@ -44,20 +44,15 @@ export function CodeInput({
     newCodes[index] = newValue;
     setCodes(newCodes);
 
-    // Update parent component
     const fullCode = newCodes.join("");
     onChange(fullCode);
 
-    // Auto-complete when all digits are filled
     if (fullCode.length === length && onComplete) {
-      console.log("Auto-completing with code:", fullCode); // Debug log
       setTimeout(() => {
-        console.log("Calling onComplete with:", fullCode); // Debug log
         onComplete(fullCode);
       }, 100);
     }
 
-    // Move to next input if value entered
     if (newValue && index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -66,14 +61,12 @@ export function CodeInput({
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace") {
       if (!codes[index] && index > 0) {
-        // If current input is empty, move to previous and clear it
         const newCodes = [...codes];
         newCodes[index - 1] = "";
         setCodes(newCodes);
         onChange(newCodes.join(""));
         inputRefs.current[index - 1]?.focus();
       } else if (codes[index]) {
-        // Clear current input
         const newCodes = [...codes];
         newCodes[index] = "";
         setCodes(newCodes);
@@ -88,16 +81,24 @@ export function CodeInput({
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedText = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, length);
-    
+    const pastedText = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, length);
+
     if (pastedText) {
-      const newCodes = pastedText.split("").concat(Array(length).fill("")).slice(0, length);
+      const newCodes = pastedText
+        .split("")
+        .concat(Array(length).fill(""))
+        .slice(0, length);
       setCodes(newCodes);
       onChange(pastedText);
-      
-      // Focus the next empty input or the last input
-      const nextEmptyIndex = newCodes.findIndex(code => !code);
-      const targetIndex = nextEmptyIndex === -1 ? length - 1 : Math.min(nextEmptyIndex, length - 1);
+
+      const nextEmptyIndex = newCodes.findIndex((code) => !code);
+      const targetIndex =
+        nextEmptyIndex === -1
+          ? length - 1
+          : Math.min(nextEmptyIndex, length - 1);
       inputRefs.current[targetIndex]?.focus();
     }
   };

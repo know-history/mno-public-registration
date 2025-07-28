@@ -1,12 +1,5 @@
 import { ReactNode } from "react";
 
-export interface PasswordRequirement {
-  key: string;
-  label: string;
-  test: (password: string) => boolean;
-  met: boolean;
-}
-
 export interface FormFieldProps {
   name: string;
   type?: string;
@@ -41,10 +34,4 @@ export interface AuthModalProps {
   closeOnEscape?: boolean;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
-}
-
-export interface RateLimitConfig {
-  maxAttempts: number;
-  windowMs: number;
-  escalationMs: number;
 }

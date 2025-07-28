@@ -65,9 +65,7 @@ export function PasswordRequirements({
               requirement.met ? "text-green-600" : "text-gray-500"
             )}
           >
-            <span className="text-xs mr-2">
-              {requirement.met ? "●" : "○"}
-            </span>
+            <span className="text-xs mr-2">{requirement.met ? "●" : "○"}</span>
             {requirement.label}
           </li>
         ))}

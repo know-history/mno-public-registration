@@ -26,7 +26,6 @@ export function AuthModal({
   closeOnEscape = true,
   className = "",
 }: AuthModalProps) {
-  
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -36,20 +35,18 @@ export function AuthModal({
 
   useEffect(() => {
     if (!closeOnEscape || !onClose) return;
-    
+
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    
+
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose, closeOnEscape]);
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4"
-    >
-      <div 
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+      <div
         className={`bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -73,23 +70,15 @@ export function AuthModal({
             </button>
           )}
 
-          <div className={`text-center ${showBackButton ? 'mt-8' : 'mt-2'}`}>
+          <div className={`text-center ${showBackButton ? "mt-8" : "mt-2"}`}>
             {title && (
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {title}
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
             )}
-            {subtitle && (
-              <p className="text-gray-600 text-sm">
-                {subtitle}
-              </p>
-            )}
+            {subtitle && <p className="text-gray-600 text-sm">{subtitle}</p>}
           </div>
         </div>
 
-        <div className="px-6 pb-6">
-          {children}
-        </div>
+        <div className="px-6 pb-6">{children}</div>
       </div>
     </div>
   );

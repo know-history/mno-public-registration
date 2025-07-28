@@ -3,6 +3,7 @@ import { useFormContext } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PasswordRequirements } from "@/components/ui/shared/PasswordRequirements";
+import { PASSWORD_RULES, VALIDATION_MESSAGES } from "@/lib/auth";
 
 interface PasswordFieldProps {
   name: string;
@@ -46,8 +47,8 @@ export function PasswordField({
           {...register(name, {
             required: required ? `${label} is required` : false,
             minLength: {
-              value: 8,
-              message: "Password must be at least 8 characters",
+              value: PASSWORD_RULES.MIN_LENGTH,
+              message: VALIDATION_MESSAGES.PASSWORD_MIN_LENGTH,
             },
           })}
           id={name}
@@ -61,12 +62,13 @@ export function PasswordField({
           className={cn(
             "px-4 py-3.5 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all",
             showToggle && "pr-14",
-            disabled && "bg-gray-100 text-slate-500 cursor-not-allowed border-gray-200",
+            disabled &&
+              "bg-gray-100 text-slate-500 cursor-not-allowed border-gray-200",
             error && "border-red-300 focus:border-red-500 focus:ring-red-100",
             "cursor-text"
           )}
         />
-        
+
         {showToggle && (
           <>
             <div className="absolute top-2 bottom-2 right-12 w-[1px] bg-gray-300"></div>
@@ -89,18 +91,11 @@ export function PasswordField({
         )}
       </div>
 
-      {error && (
-        <p className="text-xs text-red-500 mt-1 px-1">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-xs text-red-500 mt-1 px-1">{error}</p>}
 
-      {/* Password Requirements - Clean and Simple like the old version */}
       {showRequirements && (
         <div className="mt-4">
-          <PasswordRequirements 
-            password={passwordValue}
-          />
+          <PasswordRequirements password={passwordValue} />
         </div>
       )}
     </div>

@@ -8,7 +8,11 @@ interface SuccessAlertProps {
   className?: string;
 }
 
-export function SuccessAlert({ message, onDismiss, className }: SuccessAlertProps) {
+export function SuccessAlert({
+  message,
+  onDismiss,
+  className,
+}: SuccessAlertProps) {
   return (
     <div
       className={cn(

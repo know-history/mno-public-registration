@@ -10,10 +10,7 @@ import {
   ErrorAlert,
   SuccessAlert,
 } from "@/components/ui/shared";
-import { 
-  loginSchema, 
-  type LoginFormData 
-} from "@/lib/auth/schemas";
+import { loginSchema, type LoginFormData } from "@/lib/auth/schemas";
 import { processAuthError } from "@/lib/auth/utils/errorHandling";
 
 interface LoginFormProps {

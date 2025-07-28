@@ -40,28 +40,6 @@ export interface PasswordValidationRules {
   specialChars: boolean;
 }
 
-export interface RateLimitState {
-  attempts: number;
-  countdown: number;
-  isLimited: boolean;
-  loading: boolean;
-}
-
-export interface AuthFlowState {
-  currentFlow: AuthFlow;
-  needsConfirmation: boolean;
-  confirmationEmail: string;
-  confirmationCode: string[];
-}
-
-export enum AuthFlow {
-  LOGIN = "login",
-  SIGNUP = "signup",
-  FORGOT_PASSWORD = "forgotPassword",
-  CONFIRM_SIGNUP = "confirmSignup",
-  CONFIRM_PASSWORD_RESET = "confirmPasswordReset",
-}
-
 export enum AuthError {
   INVALID_CREDENTIALS = "NotAuthorizedException",
   USER_NOT_CONFIRMED = "UserNotConfirmedException",

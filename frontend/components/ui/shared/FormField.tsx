@@ -51,12 +51,13 @@ export function FormField({
           className={cn(
             "px-4 py-3.5 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all",
             icon && "pr-12",
-            disabled && "bg-gray-100 text-slate-500 cursor-not-allowed border-gray-200",
+            disabled &&
+              "bg-gray-100 text-slate-500 cursor-not-allowed border-gray-200",
             error && "border-red-300 focus:border-red-500 focus:ring-red-100",
             "cursor-text"
           )}
         />
-        
+
         {icon && (
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
             {icon}
@@ -64,11 +65,7 @@ export function FormField({
         )}
       </div>
 
-      {error && (
-        <p className="text-xs text-red-500 mt-1 px-1">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-xs text-red-500 mt-1 px-1">{error}</p>}
     </div>
   );
 }

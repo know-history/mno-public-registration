@@ -11,7 +11,10 @@ interface ConfirmSignupFormProps {
   onSuccess: () => void;
 }
 
-export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) {
+export function ConfirmSignupForm({
+  email,
+  onSuccess,
+}: ConfirmSignupFormProps) {
   const { confirmSignUp, resendSignUpCode } = useAuth();
   const [confirmationCode, setConfirmationCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,10 +24,10 @@ export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) 
 
   const handleSubmit = async (e?: React.FormEvent, autoCode?: string) => {
     if (e) e.preventDefault();
-    
+
     const codeToUse = autoCode || confirmationCode;
     const canSubmitNow = codeToUse.length === 6;
-    
+
     if (!canSubmitNow) return;
 
     try {
@@ -76,10 +79,7 @@ export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) 
       </div>
 
       {dismissibleError && (
-        <ErrorAlert
-          message={dismissibleError}
-          onDismiss={dismissError}
-        />
+        <ErrorAlert message={dismissibleError} onDismiss={dismissError} />
       )}
 
       <SubmitButton
