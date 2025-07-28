@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
   ChevronRight,
@@ -11,11 +13,63 @@ import {
   X,
 } from "lucide-react";
 
-import LoginForm from "@/components/Auth/LoginForm";
+import { AuthFlow, AuthFlowStep } from "@/components/auth/AuthFlow";
+import { useAuth } from "@/hooks/useAuth";
+import Image from "next/image";
+
+interface NavigationItem {
+  label: string;
+  href: string;
+}
+
+interface NavigationDropdownProps {
+  title: string;
+  items: NavigationItem[];
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+interface MobileMenuProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  openDropdown: string | null;
+  toggleDropdown: (menuName: string) => void;
+}
+
+interface HeaderProps {
+  openDropdown: string | null;
+  toggleDropdown: (menuName: string) => void;
+}
+
+interface HeroSectionProps {
+  onLoginClick: () => void;
+  isAuthenticated: boolean;
+  onDashboardClick: () => void;
+}
+
+interface MainContentProps {
+  onLoginClick: () => void;
+  onCreateAccountClick: () => void;
+  isAuthenticated: boolean;
+  onDashboardClick: () => void;
+  onLogout: () => void;
+}
+
+interface AuthModalWrapperProps {
+  isOpen: boolean;
+  onClose: () => void;
+  startWithSignup?: boolean;
+  isInConfirmation?: boolean;
+  onStateChange?: (state: { needsConfirmation: boolean }) => void;
+}
+
+interface LandingProps {
+  onDashboardClick?: () => void;
+}
 
 const TopNavBar = () => {
   return (
-    <div className="bg-blue-700 text-white text-sm py-2">
+    <div className="bg-blue-700 text-white text-base py-2">
       <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row justify-between items-center space-y-2 lg:space-y-0">
         <div className="flex flex-wrap justify-center lg:justify-start space-x-4 lg:space-x-6">
           <a
@@ -81,11 +135,13 @@ const TopNavBar = () => {
               type="text"
               name="s"
               placeholder="Search..."
-              className="px-3 py-1 text-black text-sm rounded-l border-0 bg-white"
+              className="px-3 py-1 text-black text-base rounded-l border-0 bg-white"
             />
             <button
-              onClick={() => window.open('https://www.metisnation.org/', '_blank')}
-              className="bg-gray-600 px-3 py-1 text-sm rounded-r hover:bg-gray-700 cursor-pointer"
+              onClick={() =>
+                window.open("https://www.metisnation.org/", "_blank")
+              }
+              className="bg-gray-600 px-3 py-1 text-base rounded-r hover:bg-gray-700 cursor-pointer"
             >
               SEARCH
             </button>
@@ -96,7 +152,12 @@ const TopNavBar = () => {
   );
 };
 
-const NavigationDropdown = ({ title, items, isOpen, onToggle }) => {
+const NavigationDropdown: React.FC<NavigationDropdownProps> = ({
+  title,
+  items,
+  isOpen,
+  onToggle,
+}) => {
   return (
     <div className="relative group">
       <button
@@ -107,11 +168,11 @@ const NavigationDropdown = ({ title, items, isOpen, onToggle }) => {
       </button>
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 w-64 bg-white shadow-lg rounded border z-50">
-          {items.map((item, index) => (
+          {items.map((item: NavigationItem, index: number) => (
             <a
               key={index}
               href={item.href}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+              className="block px-4 py-2 text-base text-gray-700 hover:bg-gray-100 cursor-pointer"
             >
               {item.label}
             </a>
@@ -122,84 +183,154 @@ const NavigationDropdown = ({ title, items, isOpen, onToggle }) => {
   );
 };
 
-const MobileMenu = ({ isOpen, onToggle, openDropdown, toggleDropdown }) => {
-  const menuItems = [
+const MobileMenu: React.FC<MobileMenuProps> = ({
+  isOpen,
+  openDropdown,
+  toggleDropdown,
+}) => {
+  const navigationItems = [
     {
       title: "PROGRAMS & SERVICES",
       key: "programs",
       items: [
-        { label: "Healing & Wellness", href: "https://www.metisnation.org/programs-and-services/healing-wellness/" },
-        { label: "Education & Training", href: "https://www.metisnation.org/programs-and-services/education-training/" },
-        { label: "Housing & Infrastructure", href: "https://www.metisnation.org/programs-and-services/housing-infrastructure/" },
-        { label: "Lands, Resources & Consultations", href: "https://www.metisnation.org/programs-and-services/lands-resources-consultations/" },
-        { label: "Intergovernmental Relations", href: "https://www.metisnation.org/programs-and-services/intergovernmental-relations/" },
-        { label: "Economic Development", href: "https://www.metisnation.org/programs-and-services/economic-development/" },
-      ]
+        {
+          label: "Healing & Wellness",
+          href: "https://www.metisnation.org/programs-and-services/healing-wellness/",
+        },
+        {
+          label: "Education & Training",
+          href: "https://www.metisnation.org/programs-and-services/education-training/",
+        },
+        {
+          label: "Housing & Infrastructure",
+          href: "https://www.metisnation.org/programs-and-services/housing-infrastructure/",
+        },
+        {
+          label: "Lands, Resources & Consultations",
+          href: "https://www.metisnation.org/programs-and-services/lands-resources-consultations/",
+        },
+        {
+          label: "Intergovernmental Relations",
+          href: "https://www.metisnation.org/programs-and-services/intergovernmental-relations/",
+        },
+        {
+          label: "Economic Development",
+          href: "https://www.metisnation.org/programs-and-services/economic-development/",
+        },
+      ],
     },
     {
       title: "GOVERNANCE",
       key: "governance",
       items: [
-        { label: "Self-Government", href: "https://www.metisnation.org/governance/self-government/" },
-        { label: "Governing Structure", href: "https://www.metisnation.org/governance/governing-structure/" },
-        { label: "AGA Business", href: "https://www.metisnation.org/governance/aga-business/" },
-        { label: "Reference Documents", href: "https://www.metisnation.org/governance/reference-documents/" },
-      ]
+        {
+          label: "Self-Government",
+          href: "https://www.metisnation.org/governance/self-government/",
+        },
+        {
+          label: "Governing Structure",
+          href: "https://www.metisnation.org/governance/governing-structure/",
+        },
+        {
+          label: "AGA Business",
+          href: "https://www.metisnation.org/governance/aga-business/",
+        },
+        {
+          label: "Reference Documents",
+          href: "https://www.metisnation.org/governance/reference-documents/",
+        },
+      ],
     },
     {
       title: "COMMUNITY COUNCILS",
       key: "councils",
       items: [
-        { label: "Overview and Vacancy Notices", href: "https://www.metisnation.org/community-councils/" },
-        { label: "Council Contacts", href: "https://www.metisnation.org/community-councils/council-contacts/" },
-        { label: "Community Councils Map", href: "https://www.metisnation.org/community-councils/community-councils-map/" },
-      ]
+        {
+          label: "Overview and Vacancy Notices",
+          href: "https://www.metisnation.org/community-councils/",
+        },
+        {
+          label: "Council Contacts",
+          href: "https://www.metisnation.org/community-councils/council-contacts/",
+        },
+        {
+          label: "Community Councils Map",
+          href: "https://www.metisnation.org/community-councils/community-councils-map/",
+        },
+      ],
     },
     {
       title: "REGISTRY",
       key: "registry",
       items: [
-        { label: "Registry Overview", href: "https://www.metisnation.org/registry/" },
-        { label: "Citizenship", href: "https://www.metisnation.org/registry/citizenship/" },
-        { label: "Harvesting", href: "https://www.metisnation.org/registry/harvesting/" },
-        { label: "Rights", href: "https://www.metisnation.org/registry/rights/" },
-        { label: "The Powley Case", href: "https://www.metisnation.org/registry/the-powley-case/" },
-      ]
+        {
+          label: "Registry Overview",
+          href: "https://www.metisnation.org/registry/",
+        },
+        {
+          label: "Citizenship",
+          href: "https://www.metisnation.org/registry/citizenship/",
+        },
+        {
+          label: "Harvesting",
+          href: "https://www.metisnation.org/registry/harvesting/",
+        },
+        {
+          label: "Rights",
+          href: "https://www.metisnation.org/registry/rights/",
+        },
+        {
+          label: "The Powley Case",
+          href: "https://www.metisnation.org/registry/the-powley-case/",
+        },
+      ],
     },
     {
       title: "NEWS",
       key: "news",
       items: [
-        { label: "News & Events", href: "https://www.metisnation.org/mno-news/" },
-        { label: "PCMNO Recaps", href: "https://www.metisnation.org/mno-news/pcmno-recaps/" },
-        { label: "COVID-19 Support Programs", href: "https://www.metisnation.org/covid-19-support-programs/" },
-      ]
-    }
+        {
+          label: "News & Events",
+          href: "https://www.metisnation.org/mno-news/",
+        },
+        {
+          label: "PCMNO Recaps",
+          href: "https://www.metisnation.org/mno-news/pcmno-recaps/",
+        },
+        {
+          label: "COVID-19 Support Programs",
+          href: "https://www.metisnation.org/covid-19-support-programs/",
+        },
+      ],
+    },
   ];
 
   if (!isOpen) return null;
 
   return (
-    <div className="lg:hidden bg-white border-t shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        {menuItems.map((menu) => (
-          <div key={menu.key} className="mb-4">
+    <div className="lg:hidden bg-white border-t">
+      <div className="px-2 pt-2 pb-3 space-y-1">
+        {navigationItems.map((item) => (
+          <div key={item.key}>
             <button
-              className="w-full text-left text-blue-600 font-medium py-2 flex items-center justify-between"
-              onClick={() => toggleDropdown(menu.key)}
+              onClick={() => toggleDropdown(item.key)}
+              className="text-blue-600 hover:text-blue-800 block px-3 py-2 rounded-md text-base font-medium w-full text-left flex items-center justify-between cursor-pointer"
             >
-              {menu.title}
-              <ChevronDown className={`w-4 h-4 transform transition-transform ${openDropdown === menu.key ? 'rotate-180' : ''}`} />
+              {item.title}
+              <ChevronDown
+                className={`w-4 h-4 transform transition-transform ${openDropdown === item.key ? "rotate-180" : ""}`}
+              />
             </button>
-            {openDropdown === menu.key && (
-              <div className="pl-4 mt-2 space-y-2">
-                {menu.items.map((item, index) => (
+
+            {openDropdown === item.key && (
+              <div className="ml-4 space-y-1">
+                {item.items.map((subItem, index) => (
                   <a
                     key={index}
-                    href={item.href}
-                    className="block text-sm text-gray-700 hover:text-blue-600 py-1"
+                    href={subItem.href}
+                    className="text-blue-500 hover:text-blue-700 block px-3 py-2 rounded-md text-base cursor-pointer"
                   >
-                    {item.label}
+                    {subItem.label}
                   </a>
                 ))}
               </div>
@@ -211,7 +342,7 @@ const MobileMenu = ({ isOpen, onToggle, openDropdown, toggleDropdown }) => {
   );
 };
 
-const Header = ({ openDropdown, toggleDropdown }) => {
+const Header: React.FC<HeaderProps> = ({ openDropdown, toggleDropdown }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigationItems = [
@@ -219,53 +350,116 @@ const Header = ({ openDropdown, toggleDropdown }) => {
       title: "PROGRAMS & SERVICES",
       key: "programs",
       items: [
-        { label: "Healing & Wellness", href: "https://www.metisnation.org/programs-and-services/healing-wellness/" },
-        { label: "Education & Training", href: "https://www.metisnation.org/programs-and-services/education-training/" },
-        { label: "Housing & Infrastructure", href: "https://www.metisnation.org/programs-and-services/housing-infrastructure/" },
-        { label: "Lands, Resources & Consultations", href: "https://www.metisnation.org/programs-and-services/lands-resources-consultations/" },
-        { label: "Intergovernmental Relations", href: "https://www.metisnation.org/programs-and-services/intergovernmental-relations/" },
-        { label: "Economic Development", href: "https://www.metisnation.org/programs-and-services/economic-development/" },
-      ]
+        {
+          label: "Healing & Wellness",
+          href: "https://www.metisnation.org/programs-and-services/healing-wellness/",
+        },
+        {
+          label: "Education & Training",
+          href: "https://www.metisnation.org/programs-and-services/education-training/",
+        },
+        {
+          label: "Housing & Infrastructure",
+          href: "https://www.metisnation.org/programs-and-services/housing-infrastructure/",
+        },
+        {
+          label: "Lands, Resources & Consultations",
+          href: "https://www.metisnation.org/programs-and-services/lands-resources-consultations/",
+        },
+        {
+          label: "Intergovernmental Relations",
+          href: "https://www.metisnation.org/programs-and-services/intergovernmental-relations/",
+        },
+        {
+          label: "Economic Development",
+          href: "https://www.metisnation.org/programs-and-services/economic-development/",
+        },
+      ],
     },
     {
       title: "GOVERNANCE",
       key: "governance",
       items: [
-        { label: "Self-Government", href: "https://www.metisnation.org/governance/self-government/" },
-        { label: "Governing Structure", href: "https://www.metisnation.org/governance/governing-structure/" },
-        { label: "AGA Business", href: "https://www.metisnation.org/governance/aga-business/" },
-        { label: "Reference Documents", href: "https://www.metisnation.org/governance/reference-documents/" },
-      ]
+        {
+          label: "Self-Government",
+          href: "https://www.metisnation.org/governance/self-government/",
+        },
+        {
+          label: "Governing Structure",
+          href: "https://www.metisnation.org/governance/governing-structure/",
+        },
+        {
+          label: "AGA Business",
+          href: "https://www.metisnation.org/governance/aga-business/",
+        },
+        {
+          label: "Reference Documents",
+          href: "https://www.metisnation.org/governance/reference-documents/",
+        },
+      ],
     },
     {
       title: "COMMUNITY COUNCILS",
       key: "councils",
       items: [
-        { label: "Overview and Vacancy Notices", href: "https://www.metisnation.org/community-councils/" },
-        { label: "Council Contacts", href: "https://www.metisnation.org/community-councils/council-contacts/" },
-        { label: "Community Councils Map", href: "https://www.metisnation.org/community-councils/community-councils-map/" },
-      ]
+        {
+          label: "Overview and Vacancy Notices",
+          href: "https://www.metisnation.org/community-councils/",
+        },
+        {
+          label: "Council Contacts",
+          href: "https://www.metisnation.org/community-councils/council-contacts/",
+        },
+        {
+          label: "Community Councils Map",
+          href: "https://www.metisnation.org/community-councils/community-councils-map/",
+        },
+      ],
     },
     {
       title: "REGISTRY",
       key: "registry",
       items: [
-        { label: "Registry Overview", href: "https://www.metisnation.org/registry/" },
-        { label: "Citizenship", href: "https://www.metisnation.org/registry/citizenship/" },
-        { label: "Harvesting", href: "https://www.metisnation.org/registry/harvesting/" },
-        { label: "Rights", href: "https://www.metisnation.org/registry/rights/" },
-        { label: "The Powley Case", href: "https://www.metisnation.org/registry/the-powley-case/" },
-      ]
+        {
+          label: "Registry Overview",
+          href: "https://www.metisnation.org/registry/",
+        },
+        {
+          label: "Citizenship",
+          href: "https://www.metisnation.org/registry/citizenship/",
+        },
+        {
+          label: "Harvesting",
+          href: "https://www.metisnation.org/registry/harvesting/",
+        },
+        {
+          label: "Rights",
+          href: "https://www.metisnation.org/registry/rights/",
+        },
+        {
+          label: "The Powley Case",
+          href: "https://www.metisnation.org/registry/the-powley-case/",
+        },
+      ],
     },
     {
       title: "NEWS",
       key: "news",
       items: [
-        { label: "News & Events", href: "https://www.metisnation.org/mno-news/" },
-        { label: "PCMNO Recaps", href: "https://www.metisnation.org/mno-news/pcmno-recaps/" },
-        { label: "COVID-19 Support Programs", href: "https://www.metisnation.org/covid-19-support-programs/" },
-      ]
-    }
+        {
+          label: "News & Events",
+          href: "https://www.metisnation.org/mno-news/",
+        },
+        {
+          label: "PCMNO Recaps",
+          href: "https://www.metisnation.org/mno-news/pcmno-recaps/",
+        },
+        {
+          label: "COVID-19 Support Programs",
+          href: "https://www.metisnation.org/covid-19-support-programs/",
+        },
+      ],
+    },
   ];
 
   return (
@@ -274,19 +468,24 @@ const Header = ({ openDropdown, toggleDropdown }) => {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <a href="https://www.metisnation.org/" className="cursor-pointer">
-              <img
+              <Image
                 src="logo.png"
                 alt="Métis Nation of Ontario"
-                className="h-12 sm:h-16"
+                width={250}
+                height={75}
               />
             </a>
           </div>
-          
+
           <button
             className="lg:hidden text-blue-600 hover:text-blue-800"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
 
           <nav className="hidden lg:flex space-x-8">
@@ -313,7 +512,11 @@ const Header = ({ openDropdown, toggleDropdown }) => {
   );
 };
 
-const HeroSection = ({ onLoginClick }) => {
+const HeroSection: React.FC<HeroSectionProps> = ({
+  onLoginClick,
+  isAuthenticated,
+  onDashboardClick,
+}) => {
   return (
     <div
       className="bg-gradient-to-r from-blue-700 to-blue-800 text-white py-8 sm:py-16"
@@ -325,7 +528,7 @@ const HeroSection = ({ onLoginClick }) => {
     >
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-6">
-          <div className="flex items-center text-blue-200 text-sm mb-2">
+          <div className="flex items-center text-blue-200 text-base mb-2">
             <a
               href="https://www.metisnation.org/"
               className="hover:text-white cursor-pointer"
@@ -340,20 +543,37 @@ const HeroSection = ({ onLoginClick }) => {
               REGISTRY
             </a>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-bold mb-4">Registry Applications</h1>
-          <button
-            onClick={onLoginClick}
-            className="bg-gray-800 hover:bg-gray-700 text-white px-4 sm:px-6 py-2 rounded font-medium transition-colors cursor-pointer text-sm sm:text-base"
-          >
-            LOGIN TO YOUR ACCOUNT
-          </button>
+          <h1 className="text-2xl sm:text-4xl font-bold mb-4">
+            Registry Applications
+          </h1>
+          {isAuthenticated ? (
+            <button
+              onClick={onDashboardClick}
+              className="bg-gray-800 hover:bg-gray-700 text-white px-4 sm:px-6 py-2 rounded font-medium transition-colors cursor-pointer text-base sm:text-base"
+            >
+              GO TO APPLICATION DASHBOARD
+            </button>
+          ) : (
+            <button
+              onClick={onLoginClick}
+              className="bg-gray-800 hover:bg-gray-700 text-white px-4 sm:px-6 py-2 rounded font-medium transition-colors cursor-pointer text-base sm:text-base"
+            >
+              LOGIN TO YOUR ACCOUNT
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-const MainContent = ({ onLoginClick }) => {
+const MainContent: React.FC<MainContentProps> = ({
+  onLoginClick,
+  onCreateAccountClick,
+  isAuthenticated,
+  onDashboardClick,
+  onLogout,
+}) => {
   return (
     <div
       className="py-8 sm:py-16 min-h-96"
@@ -369,12 +589,12 @@ const MainContent = ({ onLoginClick }) => {
             <p className="text-base sm:text-lg mb-6 leading-relaxed">
               On this page you can <strong>Update your Address</strong>,{" "}
               <strong>Apply for MNO Citizenship</strong>,{" "}
-              <strong>Apply for a MNO Harvester Certificate</strong> and
-              check the status of your applications — all online! To start
-              an application process, you will need to create an account.
+              <strong>Apply for a MNO Harvester Certificate</strong> and check
+              the status of your applications — all online! To start an
+              application process, you will need to create an account.
             </p>
 
-            <p className="mb-8 leading-relaxed text-sm sm:text-base">
+            <p className="mb-8 leading-relaxed text-base sm:text-base">
               If you require assistance or have any questions about the
               Application and Update process please email us at{" "}
               <strong>info@mnoregistry.ca</strong> or call Toll Free at{" "}
@@ -383,36 +603,67 @@ const MainContent = ({ onLoginClick }) => {
             </p>
 
             <div className="space-y-3">
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base">
+              <button
+                onClick={isAuthenticated ? onDashboardClick : onLoginClick}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
+              >
                 <span>Change Address / Renew Citizen Card</span>
                 <ChevronRight className="w-5 h-5 flex-shrink-0" />
               </button>
 
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base">
+              <button
+                onClick={isAuthenticated ? onDashboardClick : onLoginClick}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-base sm:text-base"
+              >
                 <span>Apply for Citizenship</span>
                 <ChevronRight className="w-5 h-5 flex-shrink-0" />
               </button>
 
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base">
-                <span>Apply for Harvester's Certificate</span>
+              <button
+                onClick={isAuthenticated ? onDashboardClick : onLoginClick}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-base sm:text-base"
+              >
+                <span>Apply for Harvester&apos;s Certificate</span>
                 <ChevronRight className="w-5 h-5 flex-shrink-0" />
               </button>
 
-              <button
-                onClick={onLoginClick}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
-              >
-                <span>Create an Account</span>
-                <ChevronRight className="w-5 h-5 flex-shrink-0" />
-              </button>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={onDashboardClick}
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-base sm:text-base"
+                  >
+                    <span>Application Dashboard</span>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </button>
 
-              <button
-                onClick={onLoginClick}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-sm sm:text-base"
-              >
-                <span>Login to your Account</span>
-                <ChevronRight className="w-5 h-5 flex-shrink-0" />
-              </button>
+                  <button
+                    onClick={onLogout}
+                    className="w-full bg-red-400 hover:bg-red-500 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-base sm:text-base"
+                  >
+                    <span>Logout</span>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={onCreateAccountClick}
+                    className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-base sm:text-base"
+                  >
+                    <span>Create an Account</span>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </button>
+
+                  <button
+                    onClick={onLoginClick}
+                    className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 sm:px-6 rounded flex items-center justify-between font-medium transition-colors cursor-pointer text-base sm:text-base"
+                  >
+                    <span>Login to your Account</span>
+                    <ChevronRight className="w-5 h-5 flex-shrink-0" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -430,7 +681,7 @@ const Footer = () => {
             <h3 className="font-bold text-gray-900 mb-4">
               Métis Nation of Ontario
             </h3>
-            <div className="space-y-2 text-sm text-gray-700">
+            <div className="space-y-2 text-base text-gray-700">
               <div className="flex items-center">
                 <div>
                   <p>Suite 1100 - 66 Slater Street</p>
@@ -445,7 +696,7 @@ const Footer = () => {
               </div>
             </div>
 
-            <div className="mt-6 space-y-1 text-sm text-gray-700">
+            <div className="mt-6 space-y-1 text-base text-gray-700">
               <div className="flex items-center">
                 <div>
                   <p>Tel.: 613-798-1488</p>
@@ -464,9 +715,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="font-bold text-gray-900 mb-4">
-              Connect With Us
-            </h3>
+            <h3 className="font-bold text-gray-900 mb-4">Connect With Us</h3>
             <div className="space-y-3">
               <div className="flex items-center">
                 <Twitter className="w-4 h-4 mr-2 text-gray-600" />
@@ -518,47 +767,26 @@ const Footer = () => {
 
           <div>
             <h3 className="font-bold text-gray-900 mb-4">Quick Links</h3>
-            <div className="space-y-2 text-sm">
-              <a
-                href="#"
-                className="text-gray-700 hover:text-gray-900 block"
-              >
+            <div className="space-y-2 text-base">
+              <a href="#" className="text-gray-700 hover:text-gray-900 block">
                 Voyageur Newsletter
               </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-gray-900 block"
-              >
+              <a href="#" className="text-gray-700 hover:text-gray-900 block">
                 COVID-19 Support Programs
               </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-gray-900 block"
-              >
+              <a href="#" className="text-gray-700 hover:text-gray-900 block">
                 MNO Offices & Staff
               </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-gray-900 block"
-              >
+              <a href="#" className="text-gray-700 hover:text-gray-900 block">
                 Swag Store
               </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-gray-900 block"
-              >
+              <a href="#" className="text-gray-700 hover:text-gray-900 block">
                 Procurement Opportunities
               </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-gray-900 block"
-              >
+              <a href="#" className="text-gray-700 hover:text-gray-900 block">
                 Careers
               </a>
-              <a
-                href="#"
-                className="text-gray-700 hover:text-gray-900 block"
-              >
+              <a href="#" className="text-gray-700 hover:text-gray-900 block">
                 Contact Us
               </a>
             </div>
@@ -571,18 +799,26 @@ const Footer = () => {
 
 const BottomFooter = () => {
   const currentYear = new Date().getFullYear();
-  
+
   return (
     <div className="bg-blue-700 text-white py-4">
-      <div className="max-w-7xl mx-auto px-4 text-center text-sm">
+      <div className="max-w-7xl mx-auto px-4 text-center text-base">
         <p className="flex flex-col sm:flex-row sm:justify-center sm:items-center space-y-1 sm:space-y-0">
-          <span>© {currentYear} Métis Nation of Ontario. All rights reserved.</span>
+          <span>
+            © {currentYear} Métis Nation of Ontario. All rights reserved.
+          </span>
           <span className="hidden sm:inline mx-2">|</span>
-          <a href="https://www.metisnation.org/privacy-policy/" className="hover:text-blue-200">
+          <a
+            href="https://www.metisnation.org/privacy-policy/"
+            className="hover:text-blue-200"
+          >
             Privacy Policy
           </a>
           <span className="hidden sm:inline mx-2">|</span>
-          <a href="https://www.metisnation.org/accessibility-form/" className="hover:text-blue-200">
+          <a
+            href="https://www.metisnation.org/accessibility-form/"
+            className="hover:text-blue-200"
+          >
             Accessibility Feedback Form
           </a>
         </p>
@@ -591,37 +827,72 @@ const BottomFooter = () => {
   );
 };
 
-const LoginModal = ({ isOpen, onClose }) => {
+const AuthModalWrapper: React.FC<AuthModalWrapperProps> = ({
+  isOpen,
+  onClose,
+  startWithSignup = false,
+  isInConfirmation = false,
+}) => {
   if (!isOpen) return null;
 
+  const canClose = !isInConfirmation;
+
   return (
-    <div
-      className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-      >
-        <LoginForm onSuccess={onClose} />
-      </div>
-    </div>
+    <AuthFlow
+      initialStep={startWithSignup ? AuthFlowStep.SIGNUP : AuthFlowStep.LOGIN}
+      onSuccess={onClose}
+      onClose={canClose ? onClose : undefined}
+    />
   );
 };
 
-const Landing = () => {
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+const Landing: React.FC<LandingProps> = ({
+  onDashboardClick = () => console.error("No onDashboardClick provided"),
+}) => {
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [startWithSignup, setStartWithSignup] = useState<boolean>(false);
+  const [isInConfirmation, setIsInConfirmation] = useState<boolean>(false);
+  const { user, signOut } = useAuth();
 
-  const toggleDropdown = (menuName) => {
+  const toggleDropdown = (menuName: string) => {
     setOpenDropdown(openDropdown === menuName ? null : menuName);
   };
 
   const handleLoginClick = () => {
-    setShowLoginModal(true);
+    setStartWithSignup(false);
+    setShowAuthModal(true);
+  };
+
+  const handleCreateAccountClick = () => {
+    setStartWithSignup(true);
+    setShowAuthModal(true);
   };
 
   const handleCloseLogin = () => {
-    setShowLoginModal(false);
+    setShowAuthModal(false);
+    setStartWithSignup(false);
+    setIsInConfirmation(false);
+  };
+
+  const handleModalStateChange = (state: { needsConfirmation: boolean }) => {
+    setIsInConfirmation(state.needsConfirmation);
+  };
+
+  const handleDashboardClick = () => {
+    if (onDashboardClick) {
+      onDashboardClick();
+    } else {
+      console.error("onDashboardClick prop is undefined or null");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
@@ -629,13 +900,29 @@ const Landing = () => {
       <div className="min-h-screen bg-gray-100">
         <TopNavBar />
         <Header openDropdown={openDropdown} toggleDropdown={toggleDropdown} />
-        <HeroSection onLoginClick={handleLoginClick} />
-        <MainContent onLoginClick={handleLoginClick} />
+        <HeroSection
+          onLoginClick={handleLoginClick}
+          onDashboardClick={handleDashboardClick}
+          isAuthenticated={!!user}
+        />
+        <MainContent
+          onLoginClick={handleLoginClick}
+          onCreateAccountClick={handleCreateAccountClick}
+          onDashboardClick={handleDashboardClick}
+          onLogout={handleLogout}
+          isAuthenticated={!!user}
+        />
         <Footer />
         <BottomFooter />
       </div>
 
-      <LoginModal isOpen={showLoginModal} onClose={handleCloseLogin} />
+      <AuthModalWrapper
+        isOpen={showAuthModal}
+        onClose={handleCloseLogin}
+        startWithSignup={startWithSignup}
+        isInConfirmation={isInConfirmation}
+        onStateChange={handleModalStateChange}
+      />
     </>
   );
 };

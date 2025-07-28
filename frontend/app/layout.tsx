@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import './globals.css';
-import { AuthProvider } from '@/hooks/useAuth';
-import '@/lib/aws-config';
+import "./globals.css";
+import { AuthProvider } from "@/hooks/useAuth";
+import "@/lib/config/aws";
 
 export default function RootLayout({
   children,
@@ -12,9 +12,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

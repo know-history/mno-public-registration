@@ -1,11 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/components/Dashboard";
 import Landing from "@/components/Landing";
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const [showDashboard, setShowDashboard] = useState(false);
+
+  const handleDashboardClick = () => {
+    setShowDashboard(true);
+  };
 
   if (loading) {
     return (
@@ -15,7 +21,17 @@ export default function Home() {
     );
   }
 
+  if (showDashboard && user) {
+    return (
+      <main className="min-h-screen">
+        <Dashboard onBackToLanding={() => setShowDashboard(false)} />
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen">{user ? <Dashboard /> : <Landing />}</main>
+    <main className="min-h-screen">
+      <Landing onDashboardClick={handleDashboardClick} />
+    </main>
   );
 }
