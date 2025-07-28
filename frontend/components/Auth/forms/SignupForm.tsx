@@ -1,25 +1,4 @@
-const dobLabel = (
-    <>
-      Date of Birth
-      <Popover>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="ml-1 flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            aria-label="More information about Date of Birth"
-          >
-            <Info className="w-3 h-3" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-64 p-3 text-sm text-gray-700">
-          We collect your date of birth to customize the application you will be
-          submitting. Applicants under 16 years old will require their
-          application to be created under an account held by their parent or
-          guardian.
-        </PopoverContent>
-      </Popover>
-    </>
-  );import React, { useState } from "react";
+import React, { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";

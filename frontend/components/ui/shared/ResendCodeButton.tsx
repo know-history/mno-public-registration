@@ -31,7 +31,7 @@ export function ResendCodeButton({
       setIsLoading(true);
       await onResend();
       setCountdown(cooldownSeconds);
-    } catch (error) {
+    } catch {
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +45,7 @@ export function ResendCodeButton({
       onClick={handleResend}
       disabled={isDisabled}
       className={cn(
-        "text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors cursor-pointer",
+        "text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors",
         isDisabled && "text-gray-400 cursor-not-allowed hover:text-gray-400",
         className
       )}

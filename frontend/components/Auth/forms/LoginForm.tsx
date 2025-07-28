@@ -2,15 +2,13 @@ import React, { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, Loader2 } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  FormField,
-  PasswordField,
-  SubmitButton,
-  ErrorAlert,
-  SuccessAlert,
-} from "@/components/ui/shared";
+import { FormField } from "@/components/ui/shared/FormField";
+import { PasswordField } from "@/components/ui/shared/PasswordField";
+import { SubmitButton } from "@/components/ui/shared/SubmitButton";
+import { ErrorAlert } from "@/components/ui/shared/ErrorAlert";
+import { SuccessAlert } from "@/components/ui/shared/SuccessAlert";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
@@ -34,7 +32,6 @@ export function LoginForm({
 }: LoginFormProps) {
   const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [dismissibleError, setDismissibleError] = useState("");
 
   const form = useForm<LoginFormData>({
@@ -51,7 +48,6 @@ export function LoginForm({
   const handleSubmit = async (data: LoginFormData) => {
     try {
       setLoading(true);
-      setError("");
       setDismissibleError("");
 
       await signIn(data.email, data.password);
@@ -87,8 +83,12 @@ export function LoginForm({
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {successMessage && <SuccessAlert message={successMessage} />}
+        {/* Success Message */}
+        {successMessage && (
+          <SuccessAlert message={successMessage} />
+        )}
 
+        {/* Email Field */}
         <FormField
           name="email"
           type="email"
@@ -99,6 +99,7 @@ export function LoginForm({
           autoComplete="email"
         />
 
+        {/* Password Field */}
         <PasswordField
           name="password"
           label="Password"
@@ -107,10 +108,15 @@ export function LoginForm({
           showRequirements={false}
         />
 
+        {/* Dismissible Error */}
         {dismissibleError && (
-          <ErrorAlert message={dismissibleError} onDismiss={dismissError} />
+          <ErrorAlert
+            message={dismissibleError}
+            onDismiss={dismissError}
+          />
         )}
 
+        {/* Submit Button */}
         <SubmitButton
           loading={loading}
           disabled={!canSubmit}
@@ -118,22 +124,24 @@ export function LoginForm({
           loadingText="Signing in..."
         />
 
+        {/* Forgot Password Link */}
         <div className="text-center">
           <button
             type="button"
             onClick={onForgotPassword}
-            className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors cursor-pointer"
+            className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
           >
             Forgot your password?
           </button>
         </div>
 
+        {/* Sign Up Link */}
         <div className="text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don&#39;t have an account?{" "}
           <button
             type="button"
             onClick={onSignUp}
-            className="text-blue-600 hover:text-blue-700 font-medium transition-colors cursor-pointer"
+            className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
           >
             Sign up
           </button>

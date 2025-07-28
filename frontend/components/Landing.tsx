@@ -832,7 +832,6 @@ const AuthModalWrapper: React.FC<AuthModalWrapperProps> = ({
   onClose,
   startWithSignup = false,
   isInConfirmation = false,
-  onStateChange,
 }) => {
   if (!isOpen) return null;
 
