@@ -13,7 +13,6 @@ import {
   X,
 } from "lucide-react";
 
-import { AuthModal } from "@/components/ui/shared";
 import { AuthFlow, AuthFlowStep } from "@/components/auth/AuthFlow";
 import { useAuth } from "@/hooks/useAuth";
 import Image from "next/image";
@@ -840,17 +839,11 @@ const AuthModalWrapper: React.FC<AuthModalWrapperProps> = ({
   const canClose = !isInConfirmation;
 
   return (
-    <AuthModal 
+    <AuthFlow
+      initialStep={startWithSignup ? AuthFlowStep.SIGNUP : AuthFlowStep.LOGIN}
+      onSuccess={onClose}
       onClose={canClose ? onClose : undefined}
-      showCloseButton={canClose}
-      closeOnEscape={canClose}
-      closeOnOverlayClick={canClose}
-    >
-      <AuthFlow
-        initialStep={startWithSignup ? AuthFlowStep.SIGNUP : AuthFlowStep.LOGIN}
-        onSuccess={onClose}
-      />
-    </AuthModal>
+    />
   );
 };
 

@@ -6,32 +6,16 @@ interface SubmitButtonProps {
   children: React.ReactNode;
   loading?: boolean;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
   className?: string;
   loadingText?: string;
   type?: 'submit' | 'button' | 'reset';
   onClick?: () => void;
 }
 
-const variants = {
-  primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
-  secondary: "bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500",
-  danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
-};
-
-const sizes = {
-  sm: "px-3 py-2 text-sm",
-  md: "px-4 py-3 text-base",
-  lg: "px-6 py-4 text-lg",
-};
-
 export function SubmitButton({
   children,
   loading = false,
   disabled = false,
-  variant = 'primary',
-  size = 'md',
   className,
   loadingText,
   type = 'submit',
@@ -46,23 +30,22 @@ export function SubmitButton({
       disabled={isDisabled}
       onClick={onClick}
       className={cn(
-        "w-full font-semibold rounded-lg transition-all duration-200",
-        "focus:outline-none focus:ring-2 focus:ring-offset-2",
-        isDisabled 
-          ? "opacity-50 cursor-not-allowed" 
-          : "cursor-pointer",
-        variants[variant],
-        sizes[size],
+        "w-full py-3.5 text-base font-semibold rounded-lg transition-all",
+        isDisabled
+          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+          : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl cursor-pointer",
         className
       )}
       {...props}
     >
-      <div className="flex items-center justify-center">
-        {loading && (
-          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-        )}
-        {loading && loadingText ? loadingText : children}
-      </div>
+      {loading ? (
+        <span className="flex items-center justify-center">
+          <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white pr-2" />
+          {loadingText || children}
+        </span>
+      ) : (
+        children
+      )}
     </button>
   );
 }

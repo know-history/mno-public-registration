@@ -20,7 +20,9 @@ export function ErrorAlert({ message, onDismiss, className }: ErrorAlertProps) {
       role="alert"
     >
       <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
-      <span className="text-base font-medium flex-1">{message}</span>
+      <span className="text-base font-medium flex-1">
+        {message}
+      </span>
       {onDismiss && (
         <button
           onClick={onDismiss}

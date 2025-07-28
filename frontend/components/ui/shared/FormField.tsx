@@ -1,7 +1,18 @@
 import React from "react";
 import { useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
-import { FormFieldProps } from "@/lib/auth/types/form.types";
+
+interface FormFieldProps {
+  name: string;
+  type?: string;
+  label: string;
+  placeholder?: string;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+  required?: boolean;
+  autoComplete?: string;
+  className?: string;
+}
 
 export function FormField({
   name,
@@ -13,8 +24,6 @@ export function FormField({
   required = false,
   autoComplete,
   className,
-  inputClassName,
-  ...props
 }: FormFieldProps) {
   const { register, formState } = useFormContext();
   const error = formState.errors[name]?.message as string | undefined;
@@ -30,12 +39,6 @@ export function FormField({
       </label>
 
       <div className="relative flex items-center">
-        {icon && (
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10 pointer-events-none">
-            {icon}
-          </div>
-        )}
-        
         <input
           {...register(name, {
             required: required ? `${label} is required` : false,
@@ -46,16 +49,19 @@ export function FormField({
           autoComplete={autoComplete}
           disabled={disabled}
           className={cn(
-            "w-full text-base border-2 border-gray-200 rounded-lg outline-none transition-all",
-            "px-4 py-3.5 bg-white text-slate-900 font-medium cursor-text",
-            "hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100",
-            icon && "pl-12",
+            "px-4 py-3.5 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all",
+            icon && "pr-12",
             disabled && "bg-gray-100 text-slate-500 cursor-not-allowed border-gray-200",
             error && "border-red-300 focus:border-red-500 focus:ring-red-100",
-            inputClassName
+            "cursor-text"
           )}
-          {...props}
         />
+        
+        {icon && (
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+            {icon}
+          </div>
+        )}
       </div>
 
       {error && (

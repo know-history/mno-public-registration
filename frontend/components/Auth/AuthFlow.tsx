@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { AuthModal } from "@/components/ui/shared";
 import { LoginFlow } from "@/components/auth/flows/LoginFlow";
 import { SignupFlow } from "@/components/auth/flows/SignupFlow";
@@ -18,56 +18,78 @@ interface AuthFlowProps {
   onSuccess?: () => void;
   onClose?: () => void;
   initialStep?: AuthFlowStep;
-  title?: string;
-  subtitle?: string;
 }
 
 export function AuthFlow({
   onSuccess,
   onClose,
   initialStep = AuthFlowStep.LOGIN,
-  title,
-  subtitle,
 }: AuthFlowProps) {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [confirmationEmail, setConfirmationEmail] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const getStepTitle = (step: AuthFlowStep): string => {
-    if (title) return title;
-    
-    switch (step) {
-      case AuthFlowStep.LOGIN:
-        return "Welcome back";
-      case AuthFlowStep.SIGNUP:
-        return "Create account";
-      case AuthFlowStep.FORGOT_PASSWORD:
-        return "Reset password";
-      case AuthFlowStep.CONFIRM_SIGNUP:
-        return "Confirm your account";
-      case AuthFlowStep.CONFIRM_PASSWORD_RESET:
-        return "Confirm password reset";
-      default:
-        return "Authentication";
-    }
-  };
+  // References to the current step components to access their back handlers
+  const confirmSignupRef = useRef<any>(null);
+  const confirmPasswordResetRef = useRef<any>(null);
 
-  const getStepSubtitle = (step: AuthFlowStep): string => {
-    if (subtitle) return subtitle;
-    
-    switch (step) {
+  // Get modal props based on current step
+  const getModalProps = () => {
+    switch (currentStep) {
       case AuthFlowStep.LOGIN:
-        return "Sign in to your account";
+        return {
+          title: "Welcome back",
+          subtitle: "Sign in to your account",
+          showBackButton: false,
+        };
       case AuthFlowStep.SIGNUP:
-        return "Join us today";
+        return {
+          title: "Create Account",
+          subtitle: "Join us today and get started",
+          showBackButton: true,
+          backButtonText: "Back to Sign In",
+          onBack: () => setCurrentStep(AuthFlowStep.LOGIN),
+        };
       case AuthFlowStep.FORGOT_PASSWORD:
-        return "Enter your email and we'll send you a reset code";
+        return {
+          title: "Reset password",
+          subtitle: "Enter your email and we'll send you a reset code",
+          showBackButton: true,
+          backButtonText: "Back to Sign In",
+          onBack: () => setCurrentStep(AuthFlowStep.LOGIN),
+        };
       case AuthFlowStep.CONFIRM_SIGNUP:
-        return "Please check your email for a confirmation code";
+        return {
+          title: "Confirm Your Email",
+          subtitle: "Enter the confirmation code that was sent to your email",
+          showBackButton: true,
+          backButtonText: "Back to Sign Up",
+          // Use the component's back handler with confirmation, fallback to normal navigation
+          onBack: () => {
+            // For confirmation steps, we want normal back navigation since the component
+            // handles its own confirmation logic via the onBack prop
+            setCurrentStep(AuthFlowStep.SIGNUP);
+          },
+        };
       case AuthFlowStep.CONFIRM_PASSWORD_RESET:
-        return "Enter the code sent to your email";
+        return {
+          title: "Reset Your Password",
+          subtitle: "Enter the confirmation code sent to your email and choose a new password",
+          showBackButton: true,
+          backButtonText: "Back to Forgot Password",
+          // Use the component's back handler with confirmation, fallback to normal navigation
+          onBack: () => {
+            // For confirmation steps, we want normal back navigation since the component
+            // handles its own confirmation logic via the onBack prop
+            setCurrentStep(AuthFlowStep.FORGOT_PASSWORD);
+          },
+        };
       default:
-        return "";
+        return {
+          title: "Authentication",
+          subtitle: "",
+          showBackButton: false,
+        };
     }
   };
 
@@ -119,16 +141,6 @@ export function AuthFlow({
     setCurrentStep(AuthFlowStep.FORGOT_PASSWORD);
   };
 
-  const handleBackToSignup = () => {
-    setSuccessMessage("");
-    setCurrentStep(AuthFlowStep.SIGNUP);
-  };
-
-  const handleBackToForgotPassword = () => {
-    setSuccessMessage("");
-    setCurrentStep(AuthFlowStep.FORGOT_PASSWORD);
-  };
-
   const renderCurrentStep = () => {
     switch (currentStep) {
       case AuthFlowStep.LOGIN:
@@ -163,7 +175,7 @@ export function AuthFlow({
           <ConfirmSignupFlow
             email={confirmationEmail}
             onSuccess={handleConfirmSignupSuccess}
-            onBack={handleBackToSignup}
+            onBack={() => setCurrentStep(AuthFlowStep.SIGNUP)} // Pass the back handler with confirmation logic
             successMessage={successMessage}
           />
         );
@@ -173,7 +185,7 @@ export function AuthFlow({
           <ConfirmPasswordResetFlow
             email={confirmationEmail}
             onSuccess={handleConfirmPasswordResetSuccess}
-            onBack={handleBackToForgotPassword}
+            onBack={() => setCurrentStep(AuthFlowStep.FORGOT_PASSWORD)} // Pass the back handler with confirmation logic
             successMessage={successMessage}
           />
         );
@@ -189,13 +201,12 @@ export function AuthFlow({
     }
   };
 
+  const modalProps = getModalProps();
+
   return (
     <AuthModal 
-      onClose={onClose} 
-      title={getStepTitle(currentStep)} 
-      subtitle={getStepSubtitle(currentStep)} 
-      size="md"
-      showCloseButton
+      onClose={onClose}
+      {...modalProps}
     >
       {renderCurrentStep()}
     </AuthModal>

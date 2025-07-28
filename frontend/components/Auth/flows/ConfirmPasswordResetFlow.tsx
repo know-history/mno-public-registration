@@ -19,6 +19,7 @@ export function ConfirmPasswordResetFlow({
   successMessage,
 }: ConfirmPasswordResetFlowProps) {
   const [code, setCode] = useState<string[]>(Array(6).fill(""));
+  const [showBackWarning, setShowBackWarning] = useState(false);
   
   const { confirmResetPassword, resetPassword } = useAuth();
   
@@ -28,8 +29,12 @@ export function ConfirmPasswordResetFlow({
     onSuccess,
   });
 
-  const password = form.watch("password");
-  const { canSubmit } = usePasswordValidation(password);
+  // Provide default empty string for password to prevent undefined error
+  const password = form.watch("password") || "";
+  const passwordConfirmation = form.watch("password_confirmation") || "";
+  
+  // Remove unused canSubmit
+  // const { canSubmit } = usePasswordValidation(password);
 
   const handleConfirmReset = async (data: {
     email: string;
@@ -49,93 +54,115 @@ export function ConfirmPasswordResetFlow({
     form.setValue("code", newCode.join(""));
   };
 
+  // This function handles the back button logic with confirmation
+  const handleBackWithConfirmation = () => {
+    // Check if user has started the reset process (entered code or password)
+    const hasStartedReset = code.some(digit => digit !== "") || password || passwordConfirmation;
+    
+    if (hasStartedReset) {
+      // Show warning and set error message
+      form.setError("root", {
+        type: "manual",
+        message: 'Please complete the password reset process or use "Back to Forgot Password" to cancel.'
+      });
+      setShowBackWarning(true);
+      return;
+    }
+    
+    // If nothing entered, allow normal back navigation
+    onBack?.();
+  };
+
+  const handleForceBack = () => {
+    // User confirmed they want to go back despite warning
+    setShowBackWarning(false);
+    form.clearErrors();
+    onBack?.();
+  };
+
   const isCodeComplete = code.every(digit => digit !== "") && code.length === 6;
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Reset your password</h2>
-        <p className="text-gray-600 mb-2">
-          Enter the code sent to
-        </p>
-        <p className="font-medium text-gray-900">{email}</p>
-      </div>
+    <FormProvider {...form}>
+      <div className="space-y-6">
+        {successMessage && (
+          <SuccessAlert message={successMessage} />
+        )}
 
-      <FormProvider {...form}>
-        <div className="space-y-6">
-          {successMessage && (
-            <SuccessAlert message={successMessage} />
+        <form onSubmit={form.handleAuthSubmit(handleConfirmReset)} className="space-y-6">
+          {/* Confirmation Code Input */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Confirmation Code
+            </label>
+            <CodeInput
+              value={code}
+              onChange={handleCodeChange}
+              error={!!form.formState.errors.code}
+            />
+            {form.formState.errors.code && (
+              <p className="text-xs text-red-500 mt-1 px-1">
+                {form.formState.errors.code.message}
+              </p>
+            )}
+          </div>
+
+          {/* Resend Code Section */}
+          <ResendCodeButton
+            onResend={handleResendCode}
+            variant="link"
+          />
+
+          {/* New Password Fields */}
+          <PasswordField
+            name="password"
+            label="New Password"
+            placeholder="Enter new password"
+            showRequirements={true}
+            showStrength={true}
+            required
+          />
+
+          <PasswordField
+            name="password_confirmation"
+            label="Confirm New Password"
+            placeholder="Confirm new password"
+            required
+          />
+
+          {/* Show warning if user tries to go back with partial data */}
+          {form.formState.errors.root && (
+            <ErrorAlert
+              message={form.formState.errors.root.message || ""}
+              onDismiss={() => {
+                form.clearErrors("root");
+                setShowBackWarning(false);
+              }}
+            />
           )}
 
-          <form onSubmit={form.handleAuthSubmit(handleConfirmReset)} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirmation Code
-                </label>
-                <CodeInput
-                  value={code}
-                  onChange={handleCodeChange}
-                  error={!!form.formState.errors.code}
-                />
-                {form.formState.errors.code && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {form.formState.errors.code.message}
-                  </p>
-                )}
-              </div>
-
-              <ResendCodeButton
-                onResend={handleResendCode}
-                rateLimitKey="resend_password_reset_code"
-                variant="link"
-              />
-            </div>
-
-            <PasswordField
-              name="password"
-              label="New Password"
-              placeholder="Enter your new password"
-              showRequirements={true}
-              showStrength={true}
-              required
-            />
-
-            <PasswordField
-              name="password_confirmation"
-              label="Confirm New Password"
-              placeholder="Confirm your new password"
-              required
-            />
-
-            {form.hasError && (
-              <ErrorAlert
-                message={form.submitError}
-                onDismiss={form.dismissError}
-              />
-            )}
-
-            <SubmitButton
-              loading={form.isSubmitting}
-              disabled={!isCodeComplete || !canSubmit || !form.formState.isValid}
-            >
-              Reset Password
-            </SubmitButton>
-          </form>
-
-          {onBack && (
-            <div className="text-center pt-4 border-t border-gray-200">
+          {/* Show force back option if warning is active */}
+          {showBackWarning && (
+            <div className="text-center pt-2">
               <button
                 type="button"
-                onClick={onBack}
-                className="text-sm text-gray-600 hover:text-gray-800"
+                onClick={handleForceBack}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer underline"
               >
-                Back to password reset
+                Back to Forgot Password (cancel reset)
               </button>
             </div>
           )}
-        </div>
-      </FormProvider>
-    </div>
+
+          <SubmitButton
+            loading={form.isSubmitting}
+            disabled={!form.formState.isValid || !isCodeComplete}
+            loadingText="Resetting Password..."
+          >
+            Reset Password
+          </SubmitButton>
+        </form>
+      </div>
+    </FormProvider>
   );
 }

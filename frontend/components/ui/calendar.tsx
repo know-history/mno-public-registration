@@ -15,7 +15,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  captionLayout = "label",
+  captionLayout = "dropdown", // Changed from "label" to "dropdown"
   buttonVariant = "ghost",
   formatters,
   components,
@@ -37,9 +37,13 @@ function Calendar({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+          date.toLocaleString("default", { month: "long" }), // Show full month name
+        formatYearDropdown: (date) => date.getFullYear().toString(),
         ...formatters,
       }}
+      // Add month and year ranges for dropdowns
+      fromYear={1900}
+      toYear={new Date().getFullYear()}
       classNames={{
         root: cn("w-fit", defaultClassNames.root),
         months: cn(
@@ -74,14 +78,14 @@ function Calendar({
           defaultClassNames.dropdown_root
         ),
         dropdown: cn(
-          "absolute bg-popover inset-0 opacity-0 cursor-pointer",
+          "absolute bg-popover inset-0 opacity-0 cursor-pointer w-full h-full rounded-md",
           defaultClassNames.dropdown
         ),
         caption_label: cn(
           "select-none font-medium cursor-pointer",
-          captionLayout === "label"
-            ? "text-sm"
-            : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-muted-foreground [&>svg]:size-3.5",
+          captionLayout === "dropdown"
+            ? "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-muted-foreground [&>svg]:size-3.5"
+            : "text-sm",
           defaultClassNames.caption_label
         ),
         table: "w-full border-collapse",

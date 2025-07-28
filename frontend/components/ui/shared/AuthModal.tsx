@@ -1,43 +1,39 @@
 import React, { useEffect } from "react";
-import { X } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AuthModalProps {
   children: React.ReactNode;
   onClose?: () => void;
+  onBack?: () => void;
   title?: string;
   subtitle?: string;
   showCloseButton?: boolean;
+  showBackButton?: boolean;
+  backButtonText?: string;
   closeOnEscape?: boolean;
   closeOnOverlayClick?: boolean;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
 }
-
-const sizes = {
-  sm: "max-w-md",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-};
 
 export function AuthModal({
   children,
   onClose,
+  onBack,
   title,
   subtitle,
   showCloseButton = true,
+  showBackButton = false,
+  backButtonText = "Back",
   closeOnEscape = true,
   closeOnOverlayClick = true,
   className,
-  size = 'md',
 }: AuthModalProps) {
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    document.body.classList.add("modal-open");
     
     return () => {
       document.body.style.overflow = "";
-      document.body.classList.remove("modal-open");
     };
   }, []);
 
@@ -62,52 +58,55 @@ export function AuthModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm modal-container"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm overflow-y-auto px-4 py-8"
       onClick={handleOverlayClick}
     >
-      <div 
-        className={cn(
-          "relative w-full bg-white rounded-2xl shadow-2xl border border-gray-200",
-          "transform transition-all duration-200 ease-out",
-          "animate-in fade-in-0 zoom-in-95",
-          sizes[size],
-          className
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {(title || subtitle || showCloseButton) && (
-          <div className="flex items-start justify-between p-6 border-b border-gray-100">
-            <div className="flex-1">
-              {title && (
-                <h2 className="text-2xl text-center font-bold text-gray-900 mb-2">
-                  {title}
-                </h2>
-              )}
-              {subtitle && (
-                <p className="text-gray-600 text-center text-base leading-relaxed">
-                  {subtitle}
-                </p>
-              )}
-            </div>
-            
+      <div className="min-h-full flex items-center justify-center p-4">
+        <div 
+          className={cn(
+            "bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md relative",
+            className
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between p-6 pb-4">
+            {showBackButton && onBack ? (
+              <button
+                onClick={onBack}
+                className="flex items-center text-gray-600 hover:text-gray-800 text-base font-medium transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {backButtonText}
+              </button>
+            ) : (
+              <div />
+            )}
+
             {showCloseButton && onClose && (
               <button
-                type="button"
                 onClick={onClose}
-                className={cn(
-                  "ml-4 p-2 text-gray-400 hover:text-gray-600 transition-colors",
-                  "rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                )}
-                aria-label="Close modal"
+                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                aria-label="Close"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
-        )}
 
-        <div className="p-6">
-          {children}
+          {title && (
+            <div className="px-6 pb-4">
+              <div className="text-center">
+                <h4 className="text-3xl font-bold text-gray-900">{title}</h4>
+                {subtitle && (
+                  <p className="text-gray-600 mt-4">{subtitle}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="px-6 pb-8">
+            {children}
+          </div>
         </div>
       </div>
     </div>

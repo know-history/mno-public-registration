@@ -16,8 +16,10 @@ interface UsePasswordValidationReturn {
 }
 
 export function usePasswordValidation(
-  password: string
+  password: string | undefined
 ): UsePasswordValidationReturn {
+  const safePassword = password || "";
+  
   const [rules, setRules] = useState<PasswordValidationRules>({
     minLength: false,
     lowercase: false,
@@ -31,18 +33,18 @@ export function usePasswordValidation(
   >([]);
 
   useEffect(() => {
-    const validationRules = validatePassword(password);
-    const requirementsList = updatePasswordRequirements(password);
+    const validationRules = validatePassword(safePassword);
+    const requirementsList = updatePasswordRequirements(safePassword);
 
     setRules(validationRules);
     setRequirements(requirementsList);
-  }, [password]);
+  }, [safePassword]);
 
-  const strength = useMemo(() => getPasswordStrength(password), [password]);
-  const isValid = useMemo(() => isPasswordValid(password), [password]);
+  const strength = useMemo(() => getPasswordStrength(safePassword), [safePassword]);
+  const isValid = useMemo(() => isPasswordValid(safePassword), [safePassword]);
   const canSubmit = useMemo(
-    () => password.length >= 8 && isValid,
-    [password, isValid]
+    () => safePassword.length >= 8 && isValid,
+    [safePassword, isValid]
   );
 
   return {

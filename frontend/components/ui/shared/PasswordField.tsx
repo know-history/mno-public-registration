@@ -34,8 +34,7 @@ export function PasswordField({
   const error = formState.errors[name]?.message as string | undefined;
   const passwordValue = watch(name) || "";
 
-  const { requirements, strength, isValid } =
-    usePasswordValidation(passwordValue);
+  const { requirements, strength } = usePasswordValidation(passwordValue);
 
   const mergedPasswordRef = useCallback(
     (node: HTMLInputElement | null) => {
@@ -45,44 +44,12 @@ export function PasswordField({
 
       if (typeof rhfRef === "function") rhfRef(node);
       else if (rhfRef)
-        (rhfRef as React.MutableRefObject<HTMLInputElement | null>).current =
-          node;
+        (rhfRef as React.MutableRefObject<HTMLInputElement | null>).current = node;
 
       passwordInputRef.current = node;
     },
     [register, name, required, label]
   );
-
-  // Enhanced iOS focus preservation
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-    
-    // Enhanced focus preservation for mobile/iOS
-    const currentFocus = passwordInputRef.current;
-    if (currentFocus) {
-      // Store current selection
-      const start = currentFocus.selectionStart;
-      const end = currentFocus.selectionEnd;
-      
-      // Use multiple methods to ensure focus is maintained
-      setTimeout(() => {
-        if (currentFocus) {
-          currentFocus.focus();
-          // Restore selection if it existed
-          if (start !== null && end !== null) {
-            currentFocus.setSelectionRange(start, end);
-          }
-        }
-      }, 0);
-      
-      // Additional timeout for iOS Safari
-      setTimeout(() => {
-        if (currentFocus && document.activeElement !== currentFocus) {
-          currentFocus.focus();
-        }
-      }, 10);
-    }
-  };
 
   const getStrengthColor = (strength: number) => {
     if (strength >= 80) return "text-green-600";
@@ -118,9 +85,7 @@ export function PasswordField({
                 key={requirement.key}
                 className={cn(
                   "flex items-center",
-                  requirement.met
-                    ? "text-green-600"
-                    : "text-gray-500"
+                  requirement.met ? "text-green-600" : "text-gray-500"
                 )}
               >
                 <div
@@ -139,7 +104,7 @@ export function PasswordField({
       <div className="relative flex flex-col">
         <label
           htmlFor={name}
-          className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10"
+          className="text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10 cursor-pointer"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -154,39 +119,45 @@ export function PasswordField({
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              "w-full text-base border-2 border-gray-200 rounded-lg outline-none transition-all",
-              "px-4 py-3.5 bg-white text-slate-900 font-medium",
-              "hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100",
-              showToggle && "pr-12",
-              disabled &&
-                "bg-gray-100 text-slate-500 cursor-not-allowed border-gray-200",
+              "px-4 py-3.5 pr-14 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all cursor-text",
+              disabled && "bg-gray-100 text-slate-500 cursor-not-allowed border-gray-200",
               error && "border-red-300 focus:border-red-500 focus:ring-red-100"
             )}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck="false"
           />
+
+          {showToggle && (
+            <div className="absolute top-2 bottom-2 right-12 w-[1px] bg-gray-300"></div>
+          )}
 
           {showToggle && (
             <button
               type="button"
-              onClick={togglePasswordVisibility}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setShowPassword((prev) => !prev);
+                setTimeout(() => passwordInputRef.current?.focus(), 0);
+              }}
               disabled={disabled}
               className={cn(
-                "absolute right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer",
-                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded",
+                "absolute top-0 bottom-0 right-0 m-auto my-auto h-full px-4 flex items-center justify-center rounded hover:bg-blue-50/50 transition cursor-pointer",
                 disabled && "cursor-not-allowed opacity-50"
               )}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
-                <EyeOff className="w-5 h-5" />
+                <EyeOff className="w-5 h-5 text-gray-400" />
               ) : (
-                <Eye className="w-5 h-5" />
+                <Eye className="w-5 h-5 text-gray-400" />
               )}
             </button>
           )}
         </div>
 
         {error && (
-          <p className="text-xs text-red-500 mt-1 px-1">
+          <p className="text-xs text-red-500 ml-1 absolute -bottom-5 left-0">
             {error}
           </p>
         )}
