@@ -1,11 +1,3 @@
-export const RATE_LIMIT = {
-  INITIAL_DELAY: 60,
-  ESCALATED_DELAY: 120,
-  MAX_ATTEMPTS: 2,
-  LOCKOUT_DURATION: 600,
-  AWS_FALLBACK_DELAY: 180,
-} as const;
-
 export const PASSWORD_RULES = {
   MIN_LENGTH: 8,
   REQUIRE_LOWERCASE: true,
@@ -13,13 +5,6 @@ export const PASSWORD_RULES = {
   REQUIRE_NUMBERS: true,
   REQUIRE_SPECIAL_CHARS: true,
   SPECIAL_CHAR_PATTERN: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
-} as const;
-
-export const CONFIRMATION = {
-  CODE_LENGTH: 6,
-  CODE_PATTERN: /^[0-9]{6}$/,
-  RESEND_TEXT: "It may take a minute to receive your code. Didn't receive it?",
-  RESEND_LINK_TEXT: "Resend a new code",
 } as const;
 
 export const VALIDATION_MESSAGES = {
@@ -54,16 +39,6 @@ export const ERROR_MESSAGES = {
 
   SOMETHING_WENT_WRONG: "Something went wrong. Please try again.",
   NETWORK_ERROR: "Network error. Please check your connection.",
-} as const;
-
-export const SUCCESS_MESSAGES = {
-  PASSWORD_RESET_SENT:
-    "If an account with this email exists, you will receive a password reset code shortly.",
-  PASSWORD_RESET_SUCCESS:
-    "Password reset successfully! Please log in with your new password.",
-  SIGNUP_SUCCESS:
-    "Account confirmed successfully! Please log in with your credentials.",
-  SIGNUP_CODE_SENT: "Confirmation code sent to your email.",
 } as const;
 
 export const PASSWORD_REQUIREMENTS = {
