@@ -4,10 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Mail, User, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { FormField } from "@/components/ui/shared/FormField";
-import { PasswordField } from "@/components/ui/shared/PasswordField";
-import { SubmitButton } from "@/components/ui/shared/SubmitButton";
-import { ErrorAlert } from "@/components/ui/shared/ErrorAlert";
+import {
+  FormField,
+  PasswordField,
+  SubmitButton,
+  ErrorAlert,
+} from "@/components/ui/shared";
 import { DatePicker } from "@/components/form/DatePicker";
 import {
   Popover,
@@ -15,21 +17,23 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 
-const signupSchema = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  password_confirmation: z
-    .string()
-    .min(8, "Password must be at least 8 characters"),
-  given_name: z.string().min(1, "First name is required"),
-  family_name: z.string().min(1, "Last name is required"),
-  date_of_birth: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Date of birth must be a valid date",
-  }),
-}).refine((data) => data.password === data.password_confirmation, {
-  message: "Passwords do not match",
-  path: ["password_confirmation"],
-});
+const signupSchema = z
+  .object({
+    email: z.email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    password_confirmation: z
+      .string()
+      .min(8, "Password must be at least 8 characters"),
+    given_name: z.string().min(1, "First name is required"),
+    family_name: z.string().min(1, "Last name is required"),
+    date_of_birth: z.string().refine((val) => !isNaN(Date.parse(val)), {
+      message: "Date of birth must be a valid date",
+    }),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: "Passwords do not match",
+    path: ["password_confirmation"],
+  });
 
 type SignupFormData = z.infer<typeof signupSchema>;
 
@@ -55,7 +59,8 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
   });
 
   const watchedFields = form.watch();
-  const passwordsMatch = watchedFields.password === watchedFields.password_confirmation;
+  const passwordsMatch =
+    watchedFields.password === watchedFields.password_confirmation;
   const requiredFieldsFilled =
     watchedFields.given_name &&
     watchedFields.family_name &&
@@ -64,23 +69,24 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
     watchedFields.password &&
     watchedFields.password_confirmation;
 
-  // Check age validation separately
-  const isUnder16 = watchedFields.date_of_birth ? (() => {
-    try {
-      const birthDate = new Date(watchedFields.date_of_birth);
-      const today = new Date();
-      const age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      const dayDiff = today.getDate() - birthDate.getDate();
-      
-      // Calculate exact age
-      const exactAge = age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
-      
-      return exactAge < 16;
-    } catch {
-      return false;
-    }
-  })() : false;
+  const isUnder16 = watchedFields.date_of_birth
+    ? (() => {
+        try {
+          const birthDate = new Date(watchedFields.date_of_birth);
+          const today = new Date();
+          const age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          const dayDiff = today.getDate() - birthDate.getDate();
+
+          const exactAge =
+            age - (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? 1 : 0);
+
+          return exactAge < 16;
+        } catch {
+          return false;
+        }
+      })()
+    : false;
 
   const canSubmit = passwordsMatch && requiredFieldsFilled && !isUnder16;
 
@@ -98,7 +104,8 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
 
       onSuccess(data.email);
     } catch (err: unknown) {
-      let processedError = err instanceof Error ? err.message : "Sign up failed";
+      let processedError =
+        err instanceof Error ? err.message : "Sign up failed";
 
       if (processedError.includes("UsernameExistsException")) {
         processedError = "An account with this email already exists";
@@ -140,7 +147,6 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Name Fields */}
         <div className="grid grid-cols-2 gap-4">
           <FormField
             name="given_name"
@@ -160,7 +166,6 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           />
         </div>
 
-        {/* Email Field */}
         <FormField
           name="email"
           type="email"
@@ -171,7 +176,6 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           autoComplete="email"
         />
 
-        {/* Date of Birth */}
         <DatePicker
           name="date_of_birth"
           label={dobLabel}
@@ -179,7 +183,6 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           required
         />
 
-        {/* Password Field */}
         <PasswordField
           name="password"
           label="Password"
@@ -188,7 +191,6 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           showRequirements={true}
         />
 
-        {/* Confirm Password Field */}
         <PasswordField
           name="password_confirmation"
           label="Confirm Password"
@@ -197,15 +199,10 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           showRequirements={false}
         />
 
-        {/* Age validation error - NOT dismissible since it's a validation issue */}
         {isUnder16 && (
-          <ErrorAlert
-            message="You must be at least 16 years old to create an account. Applicants under 16 years old will require their application to be created under an account held by their parent or guardian."
-            // No onDismiss prop - this error cannot be dismissed, only fixed by changing the date
-          />
+          <ErrorAlert message="You must be at least 16 years old to create an account. Applicants under 16 years old will require their application to be created under an account held by their parent or guardian." />
         )}
 
-        {/* Password Match Warning */}
         {!passwordsMatch && watchedFields.password_confirmation && (
           <div className="text-red-600 text-sm ml-1 flex items-center">
             <span className="mr-2">⚠️</span>
@@ -213,15 +210,10 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
           </div>
         )}
 
-        {/* Dismissible Error */}
         {dismissibleError && (
-          <ErrorAlert
-            message={dismissibleError}
-            onDismiss={dismissError}
-          />
+          <ErrorAlert message={dismissibleError} onDismiss={dismissError} />
         )}
 
-        {/* Submit Button */}
         <SubmitButton
           loading={loading}
           disabled={!canSubmit}

@@ -4,13 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { FormField } from "@/components/ui/shared/FormField";
-import { PasswordField } from "@/components/ui/shared/PasswordField";
-import { SubmitButton } from "@/components/ui/shared/SubmitButton";
-import { ErrorAlert } from "@/components/ui/shared/ErrorAlert";
-import { ResendCodeButton } from "@/components/ui/shared/ResendCodeButton";
-import { PasswordRequirements } from "@/components/ui/shared/PasswordRequirements";
-import { CodeInput } from "@/components/ui/shared/CodeInput";
+import {
+  FormField,
+  PasswordField,
+  SubmitButton,
+  ErrorAlert,
+  ResendCodeButton,
+  PasswordRequirements,
+  CodeInput,
+} from "@/components/ui/shared";
 
 const confirmResetPasswordSchema = z
   .object({
@@ -33,7 +35,10 @@ interface ConfirmPasswordResetFormProps {
   onSuccess: () => void;
 }
 
-export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordResetFormProps) {
+export function ConfirmPasswordResetForm({
+  email,
+  onSuccess,
+}: ConfirmPasswordResetFormProps) {
   const { confirmResetPassword, resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
   const [dismissibleError, setDismissibleError] = useState("");
@@ -50,9 +55,10 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
   });
 
   const watchedFields = form.watch();
-  const passwordsMatch = watchedFields.password === watchedFields.password_confirmation;
+  const passwordsMatch =
+    watchedFields.password === watchedFields.password_confirmation;
   const codeComplete = confirmationCode.length === 6;
-  const canSubmit = 
+  const canSubmit =
     watchedFields.email &&
     codeComplete &&
     watchedFields.password &&
@@ -64,16 +70,17 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
       setLoading(true);
       setDismissibleError("");
 
-      // Use confirmationCode state instead of form data for the code
       await confirmResetPassword(data.email, confirmationCode, data.password);
       onSuccess();
     } catch (err: unknown) {
-      let processedError = err instanceof Error ? err.message : "Password reset failed";
+      let processedError =
+        err instanceof Error ? err.message : "Password reset failed";
 
       if (processedError.includes("CodeMismatchException")) {
         processedError = "Invalid confirmation code. Please try again.";
       } else if (processedError.includes("ExpiredCodeException")) {
-        processedError = "Confirmation code has expired. Please request a new one.";
+        processedError =
+          "Confirmation code has expired. Please request a new one.";
       } else if (processedError.includes("InvalidPasswordException")) {
         processedError = "Password does not meet requirements.";
       } else if (processedError.includes("TooManyFailedAttemptsException")) {
@@ -95,10 +102,10 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
     try {
       await resetPassword(email);
       setDismissibleError("");
-      // Reset the code input when resending
       setConfirmationCode("");
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to resend code";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to resend code";
       setDismissibleError(errorMessage);
     }
   };
@@ -108,7 +115,6 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Email Field - Read Only */}
         <FormField
           name="email"
           type="email"
@@ -118,7 +124,6 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
           className="opacity-75"
         />
 
-        {/* Confirmation Code - Using CodeInput blocks */}
         <div className="text-center">
           <CodeInput
             value={confirmationCode}
@@ -127,21 +132,15 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
           />
         </div>
 
-        {/* Resend Code */}
         <div className="text-center text-sm text-gray-600">
-          It may take a minute to receive your code. Didn&#39;t receive it?{" "}
+          It may take a minute to receive your code. Didn't receive it?{" "}
           <ResendCodeButton onResend={handleResendCode} />
         </div>
 
-        {/* Show password fields only when code is complete */}
         {codeComplete && (
           <>
-            {/* Password Requirements - Using reusable component */}
-            <PasswordRequirements 
-              password={watchedFields.password || ""}
-            />
+            <PasswordRequirements password={watchedFields.password || ""} />
 
-            {/* New Password */}
             <PasswordField
               name="password"
               label="New Password"
@@ -150,7 +149,6 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
               showRequirements={false}
             />
 
-            {/* Confirm New Password */}
             <PasswordField
               name="password_confirmation"
               label="Confirm New Password"
@@ -159,7 +157,6 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
               showRequirements={false}
             />
 
-            {/* Password Match Warning */}
             {!passwordsMatch && watchedFields.password_confirmation && (
               <div className="text-red-600 text-sm ml-1 flex items-center">
                 <span className="mr-2">⚠️</span>
@@ -169,15 +166,10 @@ export function ConfirmPasswordResetForm({ email, onSuccess }: ConfirmPasswordRe
           </>
         )}
 
-        {/* Dismissible Error */}
         {dismissibleError && (
-          <ErrorAlert
-            message={dismissibleError}
-            onDismiss={dismissError}
-          />
+          <ErrorAlert message={dismissibleError} onDismiss={dismissError} />
         )}
 
-        {/* Submit Button */}
         <SubmitButton
           loading={loading}
           disabled={!canSubmit}

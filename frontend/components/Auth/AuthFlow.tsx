@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { AuthModal } from "@/components/ui/shared/AuthModal";
 import {
+  ForgotPasswordForm,
+  ConfirmSignupForm,
+  ConfirmPasswordResetForm,
   LoginForm,
   SignupForm,
-  ForgotPasswordForm,
-  ConfirmPasswordResetForm,
-  ConfirmSignupForm,
 } from "@/components/auth/forms";
 
 export enum AuthFlowStep {
