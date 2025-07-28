@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   ChevronRight,
   ChevronDown,
@@ -851,19 +850,33 @@ const Landing: React.FC<LandingProps> = ({
   onDashboardClick = () => console.error("No onDashboardClick provided"),
 }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [startWithSignup, setStartWithSignup] = useState<boolean>(false);
+  const [isInConfirmation, setIsInConfirmation] = useState<boolean>(false);
   const { user, signOut } = useAuth();
-  const router = useRouter();
 
   const toggleDropdown = (menuName: string) => {
     setOpenDropdown(openDropdown === menuName ? null : menuName);
   };
 
   const handleLoginClick = () => {
-    router.push("/login"); // This will be intercepted and show as modal
+    setStartWithSignup(false);
+    setShowAuthModal(true);
   };
 
   const handleCreateAccountClick = () => {
-    router.push("/signup"); // This will be intercepted and show as modal
+    setStartWithSignup(true);
+    setShowAuthModal(true);
+  };
+
+  const handleCloseLogin = () => {
+    setShowAuthModal(false);
+    setStartWithSignup(false);
+    setIsInConfirmation(false);
+  };
+
+  const handleModalStateChange = (state: { needsConfirmation: boolean }) => {
+    setIsInConfirmation(state.needsConfirmation);
   };
 
   const handleDashboardClick = () => {
@@ -883,24 +896,34 @@ const Landing: React.FC<LandingProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <TopNavBar />
-      <Header openDropdown={openDropdown} toggleDropdown={toggleDropdown} />
-      <HeroSection
-        onLoginClick={handleLoginClick}
-        onDashboardClick={handleDashboardClick}
-        isAuthenticated={!!user}
+    <>
+      <div className="min-h-screen bg-gray-100">
+        <TopNavBar />
+        <Header openDropdown={openDropdown} toggleDropdown={toggleDropdown} />
+        <HeroSection
+          onLoginClick={handleLoginClick}
+          onDashboardClick={handleDashboardClick}
+          isAuthenticated={!!user}
+        />
+        <MainContent
+          onLoginClick={handleLoginClick}
+          onCreateAccountClick={handleCreateAccountClick}
+          onDashboardClick={handleDashboardClick}
+          onLogout={handleLogout}
+          isAuthenticated={!!user}
+        />
+        <Footer />
+        <BottomFooter />
+      </div>
+
+      <AuthModalWrapper
+        isOpen={showAuthModal}
+        onClose={handleCloseLogin}
+        startWithSignup={startWithSignup}
+        isInConfirmation={isInConfirmation}
+        onStateChange={handleModalStateChange}
       />
-      <MainContent
-        onLoginClick={handleLoginClick}
-        onCreateAccountClick={handleCreateAccountClick}
-        onDashboardClick={handleDashboardClick}
-        onLogout={handleLogout}
-        isAuthenticated={!!user}
-      />
-      <Footer />
-      <BottomFooter />
-    </div>
+    </>
   );
 };
 
