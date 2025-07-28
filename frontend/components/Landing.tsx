@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 
-import { AuthFlow, AuthFlowStep } from "@/components/auth/AuthFlow";
+import { AuthFlow, AuthFlowStep } from "./authentication/AuthFlow";
 import { useAuth } from "@/hooks/useAuth";
 import Image from "next/image";
 
