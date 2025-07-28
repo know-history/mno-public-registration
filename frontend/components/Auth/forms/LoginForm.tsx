@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -11,13 +10,11 @@ import {
   ErrorAlert,
   SuccessAlert,
 } from "@/components/ui/shared";
-
-const loginSchema = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
+import { 
+  loginSchema, 
+  type LoginFormData 
+} from "@/lib/auth/schemas";
+import { processAuthError } from "@/lib/auth/utils/errorHandling";
 
 interface LoginFormProps {
   successMessage?: string;
@@ -55,25 +52,7 @@ export function LoginForm({
       await signIn(data.email, data.password);
       onSuccess?.();
     } catch (err: unknown) {
-      let processedError = err instanceof Error ? err.message : "Login failed";
-
-      if (
-        processedError.includes("NotAuthorizedException") ||
-        processedError.includes("Incorrect username or password")
-      ) {
-        processedError = "Incorrect email or password";
-      } else if (
-        processedError.includes("UserNotConfirmedException") ||
-        processedError.includes("not confirmed")
-      ) {
-        processedError =
-          "Account not confirmed. Please check your email for confirmation code.";
-      } else if (processedError.includes("UserNotFoundException")) {
-        processedError = "User not found";
-      } else if (processedError.includes("TooManyRequestsException")) {
-        processedError = "Too many attempts. Please try again later.";
-      }
-
+      const processedError = processAuthError(err);
       setDismissibleError(processedError);
     } finally {
       setLoading(false);
@@ -93,16 +72,16 @@ export function LoginForm({
           label="Email"
           placeholder="Enter your email"
           icon={<Mail className="w-5 h-5" />}
+          disabled={loading}
           required
-          autoComplete="email"
         />
 
         <PasswordField
           name="password"
           label="Password"
-          placeholder="Enter your password"
+          placeholder="Enter password"
+          disabled={loading}
           required
-          showRequirements={false}
         />
 
         {dismissibleError && (
@@ -112,29 +91,31 @@ export function LoginForm({
         <SubmitButton
           loading={loading}
           disabled={!canSubmit}
-          text="Sign In"
-          loadingText="Signing in..."
+          text="Login"
+          loadingText="Logging in..."
         />
 
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <button
             type="button"
             onClick={onForgotPassword}
+            disabled={loading}
             className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
           >
             Forgot your password?
           </button>
-        </div>
 
-        <div className="text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <button
-            type="button"
-            onClick={onSignUp}
-            className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
-          >
-            Sign up
-          </button>
+          <div className="text-sm text-gray-600">
+            Don't have an account?{" "}
+            <button
+              type="button"
+              onClick={onSignUp}
+              disabled={loading}
+              className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            >
+              Sign up
+            </button>
+          </div>
         </div>
       </form>
     </FormProvider>

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Mail, User, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -16,26 +15,11 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-
-const signupSchema = z
-  .object({
-    email: z.email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    password_confirmation: z
-      .string()
-      .min(8, "Password must be at least 8 characters"),
-    given_name: z.string().min(1, "First name is required"),
-    family_name: z.string().min(1, "Last name is required"),
-    date_of_birth: z.string().refine((val) => !isNaN(Date.parse(val)), {
-      message: "Date of birth must be a valid date",
-    }),
-  })
-  .refine((data) => data.password === data.password_confirmation, {
-    message: "Passwords do not match",
-    path: ["password_confirmation"],
-  });
-
-type SignupFormData = z.infer<typeof signupSchema>;
+import { 
+  signupSchema, 
+  type SignupFormData 
+} from "@/lib/auth/schemas";
+import { processAuthError } from "@/lib/auth/utils/errorHandling";
 
 interface SignupFormProps {
   onSuccess: (email: string) => void;
@@ -104,15 +88,7 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
 
       onSuccess(data.email);
     } catch (err: unknown) {
-      let processedError =
-        err instanceof Error ? err.message : "Sign up failed";
-
-      if (processedError.includes("UsernameExistsException")) {
-        processedError = "An account with this email already exists";
-      } else if (processedError.includes("InvalidPasswordException")) {
-        processedError = "Password does not meet requirements";
-      }
-
+      const processedError = processAuthError(err);
       setDismissibleError(processedError);
     } finally {
       setLoading(false);

@@ -4,6 +4,7 @@ import { CodeInput } from "@/components/ui/shared/CodeInput";
 import { SubmitButton } from "@/components/ui/shared/SubmitButton";
 import { ErrorAlert } from "@/components/ui/shared/ErrorAlert";
 import { ResendCodeButton } from "@/components/ui/shared/ResendCodeButton";
+import { processAuthError } from "@/lib/auth/utils/errorHandling";
 
 interface ConfirmSignupFormProps {
   email: string;
@@ -21,35 +22,19 @@ export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) 
   const handleSubmit = async (e?: React.FormEvent, autoCode?: string) => {
     if (e) e.preventDefault();
     
-    // Use autoCode if provided (for auto-complete), otherwise use state
     const codeToUse = autoCode || confirmationCode;
     const canSubmitNow = codeToUse.length === 6;
     
-    console.log("HandleSubmit called, canSubmit:", canSubmitNow, "code:", codeToUse); // Debug log
-    
-    if (!canSubmitNow) {
-      console.log("Cannot submit - code length:", codeToUse.length); // Debug log
-      return;
-    }
+    if (!canSubmitNow) return;
 
     try {
       setLoading(true);
       setDismissibleError("");
 
-      console.log("Attempting to confirm signup with:", email, codeToUse); // Debug log
       await confirmSignUp(email, codeToUse);
       onSuccess();
     } catch (err: unknown) {
-      let processedError = err instanceof Error ? err.message : "Confirmation failed";
-
-      if (processedError.includes("CodeMismatchException")) {
-        processedError = "Invalid confirmation code. Please try again.";
-      } else if (processedError.includes("ExpiredCodeException")) {
-        processedError = "Confirmation code has expired. Please request a new one.";
-      } else if (processedError.includes("TooManyFailedAttemptsException")) {
-        processedError = "Too many failed attempts. Please try again later.";
-      }
-
+      const processedError = processAuthError(err);
       setDismissibleError(processedError);
     } finally {
       setLoading(false);
@@ -57,11 +42,7 @@ export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) 
   };
 
   const handleAutoComplete = (code: string) => {
-    console.log("HandleAutoComplete called with:", code, "length:", code.length); // Debug log
-    // Auto-submit when 6 digits are entered
     if (code.length === 6) {
-      console.log("Code is 6 digits, calling handleSubmit with code"); // Debug log
-      // Pass the code directly to avoid state timing issues
       handleSubmit(undefined, code);
     }
   };
@@ -71,8 +52,8 @@ export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) 
       await resendSignUpCode(email);
       setDismissibleError("");
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to resend code";
-      setDismissibleError(errorMessage);
+      const processedError = processAuthError(err);
+      setDismissibleError(processedError);
     }
   };
 
@@ -80,7 +61,6 @@ export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Code Input */}
       <div className="text-center">
         <CodeInput
           value={confirmationCode}
@@ -90,13 +70,11 @@ export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) 
         />
       </div>
 
-      {/* Resend Code */}
       <div className="text-center text-sm text-gray-600">
-        It may take a minute to receive your code. Didn&#39;t receive it?{" "}
+        It may take a minute to receive your code. Didn't receive it?{" "}
         <ResendCodeButton onResend={handleResendCode} />
       </div>
 
-      {/* Dismissible Error */}
       {dismissibleError && (
         <ErrorAlert
           message={dismissibleError}
@@ -104,7 +82,6 @@ export function ConfirmSignupForm({ email, onSuccess }: ConfirmSignupFormProps) 
         />
       )}
 
-      {/* Submit Button */}
       <SubmitButton
         loading={loading}
         disabled={!canSubmit}
