@@ -45,7 +45,7 @@ export function ResendCodeButton({
       onClick={handleResend}
       disabled={isDisabled}
       className={cn(
-        "text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors",
+        "text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors cursor-pointer",
         isDisabled && "text-gray-400 cursor-not-allowed hover:text-gray-400",
         className
       )}
