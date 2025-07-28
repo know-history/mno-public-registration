@@ -103,7 +103,7 @@ export function LoginForm({
           </button>
 
           <div className="text-sm text-gray-600">
-            Don't have an account?{" "}
+            Don&#39;t have an account?{" "}
             <button
               type="button"
               onClick={onSignUp}

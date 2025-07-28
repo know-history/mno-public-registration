@@ -133,7 +133,7 @@ export function ConfirmPasswordResetForm({
         </div>
 
         <div className="text-center text-sm text-gray-600">
-          It may take a minute to receive your code. Didn't receive it?{" "}
+          It may take a minute to receive your code. Didn&#39;t receive it?{" "}
           <ResendCodeButton onResend={handleResendCode} />
         </div>
 
