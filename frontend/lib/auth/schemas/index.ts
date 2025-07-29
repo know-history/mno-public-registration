@@ -69,3 +69,35 @@ export type ConfirmPasswordResetFormData = z.infer<
   typeof confirmPasswordResetSchema
 >;
 export type ConfirmSignupFormData = z.infer<typeof confirmSignupSchema>;
+
+export const profileUpdateSchema = z.object({
+  first_name: z.string().min(1, VALIDATION_MESSAGES.FIRST_NAME_REQUIRED),
+  last_name: z.string().min(1, VALIDATION_MESSAGES.LAST_NAME_REQUIRED),
+  birth_date: z.string().optional(),
+  gender_id: z.number().optional(),
+});
+
+export const emailChangeSchema = z.object({
+  new_email: emailSchema,
+  current_password: passwordSchema,
+});
+
+export const passwordChangeSchema = z
+  .object({
+    current_password: passwordSchema,
+    new_password: passwordSchema,
+    confirm_password: passwordSchema,
+  })
+  .refine((data) => data.new_password === data.confirm_password, {
+    message: VALIDATION_MESSAGES.PASSWORDS_DONT_MATCH,
+    path: ["confirm_password"],
+  });
+
+export const emailVerificationSchema = z.object({
+  verification_code: confirmationCodeSchema,
+});
+
+export type ProfileUpdateFormData = z.infer<typeof profileUpdateSchema>;
+export type EmailChangeFormData = z.infer<typeof emailChangeSchema>;
+export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
+export type EmailVerificationFormData = z.infer<typeof emailVerificationSchema>;

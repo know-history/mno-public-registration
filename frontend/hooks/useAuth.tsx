@@ -30,6 +30,13 @@ interface AuthContextType {
   ) => Promise<void>;
   confirmSignUp: (email: string, code: string) => Promise<void>;
   resendSignUpCode: (email: string) => Promise<void>;
+  updateUserProfile: (attributes: {
+    given_name?: string;
+    family_name?: string;
+  }) => Promise<void>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
+  updateEmail: (newEmail: string) => Promise<void>;
+  confirmEmailUpdate: (confirmationCode: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -99,10 +106,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     given_name?: string,
     family_name?: string,
-    date_of_birth?: string,
+    date_of_birth?: string
   ) => {
     try {
-      await authService.signUp({ email, password, given_name, family_name, date_of_birth });
+      await authService.signUp({
+        email,
+        password,
+        given_name,
+        family_name,
+        date_of_birth,
+      });
       return;
     } catch (error) {
       throw error;
@@ -154,6 +167,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUserProfile = async (attributes: {
+    given_name?: string;
+    family_name?: string;
+  }) => {
+    try {
+      await authService.updateUserProfile(attributes);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    try {
+      await authService.changePassword(oldPassword, newPassword);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateEmail = async (newEmail: string) => {
+    try {
+      await authService.updateEmail(newEmail);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const confirmEmailUpdate = async (confirmationCode: string) => {
+    try {
+      await authService.confirmEmailUpdate(confirmationCode);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -166,6 +214,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         confirmResetPassword,
         resendSignUpCode,
+        updateUserProfile,
+        changePassword,
+        updateEmail,
+        confirmEmailUpdate,
       }}
     >
       {children}

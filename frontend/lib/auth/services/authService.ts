@@ -8,6 +8,9 @@ import {
   resetPassword,
   resendSignUpCode,
   confirmResetPassword,
+  updatePassword,
+  updateUserAttributes,
+  confirmUserAttribute,
 } from "aws-amplify/auth";
 
 import {
@@ -189,6 +192,58 @@ export const authService = {
       return session;
     } catch (error) {
       console.error("Get current session error:", error);
+      throw error;
+    }
+  },
+
+  async updateUserProfile(attributes: { given_name?: string; family_name?: string }) {
+    try {
+      const result = await updateUserAttributes({
+        userAttributes: attributes,
+      });
+      return result;
+    } catch (error) {
+      console.error("Update user attributes error:", error);
+      throw error;
+    }
+  },
+
+  async changePassword(oldPassword: string, newPassword: string) {
+    try {
+      const result = await updatePassword({
+        oldPassword,
+        newPassword,
+      });
+      return result;
+    } catch (error) {
+      console.error("Change password error:", error);
+      throw error;
+    }
+  },
+
+  async updateEmail(newEmail: string) {
+    try {
+      const result = await updateUserAttributes({
+        userAttributes: {
+          email: newEmail,
+        },
+      });
+      return result;
+    } catch (error) {
+      console.error("Update email error:", error);
+      throw error;
+    }
+  },
+
+  async confirmEmailUpdate(confirmationCode: string) {
+    try {
+      const result = await confirmUserAttribute({
+        userAttributeKey: 'email',
+        confirmationCode,
+      });
+      return result;
+    } catch (error) {
+      console.error("Confirm email update error:", error);
       throw error;
     }
   },
