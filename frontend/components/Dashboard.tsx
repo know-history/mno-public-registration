@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
-import { fetchAuthSession } from "aws-amplify/auth";
 import {
   ChevronLeft,
   Calendar,
@@ -19,13 +18,19 @@ import {
 } from "lucide-react";
 
 import { ProfileSettings } from "./profile/ProfileSettings";
+import { VerifyEmailButton } from "./profile/VerifyEmailButton";
+import { getDashboardUserData } from "@/app/actions/dashboard";
 
 interface UserAttributes {
   email: string;
   given_name?: string;
   family_name?: string;
+  middle_name?: string;
   user_role?: string;
   email_verified?: boolean;
+  birth_date?: string;
+  gender?: string;
+  another_gender_value?: string;
 }
 
 interface DashboardProps {
@@ -144,27 +149,21 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
 
   useEffect(() => {
     if (user) {
-      fetchUserAttributes();
+      fetchUserData();
     }
   }, [user]);
 
-  const fetchUserAttributes = async () => {
+  const fetchUserData = async () => {
     try {
-      const session = await fetchAuthSession();
-      const idToken = session.tokens?.idToken;
-
-      if (idToken) {
-        const payload = idToken.payload;
-        setUserAttributes({
-          email: payload.email as string,
-          given_name: payload.given_name as string,
-          family_name: payload.family_name as string,
-          user_role: payload["custom:user_role"] as string,
-          email_verified: payload.email_verified as boolean,
-        });
+      const result = await getDashboardUserData(user!.userId);
+      
+      if (result.success && result.data) {
+        setUserAttributes(result.data);
+      } else {
+        console.error("Error fetching user data:", result.error);
       }
     } catch (error) {
-      console.error("Error fetching user attributes:", error);
+      console.error("Error fetching user data:", error);
     } finally {
       setLoading(false);
     }
@@ -303,15 +302,7 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-base font-medium text-gray-500">
-                  Full Name
-                </label>
-                <p className="mt-1 text-base text-gray-900">
-                  {userAttributes?.given_name} {userAttributes?.family_name}
-                </p>
-              </div>
-              <div>
-                <label className="block text-base font-medium text-gray-500">
+                <label className="block text-base font-medium text-gray-700">
                   Email
                 </label>
                 <p className="mt-1 text-base text-gray-900">
@@ -319,106 +310,93 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
                 </p>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-500">
-                  Role
+                <label className="block text-base font-medium text-gray-700">
+                  Full Name
                 </label>
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(userAttributes?.user_role)}`}
-                >
-                  {formatRoleName(userAttributes?.user_role)}
-                </span>
+                <p className="mt-1 text-base text-gray-900">
+                  {userAttributes?.given_name} {userAttributes?.middle_name} {userAttributes?.family_name}
+                </p>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-500">
+                <label className="block text-base font-medium text-gray-700">
                   Email Status
                 </label>
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    userAttributes?.email_verified
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {userAttributes?.email_verified ? "Verified" : "Pending"}
-                </span>
+                <div className="flex items-center space-x-2 mt-1">
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      userAttributes?.email_verified
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {userAttributes?.email_verified ? "Verified" : "Not Verified"}
+                  </span>
+                  {!userAttributes?.email_verified && (
+                    <VerifyEmailButton
+                      email={userAttributes?.email || ""}
+                      onVerificationComplete={fetchUserData}
+                    />
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-700">
+                  User Role
+                </label>
+                <p className="mt-1 text-base text-gray-900">
+                  {formatRoleName(userAttributes?.user_role)}
+                </p>
               </div>
             </div>
           </Card>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            <Card className="hover:shadow-md transition-shadow">
-              <div className="flex items-center mb-3">
-                <MapPin className="w-5 h-5 text-blue-600 mr-2" />
-                <h3 className="font-medium text-gray-900">Address Update</h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                Update your current address or renew your citizen card
-              </p>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full transition-colors">
-                Start Application
-              </button>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <div className="flex items-center mb-3">
-                <Users className="w-5 h-5 text-blue-600 mr-2" />
-                <h3 className="font-medium text-gray-900">
-                  Citizenship Application
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                Apply for MNO citizenship
-              </p>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full transition-colors">
-                Start Application
-              </button>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <div className="flex items-center mb-3">
-                <Award className="w-5 h-5 text-blue-600 mr-2" />
-                <h3 className="font-medium text-gray-900">
-                  Harvester Certificate
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                Apply for a harvester's certificate
-              </p>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full transition-colors">
-                Start Application
-              </button>
-            </Card>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard
+              title="Applications"
+              value="2"
+              icon={<FileText className="w-8 h-8" />}
+              trend="1 pending"
+              trendDirection="neutral"
+            />
+            <StatCard
+              title="Documents"
+              value="5"
+              icon={<Award className="w-8 h-8" />}
+              trend="2 missing"
+              trendDirection="down"
+            />
+            <StatCard
+              title="Messages"
+              value="3"
+              icon={<Bell className="w-8 h-8" />}
+              trend="1 unread"
+              trendDirection="up"
+            />
+            <StatCard
+              title="Profile"
+              value="85%"
+              icon={<Users className="w-8 h-8" />}
+              trend="Complete"
+              trendDirection="up"
+            />
           </div>
 
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-black">
-                Recent Activity
-              </h2>
-              <Bell className="w-5 h-5 text-gray-400" />
-            </div>
-            <div className="space-y-4">
-              {recentActivities.map((activity, index) => (
-                <NotificationCard key={index} {...activity} />
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t">
-              <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                View all notifications
-              </button>
-            </div>
-          </Card>
-
+          {/* Recent Activity */}
           <Card>
             <h2 className="text-lg font-medium mb-4 text-black">
-              Your Applications
+              Recent Activity
             </h2>
-            <div className="text-gray-500 text-center py-8">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-base">No applications found.</p>
-              <p className="text-sm mt-2">
-                Start a new application using the quick actions above.
-              </p>
+            <div className="space-y-4">
+              {recentActivities.map((notification, index) => (
+                <NotificationCard
+                  key={index}
+                  type={notification.type as "info" | "warning" | "success" | "error"}
+                  title={notification.title}
+                  message={notification.message}
+                  time={notification.time}
+                />
+              ))}
             </div>
           </Card>
 
@@ -467,7 +445,7 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
                 </pre>
               </div>
               <div>
-                <strong>User Attributes:</strong>
+                <strong>User Attributes (Database):</strong>
                 <pre className="mt-1 text-xs bg-white p-2 rounded overflow-auto text-black max-h-40">
                   {JSON.stringify(userAttributes, null, 2)}
                 </pre>
@@ -478,11 +456,10 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
       </main>
 
       {showProfileSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <ProfileSettings onClose={() => setShowProfileSettings(false)} />
-          </div>
-        </div>
+        <ProfileSettings 
+          onClose={() => setShowProfileSettings(false)} 
+          onProfileUpdate={fetchUserData}
+        />
       )}
     </div>
   );

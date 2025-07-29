@@ -7,10 +7,10 @@ import Landing from "@/components/Landing";
 
 export default function Home() {
   const { user, loading } = useAuth();
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [showLanding, setShowLanding] = useState(false);
 
   const handleDashboardClick = () => {
-    setShowDashboard(true);
+    setShowLanding(false);
   };
 
   if (loading) {
@@ -21,10 +21,10 @@ export default function Home() {
     );
   }
 
-  if (showDashboard && user) {
+  if (user && !showLanding) {
     return (
       <main className="min-h-screen">
-        <Dashboard onBackToLanding={() => setShowDashboard(false)} />
+        <Dashboard onBackToLanding={() => setShowLanding(true)} />
       </main>
     );
   }

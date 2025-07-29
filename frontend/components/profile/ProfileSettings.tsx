@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { User, Mail, Lock, X } from "lucide-react";
+import { User, Mail, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserWithPersonByCognitoSub } from "@/app/actions/users";
 import { getGenderTypes } from "@/app/actions/profile";
@@ -9,12 +9,14 @@ import { ProfileForm } from "@/components/profile/forms/ProfileForm";
 import { EmailChangeForm } from "@/components/profile/forms/EmailChangeForm";
 import { PasswordChangeForm } from "@/components/profile/forms/PasswordChangeForm";
 import { EmailVerificationModal } from "@/components/profile/modals/EmailVerificationModal";
+import { AuthModal } from "@/components/ui/shared/AuthModal";
 
 interface ProfileSettingsProps {
   onClose?: () => void;
+  onProfileUpdate?: () => void;
 }
 
-export function ProfileSettings({ onClose }: ProfileSettingsProps) {
+export function ProfileSettings({ onClose, onProfileUpdate }: ProfileSettingsProps) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'email' | 'password'>('profile');
   const [userData, setUserData] = useState<any>(null);
@@ -22,6 +24,7 @@ export function ProfileSettings({ onClose }: ProfileSettingsProps) {
   const [loading, setLoading] = useState(true);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
+  const [emailChangeInProgress, setEmailChangeInProgress] = useState(false);
 
   useEffect(() => {
     if (user?.userId) {
@@ -41,7 +44,7 @@ export function ProfileSettings({ onClose }: ProfileSettingsProps) {
       }
       
       if (genderResult.success) {
-        setGenderTypes(genderResult.data);
+        setGenderTypes(genderResult.data || []);
       }
     } catch (error) {
       console.error("Error loading profile data:", error);
@@ -50,15 +53,71 @@ export function ProfileSettings({ onClose }: ProfileSettingsProps) {
     }
   };
 
+  const handleProfileUpdateSuccess = () => {
+    loadData();
+    onProfileUpdate?.();
+  };
+
   const handleEmailChangeSuccess = (newEmail: string) => {
     setPendingEmail(newEmail);
+    setEmailChangeInProgress(true);
     setShowEmailVerification(true);
   };
 
   const handleEmailVerificationSuccess = () => {
     setShowEmailVerification(false);
     setPendingEmail("");
+    setEmailChangeInProgress(false);
     loadData();
+    onProfileUpdate?.();
+    setTimeout(() => {
+      if ((window as any).handleEmailChangeComplete) {
+        (window as any).handleEmailChangeComplete();
+      }
+    }, 100);
+  };
+
+  const handleEmailVerificationCancel = async () => {
+    if (emailChangeInProgress && pendingEmail) {
+      try {
+        const { markEmailAsUnverified } = await import("@/app/actions/email-verification");
+        await markEmailAsUnverified(user!.userId, pendingEmail);
+      } catch (error) {
+        console.error("Failed to mark email as unverified:", error);
+      }
+    }
+    
+    setShowEmailVerification(false);
+    setPendingEmail("");
+    setEmailChangeInProgress(false);
+    loadData();
+    onProfileUpdate?.();
+  };
+
+  const getModalTitle = () => {
+    switch (activeTab) {
+      case 'profile':
+        return 'Edit Profile';
+      case 'email':
+        return 'Change Email';
+      case 'password':
+        return 'Change Password';
+      default:
+        return 'Profile Settings';
+    }
+  };
+
+  const getModalSubtitle = () => {
+    switch (activeTab) {
+      case 'profile':
+        return 'Update your personal information';
+      case 'email':
+        return 'Change your email address';
+      case 'password':
+        return 'Update your password';
+      default:
+        return '';
+    }
   };
 
   const TabButton = ({ 
@@ -72,94 +131,85 @@ export function ProfileSettings({ onClose }: ProfileSettingsProps) {
   }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+      className={`flex items-center justify-center space-x-1 px-2 sm:px-4 py-2 rounded-lg font-medium transition-colors flex-1 text-sm ${
         activeTab === id
           ? 'bg-blue-600 text-white'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
       }`}
     >
       {icon}
-      <span>{label}</span>
+      <span className="hidden sm:inline">{label}</span>
+      <span className="sm:hidden text-xs">{label}</span>
     </button>
   );
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-6 text-center">Loading...</div>
+      <AuthModal
+        onClose={onClose}
+        title="Profile Settings"
+        subtitle="Loading your profile information..."
+        className="max-w-lg"
+      >
+        <div className="py-8 text-center">
+          <div className="text-lg">Loading...</div>
         </div>
-      </div>
+      </AuthModal>
     );
   }
 
   return (
     <>
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="px-6 py-4 border-b">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">Profile Settings</h2>
-              {onClose && (
-                <button
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="px-6 py-4 border-b">
-            <div className="flex space-x-2">
-              <TabButton id="profile" label="Profile" icon={<User className="w-4 h-4" />} />
-              <TabButton id="email" label="Email" icon={<Mail className="w-4 h-4" />} />
-              <TabButton id="password" label="Password" icon={<Lock className="w-4 h-4" />} />
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6">
-            {activeTab === 'profile' && (
-              <ProfileForm
-                userId={user!.userId}
-                initialData={{
-                  first_name: userData?.person?.first_name || "",
-                  last_name: userData?.person?.last_name || "",
-                  birth_date: userData?.person?.birth_date 
-                    ? new Date(userData.person.birth_date).toISOString().split('T')[0] 
-                    : "",
-                  gender_id: userData?.person?.gender_id || undefined,
-                }}
-                genderTypes={genderTypes}
-                onSuccess={loadData}
-              />
-            )}
-
-            {activeTab === 'email' && (
-              <EmailChangeForm
-                currentEmail={userData?.user?.email || ""}
-                onSuccess={handleEmailChangeSuccess}
-              />
-            )}
-
-            {activeTab === 'password' && (
-              <PasswordChangeForm />
-            )}
-          </div>
+      <AuthModal
+        onClose={onClose}
+        title={getModalTitle()}
+        subtitle={getModalSubtitle()}
+        className="max-w-lg"
+      >
+        <div className="flex space-x-1 mb-6 p-1 bg-gray-50 rounded-lg">
+          <TabButton id="profile" label="Profile" icon={<User className="w-4 h-4" />} />
+          <TabButton id="email" label="Email" icon={<Mail className="w-4 h-4" />} />
+          <TabButton id="password" label="Password" icon={<Lock className="w-4 h-4" />} />
         </div>
-      </div>
 
-      {/* Email Verification Modal */}
+        <div className="space-y-6">
+          {activeTab === 'profile' && (
+            <ProfileForm
+              userId={user!.userId}
+              initialData={{
+                first_name: userData?.person?.first_name || "",
+                last_name: userData?.person?.last_name || "",
+                middle_name: userData?.person?.middle_name || "",
+                birth_date: userData?.person?.birth_date 
+                  ? new Date(userData.person.birth_date).toISOString().split('T')[0] 
+                  : "",
+                gender_id: userData?.person?.gender_id || undefined,
+                another_gender_value: userData?.person?.another_gender_value || "",
+              }}
+              genderTypes={genderTypes}
+              onSuccess={handleProfileUpdateSuccess}
+            />
+          )}
+
+          {activeTab === 'email' && (
+            <EmailChangeForm
+              currentEmail={userData?.user?.email || ""}
+              onSuccess={handleEmailChangeSuccess}
+            />
+          )}
+
+          {activeTab === 'password' && (
+            <PasswordChangeForm />
+          )}
+        </div>
+      </AuthModal>
+
       {showEmailVerification && (
         <EmailVerificationModal
           newEmail={pendingEmail}
           onSuccess={handleEmailVerificationSuccess}
-          onCancel={() => {
-            setShowEmailVerification(false);
-            setPendingEmail("");
-          }}
+          onCancel={handleEmailVerificationCancel}
+          isInitialVerification={emailChangeInProgress}
         />
       )}
     </>

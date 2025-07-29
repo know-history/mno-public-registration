@@ -63,13 +63,6 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
 
   return (
     <div>
-      <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
-        <p className="text-sm text-yellow-800">
-          Password must be at least 8 characters and include uppercase,
-          lowercase, numbers, and special characters.
-        </p>
-      </div>
-
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           {successMessage && <SuccessAlert message={successMessage} />}
