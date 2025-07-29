@@ -3,7 +3,23 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
-import { ChevronLeft } from "lucide-react";
+import { 
+  ChevronLeft, 
+  Calendar, 
+  FileText, 
+  Bell, 
+  TrendingUp, 
+  Users, 
+  MapPin, 
+  Award,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  Download,
+  Mail,
+  Phone
+} from "lucide-react";
 
 interface UserAttributes {
   email: string;
@@ -17,11 +33,93 @@ interface DashboardProps {
   onBackToLanding?: () => void;
 }
 
+// Reusable card component following DRY principles
+interface CardProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const Card: React.FC<CardProps> = ({ children, className = "" }) => (
+  <div className={`bg-white shadow rounded-lg p-6 ${className}`}>
+    {children}
+  </div>
+);
+
+// Reusable stat card component
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  trend?: string;
+  trendDirection?: 'up' | 'down' | 'neutral';
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, trendDirection }) => (
+  <Card className="flex items-center justify-between">
+    <div>
+      <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      {trend && (
+        <p className={`text-sm flex items-center mt-1 ${
+          trendDirection === 'up' ? 'text-green-600' : 
+          trendDirection === 'down' ? 'text-red-600' : 
+          'text-gray-600'
+        }`}>
+          {trendDirection === 'up' && <TrendingUp className="w-3 h-3 mr-1" />}
+          {trend}
+        </p>
+      )}
+    </div>
+    <div className="text-blue-600">
+      {icon}
+    </div>
+  </Card>
+);
+
+// Reusable notification component
+interface NotificationProps {
+  type: 'info' | 'warning' | 'success' | 'error';
+  title: string;
+  message: string;
+  time: string;
+}
+
+const NotificationCard: React.FC<NotificationProps> = ({ type, title, message, time }) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'success': return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'warning': return <AlertCircle className="w-5 h-5 text-yellow-600" />;
+      case 'error': return <AlertCircle className="w-5 h-5 text-red-600" />;
+      default: return <Info className="w-5 h-5 text-blue-600" />;
+    }
+  };
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success': return 'bg-green-50 border-green-200';
+      case 'warning': return 'bg-yellow-50 border-yellow-200';
+      case 'error': return 'bg-red-50 border-red-200';
+      default: return 'bg-blue-50 border-blue-200';
+    }
+  };
+
+  return (
+    <div className={`border rounded-lg p-4 ${getBgColor()}`}>
+      <div className="flex items-start space-x-3">
+        {getIcon()}
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-medium text-gray-900">{title}</h4>
+          <p className="text-sm text-gray-600 mt-1">{message}</p>
+          <p className="text-xs text-gray-500 mt-2">{time}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Dashboard({ onBackToLanding }: DashboardProps) {
   const { user, signOut } = useAuth();
-  const [userAttributes, setUserAttributes] = useState<UserAttributes | null>(
-    null
-  );
+  const [userAttributes, setUserAttributes] = useState<UserAttributes | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -105,8 +203,15 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
     );
   }
 
+  const recentActivities = [
+    { type: 'success', title: 'Application Submitted', message: 'Your citizenship application has been received and is under review.', time: '2 hours ago' },
+    { type: 'info', title: 'Document Reminder', message: 'Please upload your proof of residence by July 30, 2025.', time: '1 day ago' },
+    { type: 'warning', title: 'Profile Update Required', message: 'Your address information needs to be updated to maintain active status.', time: '3 days ago' },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navigation Header */}
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -123,8 +228,10 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
                 Application Dashboard
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
+            
+            {/* Mobile-responsive header actions */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="hidden sm:block text-right">
                 <div className="text-base text-gray-500">Welcome,</div>
                 <div className="font-medium text-gray-900">
                   {userAttributes?.given_name} {userAttributes?.family_name}
@@ -137,7 +244,7 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
               </span>
               <button
                 onClick={signOut}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-base font-medium"
+                className="bg-red-600 text-white px-3 sm:px-4 py-2 rounded hover:bg-red-700 text-sm sm:text-base font-medium"
               >
                 Sign Out
               </button>
@@ -147,33 +254,56 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
       </nav>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+        <div className="px-4 py-6 sm:px-0 space-y-6">
+          
+          {/* Dashboard Stats - Mobile responsive grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <StatCard
+              title="Active Applications"
+              value={3}
+              icon={<FileText className="w-6 h-6" />}
+              trend="+2 this month"
+              trendDirection="up"
+            />
+            <StatCard
+              title="Notifications"
+              value={5}
+              icon={<Bell className="w-6 h-6" />}
+              trend="3 unread"
+              trendDirection="neutral"
+            />
+            <StatCard
+              title="Community Events"
+              value={12}
+              icon={<Calendar className="w-6 h-6" />}
+              trend="This month"
+              trendDirection="neutral"
+            />
+            <StatCard
+              title="Documents"
+              value={8}
+              icon={<Award className="w-6 h-6" />}
+              trend="All verified"
+              trendDirection="up"
+            />
+          </div>
+
           {/* User Profile Card */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-medium mb-4 text-black">
-              Your Profile
-            </h2>
+          <Card>
+            <h2 className="text-lg font-medium mb-4 text-black">Your Profile</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-base font-medium text-gray-500">
-                  Full Name
-                </label>
+                <label className="block text-base font-medium text-gray-500">Full Name</label>
                 <p className="mt-1 text-base text-gray-900">
                   {userAttributes?.given_name} {userAttributes?.family_name}
                 </p>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-500">
-                  Email
-                </label>
-                <p className="mt-1 text-base text-gray-900">
-                  {userAttributes?.email}
-                </p>
+                <label className="block text-base font-medium text-gray-500">Email</label>
+                <p className="mt-1 text-base text-gray-900">{userAttributes?.email}</p>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-500">
-                  Role
-                </label>
+                <label className="block text-base font-medium text-gray-500">Role</label>
                 <span
                   className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(userAttributes?.user_role)}`}
                 >
@@ -181,9 +311,7 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
                 </span>
               </div>
               <div>
-                <label className="block text-base font-medium text-gray-500">
-                  Email Status
-                </label>
+                <label className="block text-base font-medium text-gray-500">Email Status</label>
                 <span
                   className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     userAttributes?.email_verified
@@ -195,114 +323,128 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
                 </span>
               </div>
             </div>
-          </div>
+          </Card>
 
-          {/* Application Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="font-medium text-gray-900 mb-2">Address Update</h3>
-              <p className="text-base text-gray-600 mb-3">
+          {/* Quick Actions - Mobile responsive grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+            <Card className="hover:shadow-md transition-shadow">
+              <div className="flex items-center mb-3">
+                <MapPin className="w-5 h-5 text-blue-600 mr-2" />
+                <h3 className="font-medium text-gray-900">Address Update</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
                 Update your current address or renew your citizen card
               </p>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded text-base hover:bg-blue-700 w-full">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full transition-colors">
                 Start Application
               </button>
-            </div>
+            </Card>
 
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="font-medium text-gray-900 mb-2">
-                Citizenship Application
-              </h3>
-              <p className="text-base text-gray-600 mb-3">
+            <Card className="hover:shadow-md transition-shadow">
+              <div className="flex items-center mb-3">
+                <Users className="w-5 h-5 text-blue-600 mr-2" />
+                <h3 className="font-medium text-gray-900">Citizenship Application</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
                 Apply for MNO citizenship
               </p>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded text-base hover:bg-blue-700 w-full">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full transition-colors">
                 Start Application
               </button>
-            </div>
+            </Card>
 
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="font-medium text-gray-900 mb-2">
-                Harvester Certificate
-              </h3>
-              <p className="text-base text-gray-600 mb-3">
-                Apply for a harvester&apos;s certificate
+            <Card className="hover:shadow-md transition-shadow">
+              <div className="flex items-center mb-3">
+                <Award className="w-5 h-5 text-blue-600 mr-2" />
+                <h3 className="font-medium text-gray-900">Harvester Certificate</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Apply for a harvester's certificate
               </p>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded text-base hover:bg-blue-700 w-full">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 w-full transition-colors">
                 Start Application
               </button>
-            </div>
+            </Card>
           </div>
+
+          {/* Two Column Layout for Larger Screens */}
+            
+            {/* Recent Activity */}
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-medium text-black">Recent Activity</h2>
+                <Bell className="w-5 h-5 text-gray-400" />
+              </div>
+              <div className="space-y-4">
+                {recentActivities.map((activity, index) => (
+                  <NotificationCard key={index} {...activity} />
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t">
+                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                  View all notifications
+                </button>
+              </div>
+            </Card>        
 
           {/* Current Applications */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-medium mb-4 text-black">
-              Your Applications
-            </h2>
+          <Card>
+            <h2 className="text-lg font-medium mb-4 text-black">Your Applications</h2>
             <div className="text-gray-500 text-center py-8">
-              <p>No applications found.</p>
-              <p className="text-base mt-2">
-                Start a new application using the options above.
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-base">No applications found.</p>
+              <p className="text-sm mt-2">
+                Start a new application using the quick actions above.
               </p>
             </div>
-          </div>
+          </Card>
 
           {/* Admin Panel - Only show for admin users */}
           {userAttributes?.user_role === "admin" && (
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-medium mb-4 text-black">
-                Admin Panel
-              </h2>
+            <Card>
+              <h2 className="text-lg font-medium mb-4 text-black">Admin Panel</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h3 className="font-medium text-red-900 mb-2">
-                    Application Management
-                  </h3>
-                  <p className="text-base text-red-700 mb-3">
+                  <h3 className="font-medium text-red-900 mb-2">Application Management</h3>
+                  <p className="text-sm text-red-700 mb-3">
                     Review and manage user applications
                   </p>
-                  <button className="bg-red-600 text-white px-3 py-1 rounded text-base hover:bg-red-700">
+                  <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
                     Manage
                   </button>
                 </div>
 
-                {userAttributes?.user_role === "admin" && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h3 className="font-medium text-red-900 mb-2">
-                      User Management
-                    </h3>
-                    <p className="text-base text-red-700 mb-3">
-                      Manage user roles and permissions
-                    </p>
-                    <button className="bg-red-600 text-white px-3 py-1 rounded text-base hover:bg-red-700">
-                      Manage
-                    </button>
-                  </div>
-                )}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h3 className="font-medium text-red-900 mb-2">User Management</h3>
+                  <p className="text-sm text-red-700 mb-3">
+                    Manage user roles and permissions
+                  </p>
+                  <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
+                    Manage
+                  </button>
+                </div>
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Debug Info - Remove in production */}
-          <div className="mt-8 bg-gray-100 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-3 text-black">
-              Debug Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base">
+          <Card className="bg-gray-100">
+            <h3 className="text-lg font-medium mb-3 text-black">Debug Information</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
               <div>
                 <strong>User Object:</strong>
-                <pre className="mt-1 text-xs bg-white p-2 rounded overflow-auto text-black">
+                <pre className="mt-1 text-xs bg-white p-2 rounded overflow-auto text-black max-h-40">
                   {JSON.stringify(user, null, 2)}
                 </pre>
               </div>
               <div>
                 <strong>User Attributes:</strong>
-                <pre className="mt-1 text-xs bg-white p-2 rounded overflow-auto text-black">
+                <pre className="mt-1 text-xs bg-white p-2 rounded overflow-auto text-black max-h-40">
                   {JSON.stringify(userAttributes, null, 2)}
                 </pre>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       </main>
     </div>

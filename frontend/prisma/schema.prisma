@@ -1,0 +1,314 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model additional_relationships {
+  id                                                          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  person_id                                                   String  @db.Uuid
+  related_person_id                                           String  @db.Uuid
+  relationship_label                                          String
+  notes                                                       String?
+  persons_additional_relationships_person_idTopersons         persons @relation("additional_relationships_person_idTopersons", fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  persons_additional_relationships_related_person_idTopersons persons @relation("additional_relationships_related_person_idTopersons", fields: [related_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model address_change_forms {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  application_id        String?       @db.Uuid
+  citizenship_number    String?
+  want_replacement_card Boolean?
+  want_change_name      Boolean?
+  gender_id             Int?
+  another_gender_value  String?
+  applications          applications? @relation(fields: [application_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  gender_types          gender_types? @relation(fields: [gender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model application_statuses {
+  id            Int            @id @default(autoincrement())
+  code          String         @unique(map: "application_statuses_name_key")
+  html_value_en String
+  html_value_fr String
+  applications  applications[]
+}
+
+model application_types {
+  id                       Int                        @id @default(autoincrement())
+  code                     String                     @unique(map: "application_types_name_key")
+  html_value_en            String
+  html_value_fr            String
+  parent_type_id           Int?
+  application_types        application_types?         @relation("application_typesToapplication_types", fields: [parent_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_application_types  application_types[]        @relation("application_typesToapplication_types")
+  applications             applications[]
+  citizenship_applications citizenship_applications[]
+  harvesting_applications  harvesting_applications[]
+}
+
+model applications {
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                  String                     @db.Uuid
+  type_id                  Int?
+  status_id                Int?
+  airtable_ticket_id       String?
+  finalized_date           DateTime?                  @db.Timestamp(6)
+  created_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?                  @default(now()) @db.Timestamptz(6)
+  address_change_forms     address_change_forms[]
+  application_statuses     application_statuses?      @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  application_types        application_types?         @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                    users                      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  citizenship_applications citizenship_applications[]
+  document_relationships   document_relationships[]
+  harvesting_applications  harvesting_applications[]
+  signature_documents      signature_documents[]
+
+  @@index([status_id], map: "idx_applications_status_id")
+  @@index([type_id], map: "idx_applications_type_id")
+  @@index([user_id], map: "idx_applications_user_id")
+}
+
+model citizenship_applications {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  application_id    String?            @db.Uuid
+  subtype_id        Int?
+  transfer_status   String?
+  applications      applications?      @relation(fields: [application_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  application_types application_types? @relation(fields: [subtype_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([application_id], map: "idx_citizenship_applications_application_id")
+  @@index([subtype_id], map: "idx_citizenship_applications_subtype_id")
+}
+
+model contacts {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  person_id      String?   @db.Uuid
+  street_address String?
+  unit           String?
+  po_box         String?
+  rr             String?
+  city           String?
+  province       String?
+  postal_code    String?
+  telephone1     String?
+  telephone2     String?
+  email          String?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  persons        persons?  @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([person_id], map: "idx_contacts_person_id")
+}
+
+model document_relationships {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  document_id          String?       @db.Uuid
+  person_id            String?       @db.Uuid
+  application_id       String?       @db.Uuid
+  relation_description String?
+  applications         applications? @relation(fields: [application_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents            documents?    @relation(fields: [document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  persons              persons?      @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model document_types {
+  id            Int         @id @default(autoincrement())
+  code          String      @unique(map: "document_types_name_key")
+  html_value_en String
+  html_value_fr String
+  documents     documents[]
+}
+
+model documents {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  s3_key                 String
+  file_name              String?
+  original_file_name     String?
+  type_id                Int?
+  description            String?
+  uploaded_by            String?                  @db.Uuid
+  deleted_at             DateTime?                @db.Timestamp(6)
+  created_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  document_relationships document_relationships[]
+  document_types         document_types?          @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                  users?                   @relation(fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  signature_documents    signature_documents[]
+
+  @@index([s3_key], map: "idx_documents_s3_key")
+  @@index([type_id], map: "idx_documents_type_id")
+  @@index([uploaded_by], map: "idx_documents_uploaded_by")
+}
+
+model family_relationships {
+  id                                                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  person_id                                               String              @db.Uuid
+  related_person_id                                       String              @db.Uuid
+  relationship_type_id                                    Int?
+  notes                                                   String?
+  persons_family_relationships_person_idTopersons         persons             @relation("family_relationships_person_idTopersons", fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  persons_family_relationships_related_person_idTopersons persons             @relation("family_relationships_related_person_idTopersons", fields: [related_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  relationship_types                                      relationship_types? @relation(fields: [relationship_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model gender_types {
+  id                   Int                    @id @default(autoincrement())
+  code                 String                 @unique(map: "gender_types_name_key")
+  html_value_en        String
+  html_value_fr        String
+  address_change_forms address_change_forms[]
+  persons              persons[]
+}
+
+model harvesting_applications {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  application_id         String?                 @db.Uuid
+  region_id              String?                 @db.Uuid
+  captain_id             String?                 @db.Uuid
+  tht_id                 String?                 @db.Uuid
+  subtype_id             Int?
+  purpose_id             Int?
+  use_firearm            Boolean?
+  denial_reason          String?
+  applications           applications?           @relation(fields: [application_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  harvesting_captains    harvesting_captains?    @relation(fields: [captain_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  harvesting_purposes    harvesting_purposes?    @relation(fields: [purpose_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  harvesting_regions     harvesting_regions?     @relation(fields: [region_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  application_types      application_types?      @relation(fields: [subtype_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  harvesting_territories harvesting_territories? @relation(fields: [tht_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([application_id], map: "idx_harvesting_applications_app_id")
+  @@index([captain_id], map: "idx_harvesting_applications_captain_id")
+  @@index([purpose_id], map: "idx_harvesting_applications_purpose_id")
+  @@index([region_id], map: "idx_harvesting_applications_region_id")
+  @@index([subtype_id], map: "idx_harvesting_applications_subtype_id")
+  @@index([tht_id], map: "idx_harvesting_applications_tht_id")
+}
+
+model harvesting_captains {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                 String?                   @db.Uuid
+  region_id               String?                   @db.Uuid
+  title                   String?
+  notes                   String?
+  first_name              String?
+  last_name               String?
+  email                   String?
+  phonenumber             String?
+  address                 String?
+  toll_free               String?
+  harvesting_applications harvesting_applications[]
+  harvesting_regions      harvesting_regions?       @relation(fields: [region_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                   users?                    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model harvesting_purposes {
+  id                      Int                       @id(map: "purposes_pkey") @default(autoincrement())
+  code                    String                    @unique(map: "purposes_name_key")
+  html_value_en           String
+  html_value_fr           String
+  harvesting_applications harvesting_applications[]
+}
+
+model harvesting_regions {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String
+  is_enabled              Boolean?                  @default(true)
+  harvesting_applications harvesting_applications[]
+  harvesting_captains     harvesting_captains[]
+  harvesting_territories  harvesting_territories[]
+}
+
+model harvesting_territories {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  region_id               String?                   @db.Uuid
+  name                    String
+  is_enabled              Boolean?                  @default(true)
+  harvesting_applications harvesting_applications[]
+  harvesting_regions      harvesting_regions?       @relation(fields: [region_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model persons {
+  id                                                                           String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                                                                      String?                    @db.Uuid
+  first_name                                                                   String
+  middle_name                                                                  String?
+  last_name                                                                    String
+  maiden_name                                                                  String?
+  gender_id                                                                    Int?
+  another_gender_value                                                         String?
+  birth_date                                                                   DateTime?                  @db.Date
+  email                                                                        String?
+  is_metis                                                                     Boolean?                   @default(false)
+  citizenship_number                                                           String?
+  birth_place                                                                  String?
+  death_place                                                                  String?
+  death_date                                                                   DateTime?                  @db.Date
+  created_at                                                                   DateTime?                  @default(now()) @db.Timestamptz(6)
+  updated_at                                                                   DateTime?                  @default(now()) @db.Timestamptz(6)
+  additional_relationships_additional_relationships_person_idTopersons         additional_relationships[] @relation("additional_relationships_person_idTopersons")
+  additional_relationships_additional_relationships_related_person_idTopersons additional_relationships[] @relation("additional_relationships_related_person_idTopersons")
+  contacts                                                                     contacts[]
+  document_relationships                                                       document_relationships[]
+  family_relationships_family_relationships_person_idTopersons                 family_relationships[]     @relation("family_relationships_person_idTopersons")
+  family_relationships_family_relationships_related_person_idTopersons         family_relationships[]     @relation("family_relationships_related_person_idTopersons")
+  gender_types                                                                 gender_types?              @relation(fields: [gender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                                                                        users?                     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  signers                                                                      signers[]
+
+  @@index([citizenship_number], map: "idx_persons_citizenship_number")
+  @@index([gender_id], map: "idx_persons_gender_id")
+  @@index([user_id], map: "idx_persons_user_id")
+}
+
+model relationship_types {
+  id                   Int                    @id @default(autoincrement())
+  code                 String                 @unique(map: "relationship_types_name_key")
+  html_value_en        String
+  html_value_fr        String
+  family_relationships family_relationships[]
+}
+
+model signature_documents {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  application_id   String?       @db.Uuid
+  document_id      String?       @db.Uuid
+  document_type    String?
+  signature_status String?
+  sent_on          DateTime?     @db.Timestamp(6)
+  created_at       DateTime?     @default(now()) @db.Timestamptz(6)
+  applications     applications? @relation(fields: [application_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  documents        documents?    @relation(fields: [document_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  signers          signers[]
+}
+
+model signers {
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  signature_document_id String?              @db.Uuid
+  person_id             String?              @db.Uuid
+  role                  String?
+  signed_on             DateTime?            @db.Timestamp(6)
+  persons               persons?             @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  signature_documents   signature_documents? @relation(fields: [signature_document_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cognito_sub         String                @unique @db.Uuid
+  email               String                @unique(map: "users_email_unique")
+  created_at          DateTime?             @default(now()) @db.Timestamptz(6)
+  status              String                @default("pending_verification")
+  email_verified_at   DateTime?             @db.Timestamptz(6)
+  applications        applications[]
+  documents           documents[]
+  harvesting_captains harvesting_captains[]
+  persons             persons[]
+
+  @@index([email], map: "idx_users_email")
+  @@index([status], map: "idx_users_status")
+}
