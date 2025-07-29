@@ -18,7 +18,8 @@ interface AuthContextType {
     email: string,
     password: string,
     given_name?: string,
-    family_name?: string
+    family_name?: string,
+    date_of_birth?: string
   ) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -97,10 +98,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     given_name?: string,
-    family_name?: string
+    family_name?: string,
+    date_of_birth?: string,
   ) => {
     try {
-      await authService.signUp({ email, password, given_name, family_name });
+      await authService.signUp({ email, password, given_name, family_name, date_of_birth });
       return;
     } catch (error) {
       throw error;

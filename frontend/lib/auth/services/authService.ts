@@ -10,11 +10,17 @@ import {
   confirmResetPassword,
 } from "aws-amplify/auth";
 
+import {
+  createUserWithPerson,
+  updateUserEmailStatus,
+} from "@/app/actions/users";
+
 interface SignUpParams {
   email: string;
   password: string;
   given_name?: string;
   family_name?: string;
+  date_of_birth?: string;
 }
 
 interface SignInParams {
@@ -50,7 +56,13 @@ export const authService = {
     }
   },
 
-  async signUp({ email, password, given_name, family_name }: SignUpParams) {
+  async signUp({
+    email,
+    password,
+    given_name,
+    family_name,
+    date_of_birth,
+  }: SignUpParams) {
     try {
       const result = await signUp({
         username: email,
@@ -64,6 +76,21 @@ export const authService = {
           },
         },
       });
+
+      if (result.userId) {
+        const dbResult = await createUserWithPerson({
+          cognito_sub: result.userId,
+          email,
+          first_name: given_name,
+          last_name: family_name,
+          birth_date: date_of_birth,
+        });
+
+        if (!dbResult.success) {
+          console.error("Database user creation failed:", dbResult.error);
+        }
+      }
+
       return result;
     } catch (error) {
       console.error("Sign up error:", error);
@@ -77,6 +104,11 @@ export const authService = {
         username: email,
         confirmationCode,
       });
+
+      if (result.isSignUpComplete) {
+        await updateUserEmailStatus(email, true);
+      }
+
       return result;
     } catch (error) {
       console.error("Confirm sign up error:", error);

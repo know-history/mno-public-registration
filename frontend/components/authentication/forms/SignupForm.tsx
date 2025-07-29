@@ -80,7 +80,8 @@ export function SignupForm({ onSuccess }: SignupFormProps) {
         data.email,
         data.password,
         data.given_name,
-        data.family_name
+        data.family_name,
+        data.date_of_birth
       );
 
       onSuccess(data.email);
