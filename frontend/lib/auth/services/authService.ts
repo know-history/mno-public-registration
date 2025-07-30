@@ -10,7 +10,6 @@ import {
   confirmResetPassword,
   updatePassword,
   updateUserAttributes,
-  confirmUserAttribute,
 } from "aws-amplify/auth";
 
 import {
@@ -147,7 +146,7 @@ export const authService = {
       const result = await confirmResetPassword({
         username: email,
         confirmationCode: code,
-        newPassword: newPassword,
+        newPassword,
       });
       return result;
     } catch (error) {
@@ -158,9 +157,7 @@ export const authService = {
 
   async resendSignUpCode({ email }: ResendSignUpCodeParams) {
     try {
-      const result = await resendSignUpCode({
-        username: email,
-      });
+      const result = await resendSignUpCode({ username: email });
       return result;
     } catch (error) {
       console.error("Resend sign up code error:", error);
@@ -168,58 +165,37 @@ export const authService = {
     }
   },
 
-  async getCurrentUser(silentCheck: boolean = false) {
+  async getCurrentUser(refresh = false) {
     try {
-      const user = await getCurrentUser();
-      return user;
-    } catch (error: unknown) {
-      if (
-        !silentCheck &&
-        typeof error === "object" &&
-        error !== null &&
-        "name" in error &&
-        (error as { name?: string }).name !== "UserUnAuthenticatedException"
-      ) {
-        console.error("Get current user error:", error);
+      if (refresh) {
+        await fetchAuthSession({ forceRefresh: true });
       }
-      throw error;
-    }
-  },
-
-  async getCurrentSession() {
-    try {
-      const session = await fetchAuthSession();
-      return session;
+      return await getCurrentUser();
     } catch (error) {
-      console.error("Get current session error:", error);
-      throw error;
-    }
-  },
-
-  async updateUserProfile(attributes: {
-    given_name?: string;
-    family_name?: string;
-  }) {
-    try {
-      const result = await updateUserAttributes({
-        userAttributes: attributes,
-      });
-      return result;
-    } catch (error) {
-      console.error("Update user attributes error:", error);
+      console.error("Get current user error:", error);
       throw error;
     }
   },
 
   async changePassword(oldPassword: string, newPassword: string) {
     try {
-      const result = await updatePassword({
+      await updatePassword({
         oldPassword,
         newPassword,
       });
-      return result;
     } catch (error) {
       console.error("Change password error:", error);
+      throw error;
+    }
+  },
+
+  async updateUserProfile(attributes: Record<string, string>) {
+    try {
+      await updateUserAttributes({
+        userAttributes: attributes,
+      });
+    } catch (error) {
+      console.error("Update user profile error:", error);
       throw error;
     }
   },

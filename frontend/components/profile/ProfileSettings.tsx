@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { User, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserWithPersonByCognitoSub } from "@/app/actions/users";
@@ -74,16 +74,12 @@ export function ProfileSettings({
   const [genderTypes, setGenderTypes] = useState<GenderType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.userId) {
-      loadData();
-    }
-  }, [user]);
+  const loadData = useCallback(async () => {
+    if (!user?.userId) return;
 
-  const loadData = async () => {
     try {
       const [userResult, genderResult] = await Promise.all([
-        getUserWithPersonByCognitoSub(user!.userId),
+        getUserWithPersonByCognitoSub(user.userId),
         getGenderTypes(),
       ]);
 
@@ -99,95 +95,66 @@ export function ProfileSettings({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.userId]);
 
-  const handleProfileUpdateSuccess = () => {
+  useEffect(() => {
+    if (user?.userId) {
+      loadData();
+    }
+  }, [user?.userId, loadData]);
+
+  const handleProfileUpdateSuccess = useCallback(() => {
     loadData();
     onProfileUpdate?.();
-  };
-
-  const getModalTitle = (): string => {
-    const titles: Record<TabType, string> = {
-      profile: "Edit Profile",
-      password: "Change Password",
-    };
-    return titles[activeTab];
-  };
-
-  const getModalSubtitle = (): string => {
-    const subtitles: Record<TabType, string> = {
-      profile: "Update your personal information",
-      password: "Update your password",
-    };
-    return subtitles[activeTab];
-  };
-
-  const TabButton = ({
-    id,
-    label,
-    icon,
-  }: {
-    id: TabType;
-    label: string;
-    icon: React.ReactNode;
-  }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`flex items-center justify-center space-x-1 px-2 sm:px-4 py-2 rounded-lg font-medium transition-colors flex-1 text-sm cursor-pointer ${
-        activeTab === id
-          ? "bg-blue-600 text-white"
-          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-      }`}
-    >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-      <span className="sm:hidden text-xs">{label}</span>
-    </button>
-  );
+  }, [loadData, onProfileUpdate]);
 
   if (loading) {
     return (
       <AuthModal
-        onClose={onClose}
         title="Profile Settings"
-        subtitle="Loading your profile information..."
-        className="max-w-lg"
+        onClose={onClose}
+        showCloseButton={true}
       >
-        <div className="py-8 text-center">
+        <div className="flex items-center justify-center py-8">
           <div className="text-lg">Loading...</div>
         </div>
       </AuthModal>
     );
   }
 
+  const tabs = [
+    { id: "profile" as TabType, label: "Profile", icon: User },
+    { id: "password" as TabType, label: "Password", icon: Lock },
+  ];
+
   return (
     <AuthModal
+      title="Profile Settings"
+      subtitle="Manage your account information and security"
       onClose={onClose}
-      title={getModalTitle()}
-      subtitle={getModalSubtitle()}
-      className="max-w-lg"
+      showCloseButton={true}
+      className="max-w-2xl"
     >
-      <div className="flex space-x-1 mb-6 p-1 bg-gray-50 rounded-lg">
-        <TabButton
-          id="profile"
-          label="Profile"
-          icon={<User className="w-4 h-4" />}
-        />
-        <TabButton
-          id="password"
-          label="Password"
-          icon={<Lock className="w-4 h-4" />}
-        />
-      </div>
-
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-700">
-          <strong>Account Email:</strong> {userData?.user?.email}
-        </p>
-        <p className="text-xs text-gray-500 mt-1">
-          This is your login email and cannot be changed through profile
-          settings.
-        </p>
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <Icon className="w-5 h-5 mr-2" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
       <div className="space-y-6">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ChevronLeft,
   FileText,
@@ -144,15 +144,11 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
   const [loading, setLoading] = useState(true);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchUserData();
-    }
-  }, [user]);
+  const fetchUserData = useCallback(async () => {
+    if (!user?.userId) return;
 
-  const fetchUserData = async () => {
     try {
-      const result = await getDashboardUserData(user!.userId);
+      const result = await getDashboardUserData(user.userId);
 
       if (result.success && result.data) {
         setUserAttributes(result.data);
@@ -164,164 +160,144 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.userId]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserData();
+    }
+  }, [user, fetchUserData]);
 
   const getRoleBadgeColor = (role?: string) => {
-    switch (role) {
+    switch (role?.toLowerCase()) {
       case "admin":
         return "bg-red-100 text-red-800";
-      case "researcher":
+      case "staff":
         return "bg-blue-100 text-blue-800";
-      case "harvesting_admin":
-        return "bg-green-100 text-green-800";
-      case "harvesting_captain":
-        return "bg-purple-100 text-purple-800";
       case "applicant":
+        return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatRoleName = (role?: string) => {
-    switch (role) {
-      case "admin":
-        return "Administrator";
-      case "researcher":
-        return "Researcher";
-      case "harvesting_admin":
-        return "Harvesting Administrator";
-      case "harvesting_captain":
-        return "Harvesting Captain";
-      case "applicant":
-        return "Applicant";
-      default:
-        return "Unknown";
+    if (!role) return "Unknown";
+    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      onBackToLanding?.();
+    } catch (error) {
+      console.error("Sign out error:", error);
     }
   };
 
-  const handleBackToLanding = async () => {
-    if (onBackToLanding) {
-      onBackToLanding();
-    } else {
-      try {
-        await signOut();
-      } catch (error) {
-        console.error("Error signing out:", error);
-      }
-    }
-  };
-
-  if (loading) {
+  if (loading && !userAttributes) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading user information...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-lg">Loading dashboard...</div>
       </div>
     );
   }
 
-  const recentActivities = [
-    {
-      type: "success",
-      title: "Application Submitted",
-      message:
-        "Your citizenship application has been received and is under review.",
-      time: "2 hours ago",
-    },
-    {
-      type: "info",
-      title: "Document Reminder",
-      message: "Please upload your proof of residence by July 30, 2025.",
-      time: "1 day ago",
-    },
-    {
-      type: "warning",
-      title: "Profile Update Required",
-      message:
-        "Your address information needs to be updated to maintain active status.",
-      time: "3 days ago",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-4">
+      <header className="bg-white shadow">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
               <button
-                onClick={handleBackToLanding}
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                onClick={onBackToLanding}
+                className="mr-4 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                <ChevronLeft className="w-5 h-5 mr-1" />
-                <span className="text-base font-medium">Back to Landing</span>
+                <ChevronLeft className="w-6 h-6" />
               </button>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-xl font-semibold text-black">
-                Application Dashboard
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back,{" "}
+                {userAttributes?.given_name || userAttributes?.email}!
               </h1>
             </div>
-
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="hidden sm:block text-right">
-                <div className="text-base text-gray-500">Welcome,</div>
-                <div className="font-medium text-gray-900">
-                  {userAttributes?.given_name} {userAttributes?.family_name}
-                </div>
-              </div>
-              <span
-                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeColor(userAttributes?.user_role)}`}
-              >
-                {formatRoleName(userAttributes?.user_role)}
-              </span>
+            <div className="flex items-center space-x-4">
               <button
-                onClick={signOut}
-                className="bg-red-600 text-white px-3 sm:px-4 py-2 rounded hover:bg-red-700 text-sm sm:text-base font-medium"
+                onClick={() => setShowProfileSettings(true)}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Profile Settings"
+              >
+                <Settings className="w-6 h-6" />
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Sign Out
               </button>
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
           <Card>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-medium text-black">Your Profile</h2>
-              <button
-                onClick={() => setShowProfileSettings(true)}
-                className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors cursor-pointer"
-              >
-                <Settings className="w-4 h-4" />
-                <span>Edit Profile</span>
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-base font-medium text-gray-700">
-                  Email
-                </label>
-                <p className="mt-1 text-base text-gray-900">
-                  {userAttributes?.email}
-                </p>
-              </div>
+            <h2 className="text-lg font-medium mb-4 text-black">
+              Account Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-base font-medium text-gray-700">
                   Full Name
                 </label>
                 <p className="mt-1 text-base text-gray-900">
-                  {userAttributes?.given_name} {userAttributes?.middle_name}{" "}
-                  {userAttributes?.family_name}
+                  {userAttributes?.given_name && userAttributes?.family_name
+                    ? `${userAttributes.given_name} ${userAttributes.middle_name ? userAttributes.middle_name + " " : ""}${userAttributes.family_name}`
+                    : "Not provided"}
                 </p>
               </div>
               <div>
                 <label className="block text-base font-medium text-gray-700">
-                  Email Status
+                  Email Address
                 </label>
-                <div className="flex items-center space-x-2 mt-1">
+                <div className="mt-1 flex items-center space-x-2">
+                  <p className="text-base text-gray-900">
+                    {userAttributes?.email || "Not provided"}
+                  </p>
                   <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      userAttributes?.email_verified
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {userAttributes?.email_verified
+                      ? "Verified"
+                      : "Not Verified"}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-700">
+                  User Role
+                </label>
+                <div className="mt-1">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${getRoleBadgeColor(
+                      userAttributes?.user_role
+                    )}`}
+                  >
+                    {formatRoleName(userAttributes?.user_role)}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-base font-medium text-gray-700">
+                  Account Status
+                </label>
+                <div className="mt-1">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${
                       userAttributes?.email_verified
                         ? "bg-green-100 text-green-800"
                         : "bg-yellow-100 text-yellow-800"
@@ -388,52 +364,95 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
               Recent Activity
             </h2>
             <div className="space-y-4">
-              {recentActivities.map((notification, index) => (
-                <NotificationCard
-                  key={index}
-                  type={
-                    notification.type as
-                      | "info"
-                      | "warning"
-                      | "success"
-                      | "error"
-                  }
-                  title={notification.title}
-                  message={notification.message}
-                  time={notification.time}
-                />
-              ))}
+              <NotificationCard
+                type="success"
+                title="Application Submitted"
+                message="Your citizenship application has been successfully submitted."
+                time="2 hours ago"
+              />
+              <NotificationCard
+                type="warning"
+                title="Document Required"
+                message="Please upload your birth certificate to complete your application."
+                time="1 day ago"
+              />
+              <NotificationCard
+                type="info"
+                title="Profile Updated"
+                message="Your profile information has been updated successfully."
+                time="3 days ago"
+              />
             </div>
           </Card>
 
           {userAttributes?.user_role === "admin" && (
-            <Card>
-              <h2 className="text-lg font-medium mb-4 text-black">
-                Admin Panel
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h3 className="font-medium text-red-900 mb-2">
-                    Application Management
-                  </h3>
-                  <p className="text-sm text-red-700 mb-3">
-                    Review and manage user applications
-                  </p>
-                  <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
-                    Manage
-                  </button>
+            <Card className="bg-red-50 border-red-200">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
                 </div>
-
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h3 className="font-medium text-red-900 mb-2">
-                    User Management
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Admin Access
                   </h3>
-                  <p className="text-sm text-red-700 mb-3">
-                    Manage user roles and permissions
-                  </p>
-                  <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
-                    Manage
-                  </button>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>You have administrative privileges.</p>
+                  </div>
+                  <div className="mt-4">
+                    <div className="-mx-2 -my-1.5 flex">
+                      <button
+                        type="button"
+                        className="bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                      >
+                        View Admin Panel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {userAttributes?.user_role === "staff" && (
+            <Card className="bg-blue-50 border-blue-200">
+              <div className="rounded-md p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <Info className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div className="ml-3 flex-1 md:flex md:justify-between">
+                    <p className="text-sm text-blue-700">
+                      You have staff access to manage applications and assist
+                      users.
+                    </p>
+                    <p className="mt-3 text-sm md:mt-0 md:ml-6">
+                      <button className="whitespace-nowrap font-medium text-blue-700 hover:text-blue-600">
+                        View Staff Dashboard
+                        <span aria-hidden="true"> &rarr;</span>
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {userAttributes?.user_role === "admin" && (
+            <Card className="bg-red-100">
+              <div className="p-4">
+                <div className="flex items-center">
+                  <AlertCircle className="w-6 h-6 text-red-600 mr-3" />
+                  <div>
+                    <h3 className="text-base font-medium text-red-900 mb-2">
+                      User Management
+                    </h3>
+                    <p className="text-sm text-red-700 mb-3">
+                      Manage user roles and permissions
+                    </p>
+                    <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
+                      Manage
+                    </button>
+                  </div>
                 </div>
               </div>
             </Card>

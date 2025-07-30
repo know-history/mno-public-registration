@@ -11,13 +11,17 @@ import {
   SuccessAlert,
 } from "@/components/ui/shared";
 import { loginSchema, type LoginFormData } from "@/lib/auth/schemas";
-import { processAuthError } from "@/lib/auth/utils/errorHandling";
+import {
+  processAuthError,
+  isConfirmationRequiredError,
+} from "@/lib/auth/utils/errorHandling";
 
 interface LoginFormProps {
   successMessage?: string;
   onSuccess?: () => void;
   onForgotPassword: () => void;
   onSignUp: () => void;
+  onConfirmationRequired?: (email: string) => void;
 }
 
 export function LoginForm({
@@ -25,6 +29,7 @@ export function LoginForm({
   onSuccess,
   onForgotPassword,
   onSignUp,
+  onConfirmationRequired,
 }: LoginFormProps) {
   const { signIn } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -49,6 +54,14 @@ export function LoginForm({
       await signIn(data.email, data.password);
       onSuccess?.();
     } catch (err: unknown) {
+      // Check if this is a confirmation required error
+      if (isConfirmationRequiredError(err)) {
+        // Navigate to confirmation flow instead of showing error
+        onConfirmationRequired?.(data.email);
+        return;
+      }
+
+      // For all other errors, show the processed error message
       const processedError = processAuthError(err);
       setDismissibleError(processedError);
     } finally {

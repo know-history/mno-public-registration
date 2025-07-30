@@ -58,10 +58,15 @@ export function AuthFlow({
       case AuthFlowStep.CONFIRM_SIGNUP:
         return {
           title: "Confirm Your Email",
-          subtitle: "Enter the confirmation code that was sent to your email",
+          subtitle: confirmationEmail
+            ? `Enter the confirmation code sent to ${confirmationEmail}`
+            : "Enter the confirmation code that was sent to your email",
           showBackButton: true,
-          backButtonText: "Back to Sign Up",
-          onBack: () => setCurrentStep(AuthFlowStep.SIGNUP),
+          backButtonText: "Back to Sign In",
+          onBack: () => {
+            setCurrentStep(AuthFlowStep.LOGIN);
+            setConfirmationEmail("");
+          },
         };
       case AuthFlowStep.CONFIRM_PASSWORD_RESET:
         return {
@@ -86,13 +91,15 @@ export function AuthFlow({
     onSuccess?.();
   };
 
-  const handleSignupSuccess = (email: string) => {
+  const handleSignUpSuccess = (email: string) => {
     setConfirmationEmail(email);
+    setSuccessMessage("Please check your email for a confirmation code.");
     setCurrentStep(AuthFlowStep.CONFIRM_SIGNUP);
   };
 
   const handleForgotPasswordSuccess = (email: string) => {
     setConfirmationEmail(email);
+    setSuccessMessage("Please check your email for a reset code.");
     setCurrentStep(AuthFlowStep.CONFIRM_PASSWORD_RESET);
   };
 
@@ -103,11 +110,18 @@ export function AuthFlow({
     setCurrentStep(AuthFlowStep.LOGIN);
   };
 
-  const handleConfirmPasswordResetSuccess = () => {
+  const handlePasswordResetSuccess = () => {
     setSuccessMessage(
-      "Password reset successfully! Please log in with your new password."
+      "Password reset successfully! Please sign in with your new password."
     );
     setCurrentStep(AuthFlowStep.LOGIN);
+  };
+
+  // NEW: Handle when login fails due to unconfirmed account
+  const handleConfirmationRequired = (email: string) => {
+    setConfirmationEmail(email);
+    setSuccessMessage(""); // Clear any previous success messages
+    setCurrentStep(AuthFlowStep.CONFIRM_SIGNUP);
   };
 
   const renderCurrentStep = () => {
@@ -121,12 +135,16 @@ export function AuthFlow({
               setCurrentStep(AuthFlowStep.FORGOT_PASSWORD)
             }
             onSignUp={() => setCurrentStep(AuthFlowStep.SIGNUP)}
+            onConfirmationRequired={handleConfirmationRequired}
           />
         );
+
       case AuthFlowStep.SIGNUP:
-        return <SignupForm onSuccess={handleSignupSuccess} />;
+        return <SignupForm onSuccess={handleSignUpSuccess} />;
+
       case AuthFlowStep.FORGOT_PASSWORD:
         return <ForgotPasswordForm onSuccess={handleForgotPasswordSuccess} />;
+
       case AuthFlowStep.CONFIRM_SIGNUP:
         return (
           <ConfirmSignupForm
@@ -134,20 +152,31 @@ export function AuthFlow({
             onSuccess={handleConfirmSignupSuccess}
           />
         );
+
       case AuthFlowStep.CONFIRM_PASSWORD_RESET:
         return (
           <ConfirmPasswordResetForm
             email={confirmationEmail}
-            onSuccess={handleConfirmPasswordResetSuccess}
+            onSuccess={handlePasswordResetSuccess}
           />
         );
+
       default:
         return null;
     }
   };
 
+  const modalProps = getModalProps();
+
   return (
-    <AuthModal onClose={onClose} {...getModalProps()}>
+    <AuthModal
+      title={modalProps.title}
+      subtitle={modalProps.subtitle}
+      onClose={onClose}
+      showBackButton={modalProps.showBackButton}
+      backButtonText={modalProps.backButtonText}
+      onBack={modalProps.onBack}
+    >
       {renderCurrentStep()}
     </AuthModal>
   );

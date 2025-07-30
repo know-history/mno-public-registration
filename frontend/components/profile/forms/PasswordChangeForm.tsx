@@ -16,6 +16,11 @@ interface PasswordChangeFormProps {
   onSuccess?: () => void;
 }
 
+interface AuthError {
+  name: string;
+  message: string;
+}
+
 export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -61,14 +66,15 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
       setSuccessMessage("Password changed successfully!");
       form.reset();
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
+      const authError = error as AuthError;
       let errorMsg = "Failed to change password";
 
-      if (error.name === "NotAuthorizedException") {
+      if (authError.name === "NotAuthorizedException") {
         errorMsg = "Current password is incorrect";
-      } else if (error.name === "InvalidPasswordException") {
+      } else if (authError.name === "InvalidPasswordException") {
         errorMsg = "New password does not meet requirements";
-      } else if (error.name === "LimitExceededException") {
+      } else if (authError.name === "LimitExceededException") {
         errorMsg = "Too many attempts. Please try again later.";
       }
 

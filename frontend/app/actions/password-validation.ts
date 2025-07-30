@@ -2,19 +2,24 @@
 
 import { signIn } from "aws-amplify/auth";
 
+interface AuthError {
+  name: string;
+  message: string;
+}
+
 export async function validateCurrentPassword(email: string, password: string) {
   try {
-    const result = await signIn({
+    await signIn({
       username: email,
       password: password,
     });
 
     return { success: true, valid: true };
-    
-  } catch (error: any) {
-    if (error.name === 'NotAuthorizedException') {
+  } catch (error) {
+    const authError = error as AuthError;
+    if (authError.name === "NotAuthorizedException") {
       return { success: true, valid: false };
-    } else if (error.name === 'UserNotFoundException') {
+    } else if (authError.name === "UserNotFoundException") {
       return { success: true, valid: false };
     } else {
       console.error("Password validation error:", error);

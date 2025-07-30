@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save } from "lucide-react";
 import {
   FormField,
   SubmitButton,
@@ -50,16 +49,23 @@ export function ProfileForm({
   const [errorMessage, setErrorMessage] = useState("");
   const [showCustomGender, setShowCustomGender] = useState(false);
 
-  // Filter out "Unknown" gender type from dropdown options
-  const visibleGenderTypes = genderTypes.filter(
-    (g) => g.code !== "unknown" && g.html_value_en.toLowerCase() !== "unknown"
+  const visibleGenderTypes = useMemo(
+    () =>
+      genderTypes.filter(
+        (g) =>
+          g.code !== "unknown" && g.html_value_en.toLowerCase() !== "unknown"
+      ),
+    [genderTypes]
   );
 
-  // Find "another gender" option
-  const anotherGenderType = visibleGenderTypes.find(
-    (g) =>
-      g.code === "another_gender" ||
-      g.html_value_en.toLowerCase().includes("another")
+  const anotherGenderType = useMemo(
+    () =>
+      visibleGenderTypes.find(
+        (g) =>
+          g.code === "another_gender" ||
+          g.html_value_en.toLowerCase().includes("another")
+      ),
+    [visibleGenderTypes]
   );
 
   const form = useForm<ProfileFormData>({
@@ -69,7 +75,6 @@ export function ProfileForm({
       last_name: initialData?.last_name || "",
       middle_name: initialData?.middle_name || "",
       birth_date: initialData?.birth_date || "",
-      // If gender_id is 10 (Unknown), show as empty string to display "Select Gender"
       gender_id:
         initialData?.gender_id === 10 ? undefined : initialData?.gender_id,
       another_gender_value: initialData?.another_gender_value || "",
@@ -81,20 +86,17 @@ export function ProfileForm({
   const watchedValues = form.watch();
   const watchedAnotherGenderValue = form.watch("another_gender_value");
 
-  // Handle custom gender field visibility
   useEffect(() => {
     const shouldShow = anotherGenderType
       ? watchedGenderId === anotherGenderType.id
       : false;
     setShowCustomGender(shouldShow);
 
-    // Clear custom gender value when switching away from "another gender"
     if (!shouldShow && form.getValues("another_gender_value")) {
       form.setValue("another_gender_value", "", { shouldValidate: true });
     }
-  }, [watchedGenderId, anotherGenderType?.id, form]);
+  }, [watchedGenderId, anotherGenderType, form]);
 
-  // Custom validation for another_gender_value
   useEffect(() => {
     if (showCustomGender) {
       if (
@@ -113,11 +115,9 @@ export function ProfileForm({
     }
   }, [showCustomGender, watchedAnotherGenderValue, form]);
 
-  // Check if form has changes (treat empty gender selection as Unknown ID 10)
-  const hasChanges = React.useMemo(() => {
+  const hasChanges = useMemo(() => {
     if (!initialData) return true;
 
-    // Normalize gender_id for comparison - treat empty/falsy as 10 (Unknown)
     const currentGenderId = watchedValues.gender_id || 10;
     const initialGenderId = initialData.gender_id || 10;
 
@@ -132,15 +132,14 @@ export function ProfileForm({
     );
   }, [watchedValues, initialData]);
 
-  const sanitizeCustomGender = (value: string): string => {
+  const sanitizeCustomGender = useCallback((value: string): string => {
     return value
       .trim()
-      .replace(/[<>\"'%;()&+]/g, "") // Remove potentially dangerous characters
-      .substring(0, 100); // Limit length
-  };
+      .replace(/[<>\"'%;()&+]/g, "")
+      .substring(0, 100);
+  }, []);
 
   const handleSubmit = async (data: ProfileFormData) => {
-    // STOP SUBMISSION if another gender is selected but empty
     if (anotherGenderType && data.gender_id === anotherGenderType.id) {
       if (
         !data.another_gender_value ||
@@ -150,7 +149,7 @@ export function ProfileForm({
           type: "required",
           message: "Please specify your gender identity",
         });
-        return; // STOP HERE
+        return;
       }
     }
 
@@ -159,30 +158,28 @@ export function ProfileForm({
       setErrorMessage("");
       setSuccessMessage("");
 
-      // Transform gender_id: if undefined/null, default to 10 (Unknown)
       const processedData = {
         ...data,
         gender_id: data.gender_id || 10,
         another_gender_value: data.another_gender_value
           ? sanitizeCustomGender(data.another_gender_value)
-          : data.another_gender_value,
+          : undefined,
       };
 
-      // Update profile in database
+      console.log("Submitting profile data:", processedData);
+
       const result = await updateProfile(userId, processedData);
 
       if (result.success) {
-        // Update AWS Cognito attributes
         try {
           await updateUserAttributes({
             userAttributes: {
-              given_name: data.first_name,
-              family_name: data.last_name,
+              given_name: processedData.first_name,
+              family_name: processedData.last_name,
             },
           });
-        } catch (awsError) {
-          console.warn("Failed to update AWS attributes:", awsError);
-          // Don't fail the entire operation if AWS update fails
+        } catch (cognitoError) {
+          console.warn("Failed to update Cognito attributes:", cognitoError);
         }
 
         setSuccessMessage("Profile updated successfully!");
@@ -198,45 +195,47 @@ export function ProfileForm({
     }
   };
 
+  const dismissError = useCallback(() => setErrorMessage(""), []);
+  const dismissSuccess = useCallback(() => setSuccessMessage(""), []);
+
   const renderGenderSelect = () => (
-    <div className="relative">
-      <label className="flex items-center space-x-1 text-[13px] bg-white text-slate-700 font-medium absolute px-2 top-[-10px] left-[18px] z-10 cursor-pointer">
-        <span>Gender</span>
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Gender <span className="text-red-500">*</span>
       </label>
-      <select
-        {...form.register("gender_id", {
-          setValueAs: (value) => {
-            // Transform empty string to 10 (Unknown) at the form level
-            if (value === "" || value === null || value === undefined) {
-              return 10;
-            }
-            const parsed = parseInt(value, 10);
-            return isNaN(parsed) ? 10 : parsed;
-          },
-        })}
-        className="px-4 py-3.5 pr-10 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all appearance-none"
-      >
-        <option value="">Select Gender</option>
-        {visibleGenderTypes.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.html_value_en}
-          </option>
-        ))}
-      </select>
-      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-        <svg
-          className="w-5 h-5 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <div className="relative">
+        <select
+          {...form.register("gender_id", {
+            valueAsNumber: true,
+            setValueAs: (value) => {
+              const parsed = parseInt(value, 10);
+              return isNaN(parsed) ? undefined : parsed;
+            },
+          })}
+          className="px-4 py-3.5 pr-10 bg-white text-slate-900 font-medium w-full text-base border-2 border-gray-200 hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-lg outline-none transition-all appearance-none"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+          <option value="">Select Gender</option>
+          {visibleGenderTypes.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.html_value_en}
+            </option>
+          ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          <svg
+            className="w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
       </div>
     </div>
   );
@@ -244,8 +243,12 @@ export function ProfileForm({
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        {successMessage && <SuccessAlert message={successMessage} />}
-        {errorMessage && <ErrorAlert message={errorMessage} />}
+        {successMessage && (
+          <SuccessAlert message={successMessage} onDismiss={dismissSuccess} />
+        )}
+        {errorMessage && (
+          <ErrorAlert message={errorMessage} onDismiss={dismissError} />
+        )}
 
         <FormField
           name="first_name"
@@ -285,9 +288,9 @@ export function ProfileForm({
               required
             />
             <p className="text-xs text-gray-500">
-              Please enter your specific gender identity. If you'd prefer not to
-              specify, please select "Prefer not to say" from the gender
-              dropdown above.
+              Please enter your specific gender identity. If you&#39;d prefer
+              not to specify, please select &#34;Prefer not to say&#34; from the
+              gender dropdown above.
             </p>
           </div>
         )}
