@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import { ProfileSettings } from "./profile/ProfileSettings";
-import { VerifyEmailButton } from "./profile/VerifyEmailButton";
+import { VerifyEmailButton } from "@/components/profile/VerifyEmailButton";
 import { getDashboardUserData } from "@/app/actions/dashboard";
 
 interface UserAttributes {

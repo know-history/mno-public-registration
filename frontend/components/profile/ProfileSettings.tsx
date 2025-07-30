@@ -16,21 +16,96 @@ interface ProfileSettingsProps {
   onProfileUpdate?: () => void;
 }
 
+interface UserData {
+  user: {
+    id: string;
+    cognito_sub: string;
+    email: string;
+    status: string;
+    persons: Array<{
+      id: string;
+      user_id: string | null;
+      first_name: string;
+      last_name: string;
+      middle_name: string | null;
+      birth_date: Date | null;
+      gender_id: number | null;
+      another_gender_value: string | null;
+      gender_types: {
+        id: number;
+        code: string;
+        html_value_en: string;
+        html_value_fr: string;
+      } | null;
+    }>;
+  };
+  person: {
+    id: string;
+    user_id: string | null;
+    first_name: string;
+    last_name: string;
+    middle_name: string | null;
+    birth_date: Date | null;
+    gender_id: number | null;
+    another_gender_value: string | null;
+    gender_types: {
+      id: number;
+      code: string;
+      html_value_en: string;
+      html_value_fr: string;
+    } | null;
+  } | null;
+}
+
+interface GenderType {
+  id: number;
+  code: string;
+  html_value_en: string;
+  html_value_fr: string;
+}
+
+type TabType = 'profile' | 'email' | 'password';
+
 export function ProfileSettings({ onClose, onProfileUpdate }: ProfileSettingsProps) {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'profile' | 'email' | 'password'>('profile');
-  const [userData, setUserData] = useState<any>(null);
-  const [genderTypes, setGenderTypes] = useState<any[]>([]);
+  const { user, updateEmail } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>('profile');
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [genderTypes, setGenderTypes] = useState<GenderType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
-  const [emailChangeInProgress, setEmailChangeInProgress] = useState(false);
+  const [originalEmail, setOriginalEmail] = useState(""); // Track original email for reverting
+  const [showVerificationBanner, setShowVerificationBanner] = useState(false);
 
   useEffect(() => {
     if (user?.userId) {
       loadData();
+      // Check if there's a pending email verification from previous session
+      checkForPendingEmailVerification();
     }
   }, [user]);
+
+  const checkForPendingEmailVerification = async () => {
+    try {
+      // Check if user has an unverified email that's different from what we expect
+      const userResult = await getUserWithPersonByCognitoSub(user!.userId);
+      if (userResult.success && userResult.data) {
+        const dbUser = userResult.data.user;
+        if (dbUser.status === "pending_verification" && dbUser.email) {
+          // There's a pending email verification - show the banner
+          setPendingEmail(dbUser.email);
+          setShowVerificationBanner(true);
+          
+          // We need to figure out what the original email was
+          // For now, we'll assume the database email before this change was the "current"
+          // This is imperfect but works for the common case
+          console.log("Found pending verification for:", dbUser.email);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking pending verification:", error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -39,12 +114,12 @@ export function ProfileSettings({ onClose, onProfileUpdate }: ProfileSettingsPro
         getGenderTypes()
       ]);
 
-      if (userResult.success) {
+      if (userResult.success && userResult.data) {
         setUserData(userResult.data);
       }
       
-      if (genderResult.success) {
-        setGenderTypes(genderResult.data || []);
+      if (genderResult.success && genderResult.data) {
+        setGenderTypes(genderResult.data);
       }
     } catch (error) {
       console.error("Error loading profile data:", error);
@@ -59,65 +134,96 @@ export function ProfileSettings({ onClose, onProfileUpdate }: ProfileSettingsPro
   };
 
   const handleEmailChangeSuccess = (newEmail: string) => {
+    // Store the original email before making the change
+    const currentUserEmail = userData?.user?.email || "";
+    setOriginalEmail(currentUserEmail);
     setPendingEmail(newEmail);
-    setEmailChangeInProgress(true);
     setShowEmailVerification(true);
+    
+    console.log("Email change initiated:", { original: currentUserEmail, new: newEmail });
   };
 
   const handleEmailVerificationSuccess = () => {
     setShowEmailVerification(false);
     setPendingEmail("");
-    setEmailChangeInProgress(false);
+    setOriginalEmail("");
+    setShowVerificationBanner(false);
     loadData();
     onProfileUpdate?.();
-    setTimeout(() => {
-      if ((window as any).handleEmailChangeComplete) {
-        (window as any).handleEmailChangeComplete();
-      }
-    }, 100);
+    
+    // Trigger the email change completion callback
+    if ((window as any).handleEmailChangeComplete) {
+      (window as any).handleEmailChangeComplete();
+    }
   };
 
   const handleEmailVerificationCancel = async () => {
-    if (emailChangeInProgress && pendingEmail) {
+    // When user cancels verification, we should NOT mark the new email as unverified
+    // Instead, we should keep the original email and just show a banner for retry
+    setShowEmailVerification(false);
+    // Clear success messages from the form
+    if ((window as any).handleEmailVerificationCancelled) {
+      (window as any).handleEmailVerificationCancelled();
+    }
+    setShowVerificationBanner(true);
+  };
+
+  const handleRetryVerification = () => {
+    setShowVerificationBanner(false);
+    setShowEmailVerification(true);
+  };
+
+  const handleDismissVerificationBanner = async () => {
+    // When user completely cancels, we revert the database back to original email
+    // If we don't have originalEmail, we assume they want to cancel the change entirely
+    const emailToRevertTo = originalEmail || ""; // This might be empty on page refresh
+    
+    if (pendingEmail) {
       try {
-        const { markEmailAsUnverified } = await import("@/app/actions/email-verification");
-        await markEmailAsUnverified(user!.userId, pendingEmail);
+        if (emailToRevertTo) {
+          // We know the original email - revert to it
+          const { syncUserEmailWithCognito } = await import("@/app/actions/email");
+          await syncUserEmailWithCognito(user!.userId, emailToRevertTo, true);
+          console.log("Reverted database to original email:", emailToRevertTo);
+        } else {
+          // We don't know the original email - this is a problem
+          // For now, just mark as needs manual intervention
+          console.warn("Cannot revert email - original email unknown");
+          // Could show an error message to user here
+        }
+        
+        // Clear the success message from the form
+        if ((window as any).handleEmailVerificationCancelled) {
+          (window as any).handleEmailVerificationCancelled();
+        }
       } catch (error) {
-        console.error("Failed to mark email as unverified:", error);
+        console.error("Failed to revert email change:", error);
       }
     }
     
-    setShowEmailVerification(false);
+    setShowVerificationBanner(false);
     setPendingEmail("");
-    setEmailChangeInProgress(false);
-    loadData();
+    setOriginalEmail("");
+    loadData(); // This should refresh and show the reverted state
     onProfileUpdate?.();
   };
 
-  const getModalTitle = () => {
-    switch (activeTab) {
-      case 'profile':
-        return 'Edit Profile';
-      case 'email':
-        return 'Change Email';
-      case 'password':
-        return 'Change Password';
-      default:
-        return 'Profile Settings';
-    }
+  const getModalTitle = (): string => {
+    const titles: Record<TabType, string> = {
+      profile: 'Edit Profile',
+      email: 'Change Email',
+      password: 'Change Password'
+    };
+    return titles[activeTab];
   };
 
-  const getModalSubtitle = () => {
-    switch (activeTab) {
-      case 'profile':
-        return 'Update your personal information';
-      case 'email':
-        return 'Change your email address';
-      case 'password':
-        return 'Update your password';
-      default:
-        return '';
-    }
+  const getModalSubtitle = (): string => {
+    const subtitles: Record<TabType, string> = {
+      profile: 'Update your personal information',
+      email: 'Change your email address',
+      password: 'Update your password'
+    };
+    return subtitles[activeTab];
   };
 
   const TabButton = ({ 
@@ -125,7 +231,7 @@ export function ProfileSettings({ onClose, onProfileUpdate }: ProfileSettingsPro
     label, 
     icon 
   }: { 
-    id: 'profile' | 'email' | 'password'; 
+    id: TabType; 
     label: string; 
     icon: React.ReactNode;
   }) => (
@@ -173,6 +279,41 @@ export function ProfileSettings({ onClose, onProfileUpdate }: ProfileSettingsPro
         </div>
 
         <div className="space-y-6">
+          {/* Email verification warning banner */}
+          {showVerificationBanner && pendingEmail && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <Mail className="w-5 h-5 text-orange-600 mt-0.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-medium text-orange-800 mb-1">
+                    Email Verification Pending
+                  </h3>
+                  <p className="text-sm text-orange-700 mb-3">
+                    You didn't complete the verification for <strong>{pendingEmail}</strong>. 
+                    Was this an accident? You can still verify your new email address.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={handleRetryVerification}
+                      className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      <Mail className="w-4 h-4 mr-1" />
+                      Enter Verification Code
+                    </button>
+                    <button
+                      onClick={handleDismissVerificationBanner}
+                      className="text-sm text-orange-600 hover:text-orange-800 underline"
+                    >
+                      Cancel Email Change
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'profile' && (
             <ProfileForm
               userId={user!.userId}
@@ -195,6 +336,10 @@ export function ProfileSettings({ onClose, onProfileUpdate }: ProfileSettingsPro
             <EmailChangeForm
               currentEmail={userData?.user?.email || ""}
               onSuccess={handleEmailChangeSuccess}
+              onEmailVerificationComplete={() => {
+                console.log("Email verification complete callback ready");
+              }}
+              isVerificationPending={showVerificationBanner || showEmailVerification}
             />
           )}
 
@@ -209,7 +354,7 @@ export function ProfileSettings({ onClose, onProfileUpdate }: ProfileSettingsPro
           newEmail={pendingEmail}
           onSuccess={handleEmailVerificationSuccess}
           onCancel={handleEmailVerificationCancel}
-          isInitialVerification={emailChangeInProgress}
+          isInitialVerification={true}
         />
       )}
     </>

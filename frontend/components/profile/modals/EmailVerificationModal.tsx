@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Mail, X } from "lucide-react";
 import {
   CodeInput,
   SubmitButton,
   ErrorAlert,
   SuccessAlert,
+  ResendCodeButton,
 } from "@/components/ui/shared";
 import { useAuth } from "@/hooks/useAuth";
 import { updateUserEmailInDatabase } from "@/app/actions/email";
@@ -30,8 +30,11 @@ export function EmailVerificationModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const { confirmEmailUpdate, updateEmail, user } = useAuth();
+
+  const canSubmit = verificationCode.length === 6 && !isCompleted;
 
   const dismissError = () => setErrorMessage("");
   const dismissSuccess = () => setSuccessMessage("");
@@ -47,17 +50,20 @@ export function EmailVerificationModal({
     onCancel();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent, autoCode?: string) => {
+    if (e) e.preventDefault();
 
-    if (verificationCode.length !== 6) return;
+    const codeToUse = autoCode || verificationCode;
+    const canSubmitNow = codeToUse.length === 6;
+
+    if (!canSubmitNow) return;
 
     try {
       setLoading(true);
       setErrorMessage("");
       setSuccessMessage("");
 
-      await confirmEmailUpdate(verificationCode);
+      await confirmEmailUpdate(codeToUse);
 
       if (isInitialVerification) {
         const dbResult = await updateUserEmailInDatabase(
@@ -78,6 +84,7 @@ export function EmailVerificationModal({
       }
 
       setSuccessMessage("Email successfully updated!");
+      setIsCompleted(true);
 
       setTimeout(() => {
         onSuccess();
@@ -100,84 +107,57 @@ export function EmailVerificationModal({
     }
   };
 
+  const handleAutoComplete = (code: string) => {
+    if (code.length === 6) {
+      handleSubmit(undefined, code);
+    }
+  };
+
   const handleResendCode = async () => {
     try {
       setErrorMessage("");
       setSuccessMessage("");
       await updateEmail(newEmail);
-      setSuccessMessage("If a new code was needed, it has been sent!");
     } catch (error) {
-      setSuccessMessage(
-        "You can try using your existing verification code, or wait and request a new one later."
-      );
     }
   };
 
   return (
     <AuthModal
-      onClose={onCancel}
+      onClose={handleCancel}
       title="Verify Your New Email"
-      subtitle={`Enter the 6-digit code sent to ${newEmail}`}
+      subtitle={`Enter the confirmation code that was sent to ${newEmail}`}
       className="max-w-md"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="text-center">
           <CodeInput
             value={verificationCode}
             onChange={setVerificationCode}
-            onComplete={(code) => {
-              setVerificationCode(code);
-              if (code.length === 6) {
-                setTimeout(() => {
-                  const form = document.querySelector("form");
-                  if (form) {
-                    form.dispatchEvent(
-                      new Event("submit", { cancelable: true, bubbles: true })
-                    );
-                  }
-                }, 100);
-              }
-            }}
+            onComplete={handleAutoComplete}
             error={!!errorMessage}
           />
         </div>
 
-        {successMessage && (
-          <SuccessAlert message={successMessage} onDismiss={dismissSuccess} />
-        )}
+        <div className="text-center text-sm text-gray-600">
+          It may take a minute to receive your code. Didn't receive it?{" "}
+          <ResendCodeButton onResend={handleResendCode} />
+        </div>
 
         {errorMessage && (
           <ErrorAlert message={errorMessage} onDismiss={dismissError} />
         )}
 
-        <div className="flex flex-col space-y-3">
-          <SubmitButton
-            loading={loading}
-            disabled={verificationCode.length !== 6 || loading}
-            text="Verify Email"
-            loadingText="Verifying..."
-          />
+        {successMessage && (
+          <SuccessAlert message={successMessage} onDismiss={dismissSuccess} />
+        )}
 
-          <div className="flex justify-between items-center">
-            <button
-              type="button"
-              onClick={handleResendCode}
-              className="text-sm text-blue-600 hover:text-blue-800"
-              disabled={loading}
-            >
-              Resend Code
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="text-sm text-gray-600 hover:text-gray-800"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+        <SubmitButton
+          loading={loading}
+          disabled={!canSubmit || loading}
+          text={isCompleted ? "Email Verified!" : "Verify Email"}
+          loadingText="Verifying..."
+        />
       </form>
     </AuthModal>
   );

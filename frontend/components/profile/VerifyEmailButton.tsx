@@ -10,7 +10,10 @@ interface VerifyEmailButtonProps {
   onVerificationComplete: () => void;
 }
 
-export function VerifyEmailButton({ email, onVerificationComplete }: VerifyEmailButtonProps) {
+export function VerifyEmailButton({
+  email,
+  onVerificationComplete,
+}: VerifyEmailButtonProps) {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const { updateEmail } = useAuth();
@@ -21,7 +24,6 @@ export function VerifyEmailButton({ email, onVerificationComplete }: VerifyEmail
       await updateEmail(email);
       setShowVerificationModal(true);
     } catch (error: any) {
-      console.log("Cognito response:", error.message);
       setShowVerificationModal(true);
     } finally {
       setLoading(false);
