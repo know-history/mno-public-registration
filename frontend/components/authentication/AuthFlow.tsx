@@ -6,7 +6,7 @@ import {
   ConfirmPasswordResetForm,
   LoginForm,
   SignupForm,
-} from "@/components/auth/forms";
+} from "@/components/authentication/forms";
 
 export enum AuthFlowStep {
   LOGIN = "login",
