@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Lock } from "lucide-react";
 import {
   PasswordField,
   SubmitButton,
@@ -26,12 +25,30 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
 
   const form = useForm<PasswordChangeFormData>({
     resolver: zodResolver(passwordChangeSchema),
+    mode: "onChange", // This enables real-time validation
     defaultValues: {
       current_password: "",
       new_password: "",
       confirm_password: "",
     },
   });
+
+  // Watch all form fields for validation
+  const watchedFields = form.watch();
+  const { formState } = form;
+
+  // Check if form is valid and all fields are filled
+  const isFormValid =
+    watchedFields.current_password &&
+    watchedFields.new_password &&
+    watchedFields.confirm_password &&
+    watchedFields.new_password === watchedFields.confirm_password &&
+    watchedFields.current_password.length >= 8 && // Basic length check
+    watchedFields.new_password.length >= 8 && // Basic length check
+    Object.keys(formState.errors).length === 0; // No validation errors
+
+  const dismissError = () => setErrorMessage("");
+  const dismissSuccess = () => setSuccessMessage("");
 
   const handleSubmit = async (data: PasswordChangeFormData) => {
     try {
@@ -65,8 +82,12 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
     <div>
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          {successMessage && <SuccessAlert message={successMessage} />}
-          {errorMessage && <ErrorAlert message={errorMessage} />}
+          {successMessage && (
+            <SuccessAlert message={successMessage} onDismiss={dismissSuccess} />
+          )}
+          {errorMessage && (
+            <ErrorAlert message={errorMessage} onDismiss={dismissError} />
+          )}
 
           <PasswordField
             name="current_password"
@@ -90,10 +111,19 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
             required
           />
 
+          {watchedFields.new_password &&
+            watchedFields.confirm_password &&
+            watchedFields.new_password !== watchedFields.confirm_password && (
+              <div className="text-red-600 text-sm ml-1 flex items-center">
+                <span className="mr-2">⚠️</span>
+                Passwords do not match.
+              </div>
+            )}
+
           <div className="flex justify-end">
             <SubmitButton
               loading={loading}
-              disabled={loading}
+              disabled={loading || !isFormValid}
               text="Change Password"
               loadingText="Changing..."
             />

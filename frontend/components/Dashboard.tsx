@@ -4,12 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import {
   ChevronLeft,
-  Calendar,
   FileText,
   Bell,
   TrendingUp,
   Users,
-  MapPin,
   Award,
   CheckCircle,
   AlertCircle,
@@ -18,7 +16,6 @@ import {
 } from "lucide-react";
 
 import { ProfileSettings } from "./profile/ProfileSettings";
-import { VerifyEmailButton } from "@/components/profile/VerifyEmailButton";
 import { getDashboardUserData } from "@/app/actions/dashboard";
 
 interface UserAttributes {
@@ -156,7 +153,7 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
   const fetchUserData = async () => {
     try {
       const result = await getDashboardUserData(user!.userId);
-      
+
       if (result.success && result.data) {
         setUserAttributes(result.data);
       } else {
@@ -314,7 +311,8 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
                   Full Name
                 </label>
                 <p className="mt-1 text-base text-gray-900">
-                  {userAttributes?.given_name} {userAttributes?.middle_name} {userAttributes?.family_name}
+                  {userAttributes?.given_name} {userAttributes?.middle_name}{" "}
+                  {userAttributes?.family_name}
                 </p>
               </div>
               <div>
@@ -329,28 +327,31 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
                         : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {userAttributes?.email_verified ? "Verified" : "Not Verified"}
+                    {userAttributes?.email_verified
+                      ? "Verified"
+                      : "Not Verified"}
                   </span>
-                  {!userAttributes?.email_verified && (
-                    <VerifyEmailButton
-                      email={userAttributes?.email || ""}
-                      onVerificationComplete={fetchUserData}
-                    />
-                  )}
                 </div>
               </div>
               <div>
                 <label className="block text-base font-medium text-gray-700">
-                  User Role
+                  Date of Birth
                 </label>
                 <p className="mt-1 text-base text-gray-900">
-                  {formatRoleName(userAttributes?.user_role)}
+                  {userAttributes?.birth_date
+                    ? new Date(
+                        userAttributes.birth_date + "T12:00:00"
+                      ).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "Not provided"}
                 </p>
               </div>
             </div>
           </Card>
 
-          {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
               title="Applications"
@@ -382,7 +383,6 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
             />
           </div>
 
-          {/* Recent Activity */}
           <Card>
             <h2 className="text-lg font-medium mb-4 text-black">
               Recent Activity
@@ -391,7 +391,13 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
               {recentActivities.map((notification, index) => (
                 <NotificationCard
                   key={index}
-                  type={notification.type as "info" | "warning" | "success" | "error"}
+                  type={
+                    notification.type as
+                      | "info"
+                      | "warning"
+                      | "success"
+                      | "error"
+                  }
                   title={notification.title}
                   message={notification.message}
                   time={notification.time}
@@ -456,8 +462,8 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
       </main>
 
       {showProfileSettings && (
-        <ProfileSettings 
-          onClose={() => setShowProfileSettings(false)} 
+        <ProfileSettings
+          onClose={() => setShowProfileSettings(false)}
           onProfileUpdate={fetchUserData}
         />
       )}

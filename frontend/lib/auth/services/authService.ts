@@ -196,7 +196,10 @@ export const authService = {
     }
   },
 
-  async updateUserProfile(attributes: { given_name?: string; family_name?: string }) {
+  async updateUserProfile(attributes: {
+    given_name?: string;
+    family_name?: string;
+  }) {
     try {
       const result = await updateUserAttributes({
         userAttributes: attributes,
@@ -217,33 +220,6 @@ export const authService = {
       return result;
     } catch (error) {
       console.error("Change password error:", error);
-      throw error;
-    }
-  },
-
-  async updateEmail(newEmail: string) {
-    try {
-      const result = await updateUserAttributes({
-        userAttributes: {
-          email: newEmail,
-        },
-      });
-      return result;
-    } catch (error) {
-      console.error("Update email error:", error);
-      throw error;
-    }
-  },
-
-  async confirmEmailUpdate(confirmationCode: string) {
-    try {
-      const result = await confirmUserAttribute({
-        userAttributeKey: 'email',
-        confirmationCode,
-      });
-      return result;
-    } catch (error) {
-      console.error("Confirm email update error:", error);
       throw error;
     }
   },

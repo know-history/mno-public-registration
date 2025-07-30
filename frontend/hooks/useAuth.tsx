@@ -35,8 +35,6 @@ interface AuthContextType {
     family_name?: string;
   }) => Promise<void>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
-  updateEmail: (newEmail: string) => Promise<void>;
-  confirmEmailUpdate: (confirmationCode: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -186,22 +184,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateEmail = async (newEmail: string) => {
-    try {
-      await authService.updateEmail(newEmail);
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const confirmEmailUpdate = async (confirmationCode: string) => {
-    try {
-      await authService.confirmEmailUpdate(confirmationCode);
-    } catch (error) {
-      throw error;
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -216,8 +198,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resendSignUpCode,
         updateUserProfile,
         changePassword,
-        updateEmail,
-        confirmEmailUpdate,
       }}
     >
       {children}
