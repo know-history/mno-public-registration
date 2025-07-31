@@ -110,7 +110,7 @@ export function LoginForm({
             type="button"
             onClick={onForgotPassword}
             disabled={loading}
-            className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+            className="text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors cursor-pointer"
           >
             Forgot your password?
           </button>
@@ -121,7 +121,7 @@ export function LoginForm({
               type="button"
               onClick={onSignUp}
               disabled={loading}
-              className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              className="text-blue-600 hover:text-blue-700 font-medium transition-colors cursor-pointer"
             >
               Sign up
             </button>

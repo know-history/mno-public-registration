@@ -40,7 +40,7 @@ export interface PasswordValidationRules {
   specialChars: boolean;
 }
 
-export enum AuthError {
+export enum AuthErrorConstants {
   INVALID_CREDENTIALS = "NotAuthorizedException",
   USER_NOT_CONFIRMED = "UserNotConfirmedException",
   USER_NOT_FOUND = "UserNotFoundException",

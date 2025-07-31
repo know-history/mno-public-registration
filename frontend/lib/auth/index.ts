@@ -1,5 +1,6 @@
 export * from "./types/auth.types";
 export * from "./types/form.types";
+export * from "./types/profile.types";
 
 export * from "./schemas";
 

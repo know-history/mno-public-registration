@@ -62,24 +62,20 @@ export const confirmSignupSchema = z.object({
   code: confirmationCodeSchema,
 });
 
-export type LoginFormData = z.infer<typeof loginSchema>;
-export type SignupFormData = z.infer<typeof signupSchema>;
-export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
-export type ConfirmPasswordResetFormData = z.infer<
-  typeof confirmPasswordResetSchema
->;
-export type ConfirmSignupFormData = z.infer<typeof confirmSignupSchema>;
+export const profileSchema = z.object({
+  first_name: z.string().min(1, VALIDATION_MESSAGES.FIRST_NAME_REQUIRED),
+  last_name: z.string().min(1, VALIDATION_MESSAGES.LAST_NAME_REQUIRED),
+  middle_name: z.string().optional(),
+  birth_date: z.string().min(1, VALIDATION_MESSAGES.DATE_OF_BIRTH_REQUIRED),
+  gender_id: z.number().int().positive().optional(),
+  another_gender_value: z.string().optional(),
+});
 
 export const profileUpdateSchema = z.object({
   first_name: z.string().min(1, VALIDATION_MESSAGES.FIRST_NAME_REQUIRED),
   last_name: z.string().min(1, VALIDATION_MESSAGES.LAST_NAME_REQUIRED),
   birth_date: z.string().optional(),
   gender_id: z.number().optional(),
-});
-
-export const emailChangeSchema = z.object({
-  new_email: emailSchema,
-  current_password: passwordSchema,
 });
 
 export const passwordChangeSchema = z
@@ -93,11 +89,25 @@ export const passwordChangeSchema = z
     path: ["confirm_password"],
   });
 
+export const emailChangeSchema = z.object({
+  new_email: emailSchema,
+  current_password: passwordSchema,
+});
+
 export const emailVerificationSchema = z.object({
   verification_code: confirmationCodeSchema,
 });
 
+export type LoginFormData = z.infer<typeof loginSchema>;
+export type SignupFormData = z.infer<typeof signupSchema>;
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+export type ConfirmPasswordResetFormData = z.infer<
+  typeof confirmPasswordResetSchema
+>;
+export type ConfirmSignupFormData = z.infer<typeof confirmSignupSchema>;
+
+export type ProfileFormData = z.infer<typeof profileSchema>;
 export type ProfileUpdateFormData = z.infer<typeof profileUpdateSchema>;
-export type EmailChangeFormData = z.infer<typeof emailChangeSchema>;
 export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
+export type EmailChangeFormData = z.infer<typeof emailChangeSchema>;
 export type EmailVerificationFormData = z.infer<typeof emailVerificationSchema>;

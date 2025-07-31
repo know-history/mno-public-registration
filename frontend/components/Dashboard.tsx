@@ -211,7 +211,7 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
             <div className="flex items-center">
               <button
                 onClick={onBackToLanding}
-                className="mr-4 text-gray-600 hover:text-gray-900 transition-colors"
+                className="mr-4 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
@@ -223,14 +223,14 @@ export default function Dashboard({ onBackToLanding }: DashboardProps) {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setShowProfileSettings(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                 title="Profile Settings"
               >
                 <Settings className="w-6 h-6" />
               </button>
               <button
                 onClick={handleSignOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer"
               >
                 Sign Out
               </button>

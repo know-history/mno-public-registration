@@ -29,12 +29,15 @@ export const VALIDATION_MESSAGES = {
   PASSWORD_MIN_LENGTH: "Password must be at least 8 characters",
   PASSWORD_CONFIRMATION_REQUIRED: "Please confirm your password",
   PASSWORDS_DONT_MATCH: "Passwords do not match",
+  CODE_REQUIRED: "Confirmation code is required",
+  CODE_INVALID: "Code must be 6 digits",
+
   FIRST_NAME_REQUIRED: "First name is required",
   LAST_NAME_REQUIRED: "Last name is required",
   DATE_OF_BIRTH_REQUIRED: "Date of birth is required",
   DATE_OF_BIRTH_INVALID: "Date of birth must be a valid date",
-  CODE_REQUIRED: "Confirmation code is required",
-  CODE_INVALID: "Code must be 6 digits",
+  GENDER_REQUIRED: "Please select a gender",
+  CUSTOM_GENDER_REQUIRED: "Please specify your gender identity",
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -54,6 +57,11 @@ export const ERROR_MESSAGES = {
 
   SOMETHING_WENT_WRONG: "Something went wrong. Please try again.",
   NETWORK_ERROR: "Network error. Please check your connection.",
+
+  PROFILE_UPDATE_FAILED: "Failed to update profile",
+  PASSWORD_CHANGE_FAILED: "Failed to change password",
+  CURRENT_PASSWORD_INCORRECT: "Current password is incorrect",
+  PASSWORD_REQUIREMENTS_NOT_MET: "New password does not meet requirements",
 } as const;
 
 export const SUCCESS_MESSAGES = {
@@ -64,6 +72,9 @@ export const SUCCESS_MESSAGES = {
   SIGNUP_SUCCESS:
     "Account confirmed successfully! Please log in with your credentials.",
   SIGNUP_CODE_SENT: "Confirmation code sent to your email.",
+
+  PROFILE_UPDATED: "Profile updated successfully!",
+  PASSWORD_CHANGED: "Password changed successfully!",
 } as const;
 
 export const PASSWORD_REQUIREMENTS = {
@@ -72,4 +83,10 @@ export const PASSWORD_REQUIREMENTS = {
   UPPERCASE: "One uppercase letter",
   NUMBERS: "One number",
   SPECIAL_CHARS: "One special character",
+} as const;
+
+export const PROFILE_CONSTANTS = {
+  UNKNOWN_GENDER_ID: 10,
+  CUSTOM_GENDER_MAX_LENGTH: 100,
+  CUSTOM_GENDER_SANITIZE_PATTERN: /[<>\"'%;()&+]/g,
 } as const;
