@@ -9,16 +9,17 @@ import {
   ErrorAlert,
   SuccessAlert,
 } from "@/components/ui/shared";
-import { passwordChangeSchema, type PasswordChangeFormData } from "@/lib/auth";
+import {
+  passwordChangeSchema,
+  type PasswordChangeFormData,
+  type AuthError,
+  SUCCESS_MESSAGES,
+  ERROR_MESSAGES,
+} from "@/lib/auth";
 import { useAuth } from "@/hooks/useAuth";
 
 interface PasswordChangeFormProps {
   onSuccess?: () => void;
-}
-
-interface AuthError {
-  name: string;
-  message: string;
 }
 
 export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
@@ -30,7 +31,7 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
 
   const form = useForm<PasswordChangeFormData>({
     resolver: zodResolver(passwordChangeSchema),
-    mode: "onChange", // This enables real-time validation
+    mode: "onChange",
     defaultValues: {
       current_password: "",
       new_password: "",
@@ -38,19 +39,17 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
     },
   });
 
-  // Watch all form fields for validation
   const watchedFields = form.watch();
   const { formState } = form;
 
-  // Check if form is valid and all fields are filled
   const isFormValid =
     watchedFields.current_password &&
     watchedFields.new_password &&
     watchedFields.confirm_password &&
     watchedFields.new_password === watchedFields.confirm_password &&
-    watchedFields.current_password.length >= 8 && // Basic length check
-    watchedFields.new_password.length >= 8 && // Basic length check
-    Object.keys(formState.errors).length === 0; // No validation errors
+    watchedFields.current_password.length >= 8 &&
+    watchedFields.new_password.length >= 8 &&
+    Object.keys(formState.errors).length === 0;
 
   const dismissError = () => setErrorMessage("");
   const dismissSuccess = () => setSuccessMessage("");
@@ -63,19 +62,21 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
 
       await changePassword(data.current_password, data.new_password);
 
-      setSuccessMessage("Password changed successfully!");
+      setSuccessMessage(SUCCESS_MESSAGES.PASSWORD_CHANGED);
       form.reset();
       onSuccess?.();
     } catch (error) {
       const authError = error as AuthError;
-      let errorMsg = "Failed to change password";
+      let errorMsg;
 
       if (authError.name === "NotAuthorizedException") {
-        errorMsg = "Current password is incorrect";
+        errorMsg = ERROR_MESSAGES.CURRENT_PASSWORD_INCORRECT;
       } else if (authError.name === "InvalidPasswordException") {
-        errorMsg = "New password does not meet requirements";
+        errorMsg = ERROR_MESSAGES.PASSWORD_REQUIREMENTS_NOT_MET;
       } else if (authError.name === "LimitExceededException") {
-        errorMsg = "Too many attempts. Please try again later.";
+        errorMsg = ERROR_MESSAGES.TOO_MANY_REQUESTS;
+      } else {
+        errorMsg = ERROR_MESSAGES.PASSWORD_CHANGE_FAILED;
       }
 
       setErrorMessage(errorMsg);

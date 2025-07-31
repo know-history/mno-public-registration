@@ -1,3 +1,4 @@
+export { SelectField } from "./SelectField";
 export { FormField } from "./FormField";
 export { PasswordField } from "./PasswordField";
 export { PasswordRequirements } from "./PasswordRequirements";

@@ -8,58 +8,11 @@ import { getGenderTypes } from "@/app/actions/profile";
 import { ProfileForm } from "@/components/profile/forms/ProfileForm";
 import { PasswordChangeForm } from "@/components/profile/forms/PasswordChangeForm";
 import { AuthModal } from "@/components/ui/shared/AuthModal";
+import { type GenderType, type UserData } from "@/lib/auth";
 
 interface ProfileSettingsProps {
   onClose?: () => void;
   onProfileUpdate?: () => void;
-}
-
-interface UserData {
-  user: {
-    id: string;
-    cognito_sub: string;
-    email: string;
-    status: string;
-    persons: Array<{
-      id: string;
-      user_id: string | null;
-      first_name: string;
-      last_name: string;
-      middle_name: string | null;
-      birth_date: Date | null;
-      gender_id: number | null;
-      another_gender_value: string | null;
-      gender_types: {
-        id: number;
-        code: string;
-        html_value_en: string;
-        html_value_fr: string;
-      } | null;
-    }>;
-  };
-  person: {
-    id: string;
-    user_id: string | null;
-    first_name: string;
-    last_name: string;
-    middle_name: string | null;
-    birth_date: Date | null;
-    gender_id: number | null;
-    another_gender_value: string | null;
-    gender_types: {
-      id: number;
-      code: string;
-      html_value_en: string;
-      html_value_fr: string;
-    } | null;
-  } | null;
-}
-
-interface GenderType {
-  id: number;
-  code: string;
-  html_value_en: string;
-  html_value_fr: string;
 }
 
 type TabType = "profile" | "password";
@@ -135,7 +88,7 @@ export function ProfileSettings({
       showCloseButton={true}
       className="max-w-2xl"
     >
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -143,7 +96,7 @@ export function ProfileSettings({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
