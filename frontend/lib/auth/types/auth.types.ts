@@ -40,7 +40,7 @@ export interface PasswordValidationRules {
   specialChars: boolean;
 }
 
-export enum AuthError {
+export enum AuthErrorConstants {
   INVALID_CREDENTIALS = "NotAuthorizedException",
   USER_NOT_CONFIRMED = "UserNotConfirmedException",
   USER_NOT_FOUND = "UserNotFoundException",
@@ -49,4 +49,22 @@ export enum AuthError {
   LIMIT_EXCEEDED = "LimitExceededException",
   TOO_MANY_REQUESTS = "TooManyRequestsException",
   INVALID_PARAMETER = "InvalidParameterException",
+}
+
+export interface UpdateProfileAttributes {
+  given_name?: string;
+  family_name?: string;
+}
+
+export interface EmailUpdateRequest {
+  newEmail: string;
+}
+
+export interface PasswordChangeRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface EmailVerificationRequest {
+  confirmationCode: string;
 }

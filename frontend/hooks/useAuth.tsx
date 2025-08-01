@@ -18,7 +18,8 @@ interface AuthContextType {
     email: string,
     password: string,
     given_name?: string,
-    family_name?: string
+    family_name?: string,
+    date_of_birth?: string
   ) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -29,6 +30,11 @@ interface AuthContextType {
   ) => Promise<void>;
   confirmSignUp: (email: string, code: string) => Promise<void>;
   resendSignUpCode: (email: string) => Promise<void>;
+  updateUserProfile: (attributes: {
+    given_name?: string;
+    family_name?: string;
+  }) => Promise<void>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -97,10 +103,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     given_name?: string,
-    family_name?: string
+    family_name?: string,
+    date_of_birth?: string
   ) => {
     try {
-      await authService.signUp({ email, password, given_name, family_name });
+      await authService.signUp({
+        email,
+        password,
+        given_name,
+        family_name,
+        date_of_birth,
+      });
       return;
     } catch (error) {
       throw error;
@@ -152,6 +165,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUserProfile = async (attributes: {
+    given_name?: string;
+    family_name?: string;
+  }) => {
+    try {
+      await authService.updateUserProfile(attributes);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    try {
+      await authService.changePassword(oldPassword, newPassword);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -164,6 +196,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         confirmResetPassword,
         resendSignUpCode,
+        updateUserProfile,
+        changePassword,
       }}
     >
       {children}

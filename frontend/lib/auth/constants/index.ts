@@ -29,12 +29,15 @@ export const VALIDATION_MESSAGES = {
   PASSWORD_MIN_LENGTH: "Password must be at least 8 characters",
   PASSWORD_CONFIRMATION_REQUIRED: "Please confirm your password",
   PASSWORDS_DONT_MATCH: "Passwords do not match",
+  CODE_REQUIRED: "Confirmation code is required",
+  CODE_INVALID: "Code must be 6 digits",
+
   FIRST_NAME_REQUIRED: "First name is required",
   LAST_NAME_REQUIRED: "Last name is required",
   DATE_OF_BIRTH_REQUIRED: "Date of birth is required",
   DATE_OF_BIRTH_INVALID: "Date of birth must be a valid date",
-  CODE_REQUIRED: "Confirmation code is required",
-  CODE_INVALID: "Code must be 6 digits",
+  GENDER_REQUIRED: "Please select a gender",
+  CUSTOM_GENDER_REQUIRED: "Please specify your gender identity",
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -54,6 +57,11 @@ export const ERROR_MESSAGES = {
 
   SOMETHING_WENT_WRONG: "Something went wrong. Please try again.",
   NETWORK_ERROR: "Network error. Please check your connection.",
+
+  PROFILE_UPDATE_FAILED: "Failed to update profile",
+  PASSWORD_CHANGE_FAILED: "Failed to change password",
+  CURRENT_PASSWORD_INCORRECT: "Current password is incorrect",
+  PASSWORD_REQUIREMENTS_NOT_MET: "New password does not meet requirements",
 } as const;
 
 export const SUCCESS_MESSAGES = {
@@ -64,6 +72,9 @@ export const SUCCESS_MESSAGES = {
   SIGNUP_SUCCESS:
     "Account confirmed successfully! Please log in with your credentials.",
   SIGNUP_CODE_SENT: "Confirmation code sent to your email.",
+
+  PROFILE_UPDATED: "Profile updated successfully!",
+  PASSWORD_CHANGED: "Password changed successfully!",
 } as const;
 
 export const PASSWORD_REQUIREMENTS = {
@@ -72,4 +83,43 @@ export const PASSWORD_REQUIREMENTS = {
   UPPERCASE: "One uppercase letter",
   NUMBERS: "One number",
   SPECIAL_CHARS: "One special character",
+} as const;
+
+export const PROFILE_CONSTANTS = {
+  UNKNOWN_GENDER_ID: 10,
+  CUSTOM_GENDER_MAX_LENGTH: 100,
+  CUSTOM_GENDER_SANITIZE_PATTERN: /[<>\"'%;()&+]/g,
+} as const;
+
+export const MFA_TYPES = {
+  SMS: "SMS_MFA",
+  EMAIL: "EMAIL_MFA", 
+  TOTP: "SOFTWARE_TOKEN_MFA",
+} as const;
+
+export const MFA_MESSAGES = {
+  MFA_ENABLED: "Multi-factor authentication enabled successfully!",
+  MFA_DISABLED: "Multi-factor authentication disabled successfully!",
+  SMS_SETUP_SUCCESS: "SMS authentication setup successfully!",
+  EMAIL_SETUP_SUCCESS: "Email authentication setup successfully!",
+  TOTP_SETUP_SUCCESS: "Authenticator app setup successfully!",
+  
+  MFA_SETUP_FAILED: "Failed to setup multi-factor authentication",
+  MFA_DISABLE_FAILED: "Failed to disable multi-factor authentication",
+  INVALID_PHONE: "Please enter a valid phone number",
+  PHONE_REQUIRED: "Phone number is required for SMS authentication",
+  TOTP_CODE_REQUIRED: "Please enter the code from your authenticator app",
+  INVALID_TOTP_CODE: "Invalid authenticator code. Please try again.",
+  
+  MFA_DISABLED_INFO: "Multi-factor authentication is currently disabled. Enable it to add an extra layer of security to your account.",
+  SMS_INFO: "Receive verification codes via text message to your phone.",
+  EMAIL_INFO: "Receive verification codes via email (backup method).",
+  TOTP_INFO: "Use an authenticator app like Google Authenticator or Authy for the most secure option.",
+  SCAN_QR_INFO: "Scan this QR code with your authenticator app, then enter the 6-digit code to verify setup.",
+} as const;
+
+export const PHONE_VALIDATION = {
+  PATTERN: /^\+[1-9]\d{1,14}$/,
+  PLACEHOLDER: "+1234567890",
+  HINT: "Include country code (e.g., +1 for US/Canada)",
 } as const;

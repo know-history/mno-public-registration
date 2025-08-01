@@ -8,13 +8,21 @@ import {
   resetPassword,
   resendSignUpCode,
   confirmResetPassword,
+  updatePassword,
+  updateUserAttributes,
 } from "aws-amplify/auth";
+
+import {
+  createUserWithPerson,
+  updateUserEmailStatus,
+} from "@/app/actions/users";
 
 interface SignUpParams {
   email: string;
   password: string;
   given_name?: string;
   family_name?: string;
+  date_of_birth?: string;
 }
 
 interface SignInParams {
@@ -50,7 +58,13 @@ export const authService = {
     }
   },
 
-  async signUp({ email, password, given_name, family_name }: SignUpParams) {
+  async signUp({
+    email,
+    password,
+    given_name,
+    family_name,
+    date_of_birth,
+  }: SignUpParams) {
     try {
       const result = await signUp({
         username: email,
@@ -64,6 +78,21 @@ export const authService = {
           },
         },
       });
+
+      if (result.userId) {
+        const dbResult = await createUserWithPerson({
+          cognito_sub: result.userId,
+          email,
+          first_name: given_name,
+          last_name: family_name,
+          birth_date: date_of_birth,
+        });
+
+        if (!dbResult.success) {
+          console.error("Database user creation failed:", dbResult.error);
+        }
+      }
+
       return result;
     } catch (error) {
       console.error("Sign up error:", error);
@@ -77,6 +106,11 @@ export const authService = {
         username: email,
         confirmationCode,
       });
+
+      if (result.isSignUpComplete) {
+        await updateUserEmailStatus(email, true);
+      }
+
       return result;
     } catch (error) {
       console.error("Confirm sign up error:", error);
@@ -112,7 +146,7 @@ export const authService = {
       const result = await confirmResetPassword({
         username: email,
         confirmationCode: code,
-        newPassword: newPassword,
+        newPassword,
       });
       return result;
     } catch (error) {
@@ -123,9 +157,7 @@ export const authService = {
 
   async resendSignUpCode({ email }: ResendSignUpCodeParams) {
     try {
-      const result = await resendSignUpCode({
-        username: email,
-      });
+      const result = await resendSignUpCode({ username: email });
       return result;
     } catch (error) {
       console.error("Resend sign up code error:", error);
@@ -133,30 +165,37 @@ export const authService = {
     }
   },
 
-  async getCurrentUser(silentCheck: boolean = false) {
+  async getCurrentUser(refresh = false) {
     try {
-      const user = await getCurrentUser();
-      return user;
-    } catch (error: unknown) {
-      if (
-        !silentCheck &&
-        typeof error === "object" &&
-        error !== null &&
-        "name" in error &&
-        (error as { name?: string }).name !== "UserUnAuthenticatedException"
-      ) {
-        console.error("Get current user error:", error);
+      if (refresh) {
+        await fetchAuthSession({ forceRefresh: true });
       }
+      return await getCurrentUser();
+    } catch (error) {
+      console.error("Get current user error:", error);
       throw error;
     }
   },
 
-  async getCurrentSession() {
+  async changePassword(oldPassword: string, newPassword: string) {
     try {
-      const session = await fetchAuthSession();
-      return session;
+      await updatePassword({
+        oldPassword,
+        newPassword,
+      });
     } catch (error) {
-      console.error("Get current session error:", error);
+      console.error("Change password error:", error);
+      throw error;
+    }
+  },
+
+  async updateUserProfile(attributes: Record<string, string>) {
+    try {
+      await updateUserAttributes({
+        userAttributes: attributes,
+      });
+    } catch (error) {
+      console.error("Update user profile error:", error);
       throw error;
     }
   },
