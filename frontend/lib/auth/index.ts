@@ -10,3 +10,4 @@ export * from "./utils/passwordValidation";
 export * from "./utils/errorHandling";
 
 export { authService } from "./services/authService";
+export { mfaService } from "./services/mfaService";

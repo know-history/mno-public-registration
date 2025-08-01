@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { User, Lock } from "lucide-react";
+import { User, Lock, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserWithPersonByCognitoSub } from "@/app/actions/users";
 import { getGenderTypes } from "@/app/actions/profile";
 import { ProfileForm } from "@/components/profile/forms/ProfileForm";
 import { PasswordChangeForm } from "@/components/profile/forms/PasswordChangeForm";
+import { MFAForm } from "@/components/profile/forms/MfaForm";
 import { AuthModal } from "@/components/ui/shared/AuthModal";
 import { type GenderType, type UserData } from "@/lib/auth";
 
@@ -15,7 +16,7 @@ interface ProfileSettingsProps {
   onProfileUpdate?: () => void;
 }
 
-type TabType = "profile" | "password";
+type TabType = "profile" | "password" | "mfa";
 
 export function ProfileSettings({
   onClose,
@@ -78,6 +79,7 @@ export function ProfileSettings({
   const tabs = [
     { id: "profile" as TabType, label: "Profile", icon: User },
     { id: "password" as TabType, label: "Password", icon: Lock },
+    { id: "mfa" as TabType, label: "Security", icon: Shield },
   ];
 
   return (
@@ -96,7 +98,7 @@ export function ProfileSettings({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer ${
+                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -133,6 +135,10 @@ export function ProfileSettings({
         )}
 
         {activeTab === "password" && <PasswordChangeForm />}
+
+        {activeTab === "mfa" && (
+          <MFAForm onSuccess={handleProfileUpdateSuccess} />
+        )}
       </div>
     </AuthModal>
   );

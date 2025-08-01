@@ -90,3 +90,36 @@ export const PROFILE_CONSTANTS = {
   CUSTOM_GENDER_MAX_LENGTH: 100,
   CUSTOM_GENDER_SANITIZE_PATTERN: /[<>\"'%;()&+]/g,
 } as const;
+
+export const MFA_TYPES = {
+  SMS: "SMS_MFA",
+  EMAIL: "EMAIL_MFA", 
+  TOTP: "SOFTWARE_TOKEN_MFA",
+} as const;
+
+export const MFA_MESSAGES = {
+  MFA_ENABLED: "Multi-factor authentication enabled successfully!",
+  MFA_DISABLED: "Multi-factor authentication disabled successfully!",
+  SMS_SETUP_SUCCESS: "SMS authentication setup successfully!",
+  EMAIL_SETUP_SUCCESS: "Email authentication setup successfully!",
+  TOTP_SETUP_SUCCESS: "Authenticator app setup successfully!",
+  
+  MFA_SETUP_FAILED: "Failed to setup multi-factor authentication",
+  MFA_DISABLE_FAILED: "Failed to disable multi-factor authentication",
+  INVALID_PHONE: "Please enter a valid phone number",
+  PHONE_REQUIRED: "Phone number is required for SMS authentication",
+  TOTP_CODE_REQUIRED: "Please enter the code from your authenticator app",
+  INVALID_TOTP_CODE: "Invalid authenticator code. Please try again.",
+  
+  MFA_DISABLED_INFO: "Multi-factor authentication is currently disabled. Enable it to add an extra layer of security to your account.",
+  SMS_INFO: "Receive verification codes via text message to your phone.",
+  EMAIL_INFO: "Receive verification codes via email (backup method).",
+  TOTP_INFO: "Use an authenticator app like Google Authenticator or Authy for the most secure option.",
+  SCAN_QR_INFO: "Scan this QR code with your authenticator app, then enter the 6-digit code to verify setup.",
+} as const;
+
+export const PHONE_VALIDATION = {
+  PATTERN: /^\+[1-9]\d{1,14}$/,
+  PLACEHOLDER: "+1234567890",
+  HINT: "Include country code (e.g., +1 for US/Canada)",
+} as const;
